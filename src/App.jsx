@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import SignUp from "./pages/Register/Register";
 import LogIn from "./pages/LogIn/LogIn";
@@ -41,6 +41,13 @@ import BlogDetail from "./pages/Blog/BlogDetail.jsx";
 import AdminContactsView from "./pages/Admin/AdminContactsView.jsx";
 import ImportDataPage from "./pages/Admin/ImportDataPage.jsx";
 import AdminSubscriptionPage from "./pages/Admin/AdminSubscriptionPage";
+import AdminUserCreditsPage from "./pages/Admin/AdminUserCreditsPage";
+
+// Helper component to redirect to last visited admin page
+const AdminRedirect = () => {
+  const lastAdminPath = localStorage.getItem('lastAdminPath');
+  return <Navigate to={lastAdminPath || '/admin/home'} replace />;
+};
 
 const App = () => {
   useEffect(() => {
@@ -77,6 +84,7 @@ const App = () => {
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminRedirect />} />
 
         <Route
           path="/admin/home"
@@ -203,6 +211,11 @@ const App = () => {
         <Route path="/admin/subscriptions" element={
           <ProtectedRoute>
             <AdminSubscriptionPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/user-credits" element={
+          <ProtectedRoute>
+            <AdminUserCreditsPage />
           </ProtectedRoute>
         } />
       </Routes>

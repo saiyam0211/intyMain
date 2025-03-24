@@ -15,6 +15,10 @@ const LocationPopup = ({ onLocationSelect }) => {
   const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // Default center of India
   const [searchBox, setSearchBox] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState('');
+  const [manualLocationInput, setManualLocationInput] = useState('');
+  
+  // New states for multi-step flow
+  const [currentStep, setCurrentStep] = useState(1); // Step 1: City selection, Step 2: Location constraint, Step 3: Specific options
   
   // New states for city search
   const [citySearchQuery, setCitySearchQuery] = useState('');
@@ -22,30 +26,18 @@ const LocationPopup = ({ onLocationSelect }) => {
   const [isSearchingCity, setIsSearchingCity] = useState(false);
   const [showCityResults, setShowCityResults] = useState(false);
 
-  // List of supported cities
+  // List of supported cities - Tier 1 and Tier 2 cities in India
   const cities = [
-    // Major Metros
+    // Tier 1 Cities
     'Mumbai', 'Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 
-    'Jaipur', 'Lucknow', 'Indore', 'Nagpur',
     
-    // Other Major Cities - North
-    'Chandigarh', 'Amritsar', 'Ludhiana', 'Jalandhar', 'Shimla', 'Dehradun', 'Haridwar', 
-    'Rishikesh', 'Gurgaon', 'Noida', 'Ghaziabad', 'Faridabad', 'Meerut', 'Agra', 'Varanasi',
-    'Patna', 'Ranchi', 'Dhanbad', 'Jammu', 'Srinagar', 'Kanpur', 'Allahabad', 'Gorakhpur',
-    
-    // Other Major Cities - West
-    'Surat', 'Vadodara', 'Rajkot', 'Nashik', 'Nagpur', 'Aurangabad', 'Solapur', 'Thane',
-    'Navi Mumbai', 'Goa', 'Panaji', 'Udaipur', 'Jodhpur', 'Ajmer', 'Kota', 'Bhilai', 'Raipur',
-    
-    // Other Major Cities - South
-    'Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Warangal', 'Coimbatore', 'Madurai',
-    'Trichy', 'Salem', 'Tirunelveli', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur',
-    'Mangalore', 'Mysore', 'Hubli-Dharwad', 'Belgaum',
-    
-    // Other Major Cities - East & North-East
-    'Bhubaneswar', 'Cuttack', 'Rourkela', 'Guwahati', 'Dibrugarh', 'Silchar', 'Shillong',
-    'Imphal', 'Aizawl', 'Agartala', 'Itanagar', 'Kohima', 'Gangtok', 'Siliguri', 'Durgapur',
-    'Asansol', 'Jamshedpur', 'Dhanbad', 'Bokaro'
+    // Tier 2 Cities
+    'Jaipur', 'Lucknow', 'Indore', 'Nagpur', 'Chandigarh', 'Surat', 'Coimbatore', 'Guwahati',
+    'Bhubaneswar', 'Visakhapatnam', 'Kochi', 'Vadodara', 'Thiruvananthapuram', 'Goa', 'Bhopal',
+    'Mangalore', 'Mysore', 'Nashik', 'Rajkot', 'Patna', 'Ranchi', 'Raipur', 'Varanasi', 'Vijayawada',
+    'Dehradun', 'Amritsar', 'Ludhiana', 'Jodhpur', 'Madurai', 'Tiruchirappalli', 'Warangal',
+    'Gurgaon', 'Noida', 'Faridabad', 'Ghaziabad', 'Agra', 'Kanpur', 'Allahabad', 'Aurangabad',
+    'Thane', 'Navi Mumbai', 'Pondicherry', 'Jammu', 'Shimla', 'Jalandhar'
   ];
 
   // Load Google Maps script
@@ -57,55 +49,10 @@ const LocationPopup = ({ onLocationSelect }) => {
   const mapRef = useRef();
   const onMapLoad = useCallback((map) => {
     mapRef.current = map;
-    
-    // Check for Places API errors after map loads
-    try {
-      if (window.google && (!window.google.maps.places || !window.google.maps.places.Autocomplete)) {
-        console.error("Places API not available after map load");
-        setPlacesApiError(true);
-      }
-    } catch (error) {
-      console.error("Error checking Places API after map load:", error);
-      setPlacesApiError(true);
-    }
-  }, []);
-
-  const [placesApiError, setPlacesApiError] = useState(false);
-  const [manualLocationInput, setManualLocationInput] = useState('');
-
-  // Listen for Places API errors in console
-  useEffect(() => {
-    // Create a custom error handler to catch Places API errors
-    const originalConsoleError = console.error;
-    console.error = function(...args) {
-      // Check if the error message contains Places API error
-      if (args[0] && typeof args[0] === 'string' && 
-          (args[0].includes('Places API error') || 
-           args[0].includes('ApiNotActivatedMapError'))) {
-        setPlacesApiError(true);
-      }
-      originalConsoleError.apply(console, args);
-    };
-
-    // Restore original console.error on cleanup
-    return () => {
-      console.error = originalConsoleError;
-    };
   }, []);
 
   const onSearchBoxLoad = useCallback((ref) => {
     setSearchBox(ref);
-    // Check if the Places API is working
-    try {
-      // This will throw an error if Places API is not enabled
-      if (window.google && (!window.google.maps.places || !window.google.maps.places.Autocomplete)) {
-        console.error("Places API not available");
-        setPlacesApiError(true);
-      }
-    } catch (error) {
-      console.error("Error checking Places API:", error);
-      setPlacesApiError(true);
-    }
   }, []);
 
   const onPlacesChanged = useCallback(() => {
@@ -176,75 +123,48 @@ const LocationPopup = ({ onLocationSelect }) => {
     }
   };
 
-  const handleConstraintChange = (e) => {
-    setIsLocationConstraint(e.target.checked);
-    if (!e.target.checked) {
-      // If location is not a constraint, clear any selected location
-      setSelectedLocation('');
-      setExactCoordinates(null);
-      setSelectedAddress('');
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      // Validate city selection before moving to next step
+      if (!selectedLocation) {
+        setError('Please select a city to continue');
+        return;
+      }
+      setError('');
+      setCurrentStep(2);
     }
   };
 
-  const handleSubmit = () => {
-    if (isLocationConstraint && !selectedLocation && !exactCoordinates) {
-      setError('Please select a location or use the map search');
-      return;
-    }
-
-    if (!isLocationConstraint) {
-      // If location is not a constraint, clear location data
-      localStorage.removeItem('userLocation');
-      localStorage.removeItem('userLiveLocation');
-      onLocationSelect('');
-      setShowPopup(false);
-      return;
-    }
-
-    if (selectedLocation) {
-      // Store location in localStorage
+  const handleLocationConstraintChange = (value) => {
+    setIsLocationConstraint(value);
+    
+    if (!value) {
+      // If "No" selected - location is not a constraint
+      // Store city but mark it to hide distance in compare page
+      localStorage.setItem('hideDistanceInCompare', 'true');
+      console.log('Setting hideDistanceInCompare flag to true');
+      
+      // Dispatch a custom event to notify all components
+      window.dispatchEvent(new Event('locationPreferenceChanged'));
+      
+      // Store the selected city without exact coordinates
       localStorage.setItem('userLocation', selectedLocation);
       
-      // If we have exact coordinates from city search, store them too
-      if (exactCoordinates && selectedAddress) {
-        const liveLocation = JSON.stringify({ 
-          latitude: exactCoordinates.lat, 
-          longitude: exactCoordinates.lng,
-          address: selectedAddress,
-          timestamp: new Date().toISOString() 
-        });
-        localStorage.setItem('userLiveLocation', liveLocation);
-        
-        // Call the parent callback with selected location and coordinates
-        onLocationSelect(selectedLocation, exactCoordinates, selectedAddress);
-      } else {
-        // Clear any existing live location data when manually selecting a city without coordinates
-        localStorage.removeItem('userLiveLocation');
-        
-        // Call the parent callback with selected location
-        onLocationSelect(selectedLocation);
-      }
-    } else if (exactCoordinates && selectedAddress) {
-      // Store live location in localStorage with exact coordinates
-      const liveLocation = JSON.stringify({ 
-        latitude: exactCoordinates.lat, 
-        longitude: exactCoordinates.lng,
-        address: selectedAddress,
-        timestamp: new Date().toISOString() 
-      });
-      localStorage.setItem('userLiveLocation', liveLocation);
+      // Call the parent callback with only the selected city
+      onLocationSelect(selectedLocation, null, null);
       
-      // Find the nearest city for display purposes
-      const nearestCity = findNearestCity(exactCoordinates.lat, exactCoordinates.lng);
+      // Close the popup
+      setShowPopup(false);
+    } else {
+      // If "Yes" selected - move to next step to get specific location
+      localStorage.removeItem('hideDistanceInCompare');
+      console.log('Removing hideDistanceInCompare flag');
       
-      localStorage.setItem('userLocation', nearestCity);
+      // Dispatch a custom event to notify all components
+      window.dispatchEvent(new Event('locationPreferenceChanged'));
       
-      // Call the parent callback with the nearest city and pass coordinates
-      onLocationSelect(nearestCity, exactCoordinates, selectedAddress);
+      setCurrentStep(3);
     }
-    
-    // Close popup
-    setShowPopup(false);
   };
 
   const handleGetLiveLocation = () => {
@@ -254,48 +174,46 @@ const LocationPopup = ({ onLocationSelect }) => {
     }
 
     setIsGettingLocation(true);
-    setError('');
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         
-        // Save exact coordinates
-        const liveLocationData = {
-          latitude,
-          longitude,
-          timestamp: new Date().toISOString()
-        };
+        // Store coordinates
+        setExactCoordinates({ lat: latitude, lng: longitude });
         
-        localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
+        // Update map center
+        setMapCenter({ lat: latitude, lng: longitude });
         
-        // Try to reverse geocode to get the city name
+        // Try to get address from coordinates using reverse geocoding
         reverseGeocode(latitude, longitude);
         
         setIsGettingLocation(false);
       },
       (error) => {
         setIsGettingLocation(false);
+        console.error('Error getting location:', error);
         
-        switch(error.code) {
+        switch (error.code) {
           case error.PERMISSION_DENIED:
-            setError('Location access was denied. Please enable location services.');
+            setError('Please allow location access to use this feature');
             break;
           case error.POSITION_UNAVAILABLE:
-            setError('Location information is unavailable.');
+            setError('Location information is unavailable');
             break;
           case error.TIMEOUT:
-            setError('The request to get your location timed out.');
+            setError('Request to get location timed out');
+            break;
+          case error.UNKNOWN_ERROR:
+            setError('An unknown error occurred');
             break;
           default:
-            setError('An unknown error occurred while getting your location.');
-            break;
+            setError('Failed to get your location');
         }
-      }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
-  
-  // Reverse geocode coordinates to get address
+
   const reverseGeocode = async (latitude, longitude) => {
     try {
       const response = await axios.get(
@@ -316,6 +234,16 @@ const LocationPopup = ({ onLocationSelect }) => {
         if (city) {
           localStorage.setItem('userLocation', city);
           setSelectedLocation(city);
+          setSelectedAddress(response.data.results[0].formatted_address);
+          
+          // Store live location
+          const liveLocation = JSON.stringify({ 
+            latitude, 
+            longitude,
+            address: response.data.results[0].formatted_address,
+            timestamp: new Date().toISOString() 
+          });
+          localStorage.setItem('userLiveLocation', liveLocation);
           
           // Call the onLocationSelect prop
           if (onLocationSelect) {
@@ -351,7 +279,6 @@ const LocationPopup = ({ onLocationSelect }) => {
   };
 
   // Simple function to find the nearest city (for demo purposes)
-  // In a real app, you might want to use a more sophisticated approach
   const findNearestCity = (latitude, longitude) => {
     // Default coordinates for major cities
     const cityCoordinates = {
@@ -407,7 +334,6 @@ const LocationPopup = ({ onLocationSelect }) => {
     return deg * (Math.PI/180);
   };
 
-  // New function to handle city search using Nominatim API
   const handleCitySearch = async () => {
     if (!citySearchQuery.trim()) {
       setCitySearchResults([]);
@@ -449,76 +375,52 @@ const LocationPopup = ({ onLocationSelect }) => {
         }
       );
 
-      if (response.data && response.data.length > 0) {
-        // Filter results to include only cities, towns, or villages
-        const filteredResults = response.data.filter(result => 
-          result.type === 'city' || 
-          result.type === 'town' || 
-          result.type === 'village' ||
-          result.type === 'administrative' ||
-          (result.class === 'place' && 
-            (result.type === 'city' || 
-            result.type === 'town' || 
-            result.type === 'village'))
-        );
-        
-        setCitySearchResults(filteredResults);
-        setShowCityResults(true);
-      } else {
-        setCitySearchResults([]);
-        setShowCityResults(true); // Show empty state
-      }
+      setCitySearchResults(response.data);
+      setShowCityResults(true);
+      setIsSearchingCity(false);
     } catch (error) {
-      console.error('Error searching for cities:', error);
-      setCitySearchResults([]);
-      setShowCityResults(true); // Show empty state
-    } finally {
+      console.error('Error searching city:', error);
+      setError('Failed to search for cities. Please try again.');
       setIsSearchingCity(false);
     }
   };
 
-  // Handle city search input change
   const handleCitySearchChange = (e) => {
     setCitySearchQuery(e.target.value);
-    if (e.target.value.trim() === '') {
-      setCitySearchResults([]);
+    if (e.target.value === '') {
       setShowCityResults(false);
+      setCitySearchResults([]);
     }
   };
 
-  // Handle city selection from search results
-  const handleCitySelect = (city, result = null) => {
+  const handleAreaSelect = (city, result = null) => {
     // Extract clean city name if full result is provided
     const cityName = result ? result.name || city.split(',')[0].trim() : city;
     
     // Save the selected city
     localStorage.setItem('userLocation', cityName);
     
-    // If we have coordinates and location matters, save them
-    if (result && result.lat && result.lon && isLocationConstraint) {
+    // If we have coordinates, save them
+    if (result && result.lat && result.lon) {
       const liveLocationData = {
         latitude: parseFloat(result.lat),
         longitude: parseFloat(result.lon),
+        address: result.display_name || cityName,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
-    } else if (!isLocationConstraint) {
-      // If location doesn't matter, clear coordinates
-      localStorage.removeItem('userLiveLocation');
     }
     
     // Call the onLocationSelect prop with the selected city
     if (onLocationSelect) {
-      onLocationSelect(cityName);
+      onLocationSelect(cityName, 
+        result && result.lat && result.lon ? 
+        { latitude: parseFloat(result.lat), longitude: parseFloat(result.lon) } : null, 
+        result ? result.display_name : null);
     }
     
     // Close the popup
     setShowPopup(false);
-    
-    // If location doesn't matter, redirect to homepage
-    if (!isLocationConstraint) {
-      window.location.href = '/';
-    }
   };
 
   // Handle Enter key press in city search
@@ -529,26 +431,13 @@ const LocationPopup = ({ onLocationSelect }) => {
     }
   };
 
-  // Handle checkbox change for location preference
-  const handleLocationPreferenceChange = (e) => {
-    const locationMatters = e.target.checked;
-    setIsLocationConstraint(locationMatters);
-    
-    // Store the preference in localStorage
-    if (!locationMatters) {
-      localStorage.setItem('locationPreference', 'cityOnly');
-    } else {
-      localStorage.removeItem('locationPreference');
-    }
-  };
-
   // If popup shouldn't be shown, return null
   if (!showPopup) {
     return null;
   }
 
   // Render loading state while Google Maps is loading
-  if (!isLoaded) {
+  if (currentStep === 3 && !isLoaded) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -562,7 +451,7 @@ const LocationPopup = ({ onLocationSelect }) => {
   }
 
   // Render error state if Google Maps failed to load
-  if (loadError) {
+  if (currentStep === 3 && loadError) {
     console.error("Error loading Google Maps:", loadError);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -601,13 +490,13 @@ const LocationPopup = ({ onLocationSelect }) => {
           
           <div className="flex space-x-2">
             <Button
-              onClick={() => setShowPopup(false)}
+              onClick={() => setCurrentStep(2)}
               className="w-1/2 bg-gray-500 hover:bg-gray-600 text-white py-3"
             >
-              Cancel
+              Back
             </Button>
             <Button
-              onClick={selectedLocation ? handleSubmit : handleManualLocationSubmit}
+              onClick={selectedLocation ? handleNextStep : handleManualLocationSubmit}
               className="w-1/2 bg-teal-600 hover:bg-teal-700 text-white py-3"
             >
               Submit
@@ -631,55 +520,106 @@ const LocationPopup = ({ onLocationSelect }) => {
         </button>
 
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-center text-gray-800">
-            Does the location of our service provider matter to you?
-          </h2>
-          
-          <div className="flex justify-center items-center gap-2 mt-4">
-            <input
-              type="checkbox"
-              id="locationPreference"
-              checked={isLocationConstraint}
-              onChange={handleLocationPreferenceChange}
-              className="w-5 h-5 accent-[#006452]"
-            />
-            <label htmlFor="locationPreference" className="text-lg font-medium cursor-pointer">
-              Yes, location matters to me
-            </label>
-          </div>
-          
-          {/* Show current location option if location matters */}
-          {isLocationConstraint && (
-            <div className="border-t border-gray-200 pt-4">
-              <div className="space-y-4">
-                <p className="text-center font-medium text-gray-800">
-                  Use your current location to find service providers nearby
-                </p>
-                
-                <button
-                  onClick={handleGetLiveLocation}
-                  className="w-full p-3 bg-[#006452] text-white rounded-lg flex items-center justify-center"
-                  disabled={isGettingLocation}
+          {currentStep === 1 && (
+            <>
+              <h2 className="text-2xl font-bold text-center text-gray-800">
+                Select Your City
+              </h2>
+              
+              <div className="mt-4">
+                <select
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                  value={selectedLocation}
+                  onChange={handleLocationChange}
                 >
-                  {isGettingLocation ? 'Getting Location...' : 'Use Current Location'}
+                  <option value="">Select a city</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="mt-4">
+                <button
+                  onClick={handleNextStep}
+                  className="w-full p-3 bg-[#006452] text-white rounded-lg"
+                >
+                  Next
                 </button>
               </div>
-            </div>
+            </>
           )}
 
-          {/* Show locality search options and submit button if location doesn't matter */}
-          {!isLocationConstraint && (
+          {currentStep === 2 && (
             <>
-              <div className="border-t border-gray-200 pt-4">
-                <div className="space-y-4">
-                  <p className="text-center font-medium text-gray-800">
-                    Search for your locality
+              <h2 className="text-2xl font-bold text-center text-gray-800">
+                Is location a constraint for you?
+              </h2>
+              
+              <div className="mt-6 flex justify-center gap-4">
+                <button
+                  onClick={() => handleLocationConstraintChange(true)}
+                  className="px-6 py-3 bg-[#006452] text-white rounded-lg hover:bg-[#00503f] transition duration-200"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => handleLocationConstraintChange(false)}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
+                >
+                  No
+                </button>
+              </div>
+              
+              <div className="mt-4 text-sm text-gray-600 text-center">
+                <p>Selected city: <span className="font-medium">{selectedLocation}</span></p>
+                <p className="mt-2">
+                  • If you select "Yes", you'll be able to specify your exact location<br/>
+                  • If you select "No", we'll use the city for general search results
+                </p>
+              </div>
+              
+              <div className="mt-4">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className="w-full p-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+                >
+                  Back
+                </button>
+              </div>
+            </>
+          )}
+
+          {currentStep === 3 && (
+            <>
+              <h2 className="text-2xl font-bold text-center text-gray-800">
+                Specify Your Location
+              </h2>
+              
+              <div className="mt-4 space-y-4">
+                <div>
+                  <button
+                    onClick={handleGetLiveLocation}
+                    className="w-full p-3 bg-[#006452] text-white rounded-lg flex items-center justify-center"
+                    disabled={isGettingLocation}
+                  >
+                    {isGettingLocation ? 'Getting Location...' : 'Use My Current Location'}
+                  </button>
+                </div>
+                
+                <div className="text-center">
+                  <span className="text-gray-500">OR</span>
+                </div>
+                
+                <div>
+                  <p className="text-center font-medium text-gray-800 mb-2">
+                    Search for a specific area
                   </p>
                   
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Type your city name"
+                      placeholder="Type an area or locality name"
                       value={citySearchQuery}
                       onChange={handleCitySearchChange}
                       onKeyDown={handleCitySearchKeyDown}
@@ -698,13 +638,13 @@ const LocationPopup = ({ onLocationSelect }) => {
                     </button>
                   </div>
                   
-                  {/* City search results */}
+                  {/* Area search results */}
                   {showCityResults && citySearchResults.length > 0 && (
                     <div className="mt-2 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
                       {citySearchResults.map((result, index) => (
                         <button
                           key={index}
-                          onClick={() => handleCitySelect(result.display_name.split(',')[0], result)}
+                          onClick={() => handleAreaSelect(result.display_name.split(',')[0], result)}
                           className="w-full p-2 text-left hover:bg-gray-100 border-b border-gray-200"
                         >
                           {result.display_name}
@@ -716,41 +656,55 @@ const LocationPopup = ({ onLocationSelect }) => {
                   {/* No results message */}
                   {showCityResults && citySearchResults.length === 0 && !isSearchingCity && (
                     <p className="text-center text-gray-500 mt-2">
-                      No cities found. Try a different search term.
+                      No places found. Try a different search term.
                     </p>
                   )}
-                  
-                  {/* Popular cities suggestions */}
+                </div>
+                
+                {isLoaded && (
                   <div className="mt-4">
-                    <p className="text-center text-sm text-gray-500 mb-2">Popular cities:</p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {cities.slice(0, 6).map((city) => (
-                        <button
-                          key={city}
-                          onClick={() => handleCitySelect(city)}
-                          className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                    <p className="text-center font-medium text-gray-800 mb-2">
+                      Or select on map
+                    </p>
+                    <div className="h-60 w-full rounded-lg overflow-hidden">
+                      <GoogleMap
+                        mapContainerStyle={{ width: '100%', height: '100%' }}
+                        zoom={10}
+                        center={mapCenter}
+                        onLoad={onMapLoad}
+                        options={{
+                          disableDefaultUI: true,
+                          zoomControl: true,
+                          fullscreenControl: true,
+                        }}
+                      >
+                        <StandaloneSearchBox
+                          onLoad={onSearchBoxLoad}
+                          onPlacesChanged={onPlacesChanged}
                         >
-                          {city}
-                        </button>
-                      ))}
+                          <input
+                            type="text"
+                            placeholder="Search for places"
+                            className="w-full p-2 border border-gray-300 rounded-lg shadow-md absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-white"
+                            style={{ maxWidth: 'calc(100% - 20px)' }}
+                          />
+                        </StandaloneSearchBox>
+                        
+                        {exactCoordinates && (
+                          <Marker position={exactCoordinates} />
+                        )}
+                      </GoogleMap>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-
-              {/* Submit button only shown when location doesn't matter */}
+              
               <div className="mt-4">
                 <button
-                  onClick={() => {
-                    localStorage.setItem('locationPreference', 'cityOnly');
-                    setShowPopup(false);
-                    if (onLocationSelect) {
-                      onLocationSelect('');
-                    }
-                  }}
-                  className="w-full p-3 bg-[#006452] text-white rounded-lg"
+                  onClick={() => setCurrentStep(2)}
+                  className="w-full p-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
                 >
-                  Submit
+                  Back
                 </button>
               </div>
             </>

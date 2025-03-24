@@ -12,7 +12,8 @@ import {
   FaFileExport, 
   FaFileImport, 
   FaSignOutAlt,
-  FaCreditCard
+  FaCreditCard,
+  FaCoins
 } from 'react-icons/fa';
 
 const AdminHomePage = () => {
@@ -54,6 +55,13 @@ const AdminHomePage = () => {
             icon: <FaCreditCard className="text-3xl sm:text-4xl mb-3" />,
             path: '/admin/subscriptions',
             color: 'bg-gradient-to-br from-green-500 to-green-600'
+        },
+        {
+            title: 'User Credits',
+            description: 'Manage user credits and welcome bonuses',
+            icon: <FaCoins className="text-3xl sm:text-4xl mb-3" />,
+            path: '/admin/user-credits',
+            color: 'bg-gradient-to-br from-yellow-500 to-yellow-600'
         },
         {
             title: 'Manage Testimonials',

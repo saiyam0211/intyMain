@@ -10,6 +10,13 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
+    // Store current admin path in localStorage whenever location changes
+    if (location.pathname.startsWith('/admin/')) {
+      localStorage.setItem('lastAdminPath', location.pathname);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     const verifyAdmin = async () => {
       try {
         if (!isLoaded || !isSignedIn) {
@@ -34,8 +41,13 @@ const ProtectedRoute = ({ children }) => {
         // Store or remove token from localStorage based on admin verification
         if (isAdminUser) {
           localStorage.setItem("adminToken", token);
+          // Store current path if we're on an admin page
+          if (location.pathname.startsWith('/admin/')) {
+            localStorage.setItem('lastAdminPath', location.pathname);
+          }
         } else {
           localStorage.removeItem("adminToken");
+          localStorage.removeItem('lastAdminPath');
         }
         
         setIsLoading(false);
@@ -43,12 +55,13 @@ const ProtectedRoute = ({ children }) => {
         console.error('Error verifying admin access:', error);
         setIsAdmin(false);
         localStorage.removeItem("adminToken");
+        localStorage.removeItem('lastAdminPath');
         setIsLoading(false);
       }
     };
 
     verifyAdmin();
-  }, [isSignedIn, isLoaded, getToken]);
+  }, [isSignedIn, isLoaded, getToken, location.pathname]);
 
   if (!isLoaded || isLoading) {
     return (

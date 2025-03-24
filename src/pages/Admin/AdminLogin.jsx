@@ -1,10 +1,11 @@
 // src/pages/Admin/AdminLogin.jsx
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, useClerk } from '@clerk/clerk-react';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { getToken, isSignedIn, isLoaded } = useAuth();
   const { signIn } = useClerk();
 
@@ -31,21 +32,38 @@ const AdminLogin = () => {
           // Store the token in localStorage for backward compatibility with pages 
           // that use localStorage.getItem("adminToken")
           localStorage.setItem("adminToken", token);
-          navigate('/admin/home');
+          
+          // Get the last visited admin path or use the "from" state from the location
+          const lastAdminPath = localStorage.getItem('lastAdminPath');
+          const fromPath = location.state?.from?.pathname;
+          
+          // Navigate to last visited admin page, referrer page, or default to admin home
+          if (lastAdminPath && lastAdminPath.startsWith('/admin/')) {
+            console.log('Redirecting to last admin path:', lastAdminPath);
+            navigate(lastAdminPath);
+          } else if (fromPath && fromPath.startsWith('/admin/')) {
+            console.log('Redirecting to referrer path:', fromPath);
+            navigate(fromPath);
+          } else {
+            console.log('Redirecting to admin home');
+            navigate('/admin/home');
+          }
         } else {
           console.error('Admin verification failed:', await response.text());
           localStorage.removeItem("adminToken");
+          localStorage.removeItem('lastAdminPath');
           navigate('/');
         }
       } catch (error) {
         console.error('Error verifying admin:', error);
         localStorage.removeItem("adminToken");
+        localStorage.removeItem('lastAdminPath');
         navigate('/');
       }
     };
 
     verifyAdmin();
-  }, [isSignedIn, isLoaded, navigate, getToken]);
+  }, [isSignedIn, isLoaded, navigate, getToken, location.state]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;

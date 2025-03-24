@@ -350,6 +350,126 @@ export default function ResidentialSpace() {
     return company;
   };
 
+  // Function to calculate distance between user and company for sorting
+  const calculateDistanceForSorting = (company) => {
+    // Skip calculation if location is not a constraint
+    if (localStorage.getItem('hideDistanceInCompare') === 'true') {
+      return null;
+    }
+    
+    const userLiveLocationStr = localStorage.getItem('userLiveLocation');
+    if (!userLiveLocationStr) {
+      return null;
+    }
+
+    try {
+      const userLocation = JSON.parse(userLiveLocationStr);
+      
+      if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+        return null;
+      }
+      
+      // Check if company has coordinates directly (this is the format we're now using)
+      if (company.coordinates) {
+        // Handle different coordinate formats
+        let companyLat, companyLng;
+        
+        if (typeof company.coordinates === 'object') {
+          // Object format: { latitude, longitude } or { lat, lng }
+          companyLat = company.coordinates.latitude || company.coordinates.lat;
+          companyLng = company.coordinates.longitude || company.coordinates.lng;
+        } else if (typeof company.coordinates === 'string') {
+          try {
+            const coordParts = company.coordinates.split(',');
+            if (coordParts.length === 2) {
+              companyLat = parseFloat(coordParts[0].trim());
+              companyLng = parseFloat(coordParts[1].trim());
+            }
+          } catch (e) {
+            return null;
+          }
+        }
+        
+        if (companyLat && companyLng) {
+          return calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            companyLat,
+            companyLng
+          );
+        }
+      }
+      
+      // Check other coordinate formats
+      if (company.lat && company.lng) {
+        return calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          company.lat,
+          company.lng
+        );
+      }
+      
+      if (company.latitude && company.longitude) {
+        return calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          company.latitude,
+          company.longitude
+        );
+      }
+      
+      // Fallback to city-based mapping
+      const cityCoordinates = {
+        'Bengaluru': { lat: 12.9716, lng: 77.5946 },
+        'Indore': { lat: 22.7196, lng: 75.8577 },
+        'Nagpur': { lat: 21.1458, lng: 79.0882 },
+        'Mumbai': { lat: 19.0760, lng: 72.8777 },
+        'Delhi': { lat: 28.6139, lng: 77.2090 },
+        'Chennai': { lat: 13.0827, lng: 80.2707 },
+        'Kolkata': { lat: 22.5726, lng: 88.3639 },
+        'Hyderabad': { lat: 17.3850, lng: 78.4867 },
+        'Pune': { lat: 18.5204, lng: 73.8567 },
+        'Jaipur': { lat: 26.9124, lng: 75.7873 },
+        'Lucknow': { lat: 26.8467, lng: 80.9462 },
+        'Ahmedabad': { lat: 23.0225, lng: 72.5714 }
+      };
+      
+      const companyCity = company.location;
+      if (!companyCity || !cityCoordinates[companyCity]) {
+        return null;
+      }
+      
+      return calculateDistance(
+        userLocation.latitude, 
+        userLocation.longitude, 
+        cityCoordinates[companyCity].lat, 
+        cityCoordinates[companyCity].lng
+      );
+    } catch (err) {
+      console.error("Error calculating distance for sorting:", err);
+      return null;
+    }
+  };
+
+  // Helper function to calculate distance
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const d = R * c; // Distance in km
+    return parseFloat(d.toFixed(1)); // Return distance as a number
+  };
+  
+  const deg2rad = (deg) => {
+    return deg * (Math.PI/180);
+  };
+
   const fetchCompanies = async (page = currentPage, filters = {}) => {
     setLoading(true);
     setError(null);
@@ -413,8 +533,51 @@ export default function ResidentialSpace() {
           }
         }
 
+        // Sort companies by distance if location is a constraint
+        let sortedCompanies = [...processedCompanies];
+        
+        // Check if location is a constraint (hideDistanceInCompare is NOT true)
+        if (localStorage.getItem('hideDistanceInCompare') !== 'true') {
+          console.log("Sorting companies by distance (location is a constraint)");
+          
+          // Calculate distance for each company
+          const companiesWithDistance = sortedCompanies.map(company => {
+            const distance = calculateDistanceForSorting(company);
+            return { 
+              ...company, 
+              calculatedDistance: distance 
+            };
+          });
+          
+          // Sort by distance (companies with no distance go at the end)
+          sortedCompanies = companiesWithDistance.sort((a, b) => {
+            // If either doesn't have a distance, prioritize the one that does
+            if (a.calculatedDistance === null && b.calculatedDistance === null) return 0;
+            if (a.calculatedDistance === null) return 1;
+            if (b.calculatedDistance === null) return -1;
+            
+            // Sort by distance (ascending)
+            return a.calculatedDistance - b.calculatedDistance;
+          });
+          
+          // Mark the first company (nearest) with a flag
+          if (sortedCompanies.length > 0 && sortedCompanies[0].calculatedDistance !== null) {
+            sortedCompanies[0] = {
+              ...sortedCompanies[0],
+              isNearest: true,
+              isFirstCard: true
+            };
+            console.log("Marked nearest company:", sortedCompanies[0].name || sortedCompanies[0].companyName);
+          }
+          
+          console.log("Companies sorted by distance:", 
+            sortedCompanies.map(c => `${c.name || c.companyName}: ${c.calculatedDistance || 'no distance'}`));
+        } else {
+          console.log("Not sorting by distance (location is not a constraint)");
+        }
+
         // Filter companies by space type if the backend doesn't support it
-        setCompanies(processedCompanies);
+        setCompanies(sortedCompanies);
         setTotalPages(response.data.totalPages || 1);
         setCurrentPage(response.data.currentPage || 1);
       } else {

@@ -23,6 +23,10 @@ const userCreditSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  receivedWelcomeCredits: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -44,13 +44,16 @@ const ContactDetailsModal = ({ isOpen, onClose, phoneNumber, email, id, contactT
   
   // Get auth headers for API requests
   const getAuthHeaders = async () => {
-    if (isSignedIn) {
+    try {
       const token = await getToken();
-      return { Authorization: `Bearer ${token}` };
-    } else if (localStorage.getItem('token')) {
-      return { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return {};
     }
-    return {};
   };
   
   // Fetch subscriptions and user credits on component mount
@@ -326,6 +329,45 @@ const ContactDetailsModal = ({ isOpen, onClose, phoneNumber, email, id, contactT
   const handleLoginRedirect = () => {
     onClose(); // Close the modal
     openSignIn(); // Open Clerk sign-in modal
+  };
+
+  // Check for welcome credits when user logs in
+  useEffect(() => {
+    if (isSignedIn && user) {
+      checkForWelcomeCredits();
+    }
+  }, [isSignedIn, user]);
+
+  // Function to check and add welcome credits for new users
+  const checkForWelcomeCredits = async () => {
+    if (!user || !isSignedIn) return;
+    
+    try {
+      const headers = await getAuthHeaders();
+      
+      // Call the welcome credits endpoint
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/users/welcome-credits`,
+        { userId: user.id },
+        { headers }
+      );
+      
+      console.log('Welcome credits response:', response.data);
+      
+      if (response.data.message.includes('already received')) {
+        console.log('User already received welcome credits');
+      } else {
+        toast.success('Welcome bonus credits added to your account!');
+        // Update the local credits state
+        setUserCredits(prevCredits => ({
+          ...prevCredits,
+          designerCredits: response.data.credits.designerCredits,
+          craftsmanCredits: response.data.credits.craftsmanCredits
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking welcome credits:', error);
+    }
   };
 
   if (!isOpen) return null;

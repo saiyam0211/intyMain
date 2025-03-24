@@ -21,6 +21,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [travelTime, setTravelTime] = useState(null);
+  const [shouldShowDistance, setShouldShowDistance] = useState(true);
 
   // Sample USPs - in a real implementation, these would come from the backend
   const sampleUSPs = [
@@ -66,6 +67,10 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
       const compareList = JSON.parse(localStorage.getItem(`compareList_${user.id}`) || '[]');
       setIsInComparison(compareList.some(comp => comp._id === companyData._id));
     }
+
+    // Check if we should hide distance
+    const hideDistance = localStorage.getItem('hideDistanceInCompare') === 'true';
+    setShouldShowDistance(!hideDistance);
   }, [companyData._id, user]);
 
   const processedLogo = getLogoWithoutBackground(companyData.logo);
@@ -456,23 +461,12 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCompare}
-                className={`px-3 py-2 w-full sm:w-1/2 ${isInComparison ? 'bg-red-500 hover:bg-red-600' : 'bg-[#006452] hover:bg-[#004d3b]'} text-white rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base`}
+                className={`px-3 py-2 w-full ${isInComparison ? 'bg-red-500 hover:bg-red-600' : 'bg-[#006452] hover:bg-[#004d3b]'} text-white rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
                 </svg>
-                <span className="whitespace-nowrap">{isInComparison ? 'Remove' : 'Add to Compare'}</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleEnquireClick}
-                className="px-3 py-2 w-full sm:w-1/2 bg-[#006452] text-white rounded-md hover:bg-[#004d3b] transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-                </svg>
-                <span className="whitespace-nowrap">Enquire Now</span>
+                <span className="whitespace-nowrap">{isInComparison ? 'Remove from Compare' : 'Add to Compare'}</span>
               </motion.button>
             </div>
           </motion.div>
@@ -523,7 +517,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
               )}
 
               {/* Distance indicator - updated design */}
-              {distance !== null && (
+              {distance !== null && shouldShowDistance && (
                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg text-[#006452] font-medium text-sm shadow-lg z-30 border border-[#006452]/10">
                   <div className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

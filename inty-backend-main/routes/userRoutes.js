@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');  // Adjust path if needed
 const userController = require('../controllers/userController');
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 // JWT Secret (Load from environment variable!)
 const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_key';
@@ -133,5 +134,14 @@ router.post('/quote', userController.submitQuote);
 router.get('/test', (req, res) => {
     res.status(200).json({ message: 'User routes working!' });
 });
+
+// Add welcome credits for new users
+router.post('/welcome-credits', verifyToken, userController.addWelcomeCredits);
+
+// Admin-only routes
+router.get('/credits', isAdmin, userController.getAllUserCredits);
+router.patch('/credits', isAdmin, userController.addCreditsToUser);
+router.get('/welcome-credits-settings', isAdmin, userController.getWelcomeCreditsSettings);
+router.put('/welcome-credits-settings', isAdmin, userController.updateWelcomeCreditsSettings);
 
 module.exports = router;

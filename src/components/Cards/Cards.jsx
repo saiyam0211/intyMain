@@ -17,6 +17,7 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
   const [isInComparison, setIsInComparison] = useState(false);
   const { topRatedCount, setTopRatedCount } = useTopRatedContext();
   const [distance, setDistance] = useState(null);
+  const [shouldShowDistance, setShouldShowDistance] = useState(true);
 
   useEffect(() => {
     if (company) {
@@ -24,14 +25,18 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
       if (company.topRated) setTopRatedCount(prev => prev + 1);
       console.log(`Company ${company.name} - Assured status: ${company.assured || 'Not set'}`, company);
     }
+    
+    // Check if we should hide distance
+    const hideDistance = localStorage.getItem('hideDistanceInCompare') === 'true';
+    setShouldShowDistance(!hideDistance);
   }, [company, setTopRatedCount]);
 
   // Calculate distance when component mounts or when company changes
   useEffect(() => {
-    if (company) {
+    if (company && shouldShowDistance) {
       calculateDistanceFromUser(company);
     }
-  }, [company]);
+  }, [company, shouldShowDistance]);
 
   useEffect(() => {
     if (user && localCompany._id) {
@@ -42,6 +47,12 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
 
   // Calculate distance between user and company
   const calculateDistanceFromUser = (company) => {
+    // Check if distance should be hidden based on user preference
+    if (localStorage.getItem('hideDistanceInCompare') === 'true') {
+      console.log('Skipping distance calculation due to user preference');
+      return;
+    }
+    
     const userLiveLocationStr = localStorage.getItem('userLiveLocation');
     if (!userLiveLocationStr) {
       console.log("No user live location found in localStorage");
@@ -359,17 +370,82 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
 
   // Update the showDistance function
   const showDistance = () => {
+    // Check if distance should be hidden based on user preference
+    const hideDistance = localStorage.getItem('hideDistanceInCompare') === 'true';
+    console.log('hideDistanceInCompare flag:', hideDistance);
+    
+    if (hideDistance) {
+      console.log('Distance display disabled due to user preference');
+      return false;
+    }
+    
     // Get user's live location from localStorage
     const userLiveLocationStr = localStorage.getItem('userLiveLocation');
     
     // Only show distance if we have user's live location
     if (!userLiveLocationStr) {
+      console.log('No user location found, hiding distance');
       return false;
     }
     
     // Only show distance if we have valid distance data
-    return distance !== null && !isNaN(distance);
+    const hasValidDistance = distance !== null && !isNaN(distance);
+    console.log('Has valid distance data:', hasValidDistance);
+    return hasValidDistance;
   };
+
+  // Check if this is nearest company
+  const isNearest = () => {
+    // If nearest flag is explicitly set on the company, use that
+    if (company && company.isNearest) {
+      return true;
+    }
+    
+    // Otherwise, only show nearest badge if location is a constraint
+    if (localStorage.getItem('hideDistanceInCompare') === 'true') {
+      return false;
+    }
+    
+    // Check if this company has a valid distance and is the first in the list
+    return distance !== null && !isNaN(distance) && company && company.isFirstCard;
+  };
+
+  // Add an effect that specifically listens for localStorage and custom events
+  useEffect(() => {
+    // Create a storage event listener
+    const handleStorageChange = (e) => {
+      console.log('Storage changed:', e.key, e.newValue);
+      
+      // If hideDistanceInCompare flag changes, update the state
+      if (e.key === 'hideDistanceInCompare') {
+        const hideDistance = e.newValue === 'true';
+        console.log('hideDistanceInCompare flag changed to:', hideDistance);
+        setShouldShowDistance(!hideDistance);
+      }
+    };
+    
+    // Handler for the custom locationPreferenceChanged event
+    const handleLocationPreferenceChanged = () => {
+      console.log('Location preference changed event received');
+      const hideDistance = localStorage.getItem('hideDistanceInCompare') === 'true';
+      console.log('Current hideDistanceInCompare flag:', hideDistance);
+      setShouldShowDistance(!hideDistance);
+    };
+    
+    // Add the listeners
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('locationPreferenceChanged', handleLocationPreferenceChanged);
+    
+    // Also check the current value on mount
+    const hideDistance = localStorage.getItem('hideDistanceInCompare') === 'true';
+    setShouldShowDistance(!hideDistance);
+    
+    // Cleanup the listeners on unmount
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('locationPreferenceChanged', handleLocationPreferenceChanged);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -431,6 +507,26 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
           </div>
         </div>
       )}
+      
+      {/* "Nearest" badge */}
+      {isNearest() && (
+        <div className="absolute bg-orange-500 top-[-35px] right-[-12px] rounded-l-lg flex items-center gap-1 mt-4 mr-3 p-2 z-10">
+          <svg 
+            className="w-4 h-4 text-white" 
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              fillRule="evenodd" 
+              clipRule="evenodd" 
+              d="M5.05025 4.05025C7.78392 1.31658 12.2161 1.31658 14.9497 4.05025C17.6834 6.78392 17.6834 11.2161 14.9497 13.9497L10 18.8995L5.05025 13.9497C2.31658 11.2161 2.31658 6.78392 5.05025 4.05025ZM10 11C11.1046 11 12 10.1046 12 9C12 7.89543 11.1046 7 10 7C8.89543 7 8 7.89543 8 9C8 10.1046 8.89543 11 10 11Z"
+            />
+          </svg>
+          <span className="font-semibold text-white text-sm">Nearest</span>
+        </div>
+      )}
+      
       {localCompany?.assured === "Yes" && (
         <div className="absolute top-[185px] left-[-45px] px-4 py-2 rounded-br-lg rounded-tl-lg z-20">
           <img src={Verified} alt="verified" />

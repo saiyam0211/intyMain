@@ -228,8 +228,8 @@ const Compare = () => {
 
   // Update the comparisonMetrics array with better error handling
   const comparisonMetrics = [
-    // Only include distance metric if we have user's live location
-    ...(localStorage.getItem('userLiveLocation') ? [{
+    // Only include distance metric if we have user's live location AND hideDistanceInCompare is not set
+    ...(localStorage.getItem('userLiveLocation') && localStorage.getItem('hideDistanceInCompare') !== 'true' ? [{
       key: "distance",
       label: "Distance",
       valueKey: "distance",
@@ -239,6 +239,15 @@ const Compare = () => {
         return distance ? `${distance} km away` : "N/A";
       }
     }] : []),
+    {
+      key: "usp",
+      label: "USP",
+      valueKey: "usp",
+      defaultValue: "-",
+      getValue: (company) => {
+        return company.usp && company.usp.trim() !== "" ? company.usp : "-";
+      }
+    },
     {
       key: "completedProjects",
       label: "Completed Projects",
