@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import ScheduleMeeting from "./ScheduleMeeting";
 
 const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
   const { isSignedIn, user } = useUser();
@@ -22,6 +23,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
   const [locationError, setLocationError] = useState(null);
   const [travelTime, setTravelTime] = useState(null);
   const [shouldShowDistance, setShouldShowDistance] = useState(true);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
   // Sample USPs - in a real implementation, these would come from the backend
   const sampleUSPs = [
@@ -468,6 +470,18 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
                 </svg>
                 <span className="whitespace-nowrap">{isInComparison ? 'Remove from Compare' : 'Add to Compare'}</span>
               </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsScheduleOpen(true)}
+                className="px-3 py-2 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span className="whitespace-nowrap">Schedule Meeting</span>
+              </motion.button>
             </div>
           </motion.div>
 
@@ -702,6 +716,13 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
           </motion.div>
         </div>
       )}
+
+      {/* Schedule Meeting Modal */}
+      <ScheduleMeeting 
+        company={companyData}
+        isOpen={isScheduleOpen}
+        onClose={() => setIsScheduleOpen(false)}
+      />
     </>
   );
 };
