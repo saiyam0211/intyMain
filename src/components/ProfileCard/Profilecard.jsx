@@ -4,6 +4,10 @@ import { faStar, faStarHalfAlt,faStar as faLightStar } from "@fortawesome/free-s
 import ContactDetailsModal from "../ContactDetailsModal/ContactDetailsModal";
 import axios from 'axios';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/router';
+import ScheduleMeeting from '../ScheduleMeeting/ScheduleMeeting';
 
 const ProfileCard = ({
   id,
@@ -22,6 +26,8 @@ const ProfileCard = ({
   const { getToken } = useAuth();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isContactUnlocked, setIsContactUnlocked] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
   // Get user ID from Clerk or fallback to localStorage for backward compatibility
   const userId = isSignedIn && user ? user.id : localStorage.getItem('userId');
@@ -224,18 +230,41 @@ const ProfileCard = ({
           </div>
         </div>
         
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 md:pl-3 mb-3.5 md:-translate-x-2">
-          <button
-            onClick={handleContactDirectly}
-            className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md"
+        <div className="mt-8 flex flex-col items-center gap-3 mb-6 mt-1">
+          <Button
+            onClick={() => {
+              if (isSignedIn) {
+                setIsContactModalOpen(true);
+              } else {
+                alert("Please sign in to contact the designer");
+              }
+            }}
+            className="bg-[#B0CBCD] hover:bg-[#8eb7ba] text-[#00312D] w-[311px] h-[44px] rounded-md"
           >
-            {isContactUnlocked ? 'View Contact Details' : 'Contact Directly'}
-          </button>
-          <button className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md">
+            Contact Directly
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Schedule a Meeting button clicked");
+              if (isSignedIn) {
+                setIsScheduleOpen(true);
+              } else {
+                alert("Please sign in to schedule a meeting");
+              }
+            }}
+            className="bg-white hover:bg-gray-100 border border-[#B0CBCD] text-[#00312D] w-[311px] h-[44px] rounded-md"
+          >
             Schedule a Meeting
-          </button>
+          </Button>
         </div>
       </div>
+
+      <ScheduleMeeting 
+        contact={profile} 
+        isOpen={isScheduleOpen} 
+        onClose={() => setIsScheduleOpen(false)} 
+        contactType="designer"
+      />
 
       <ContactDetailsModal
         isOpen={isContactModalOpen}

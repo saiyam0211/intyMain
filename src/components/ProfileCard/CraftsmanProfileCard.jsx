@@ -5,6 +5,9 @@ import { faStar, faStarHalfAlt,faStar as faLightStar } from "@fortawesome/free-s
 import ContactDetailsModal from "../ContactDetailsModal/ContactDetailsModal";
 import axios from 'axios';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import ScheduleMeeting from '../ScheduleMeeting/ScheduleMeeting';
 
 const CraftsmanProfileCard = ({
   id,
@@ -23,6 +26,7 @@ const CraftsmanProfileCard = ({
   const { getToken } = useAuth();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isContactUnlocked, setIsContactUnlocked] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
   // Get user ID from Clerk or fallback to localStorage for backward compatibility
   const userId = isSignedIn && user ? user.id : localStorage.getItem('userId');
@@ -190,7 +194,7 @@ const CraftsmanProfileCard = ({
   const maskedPhone = maskPhone(phoneNumber);
 
   return (
-    <>
+    <div className="relative group w-full sm:w-[350px] h-[600px] bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 mt-8">
       <div className="bg-[rgba(0,100,82,1)] md:p-3.5 p-5 md:rounded-r-lg shadow-lg mx-auto md:pl-14 w-full max-w-md sm:max-w-lg">
         <div className="text-center sm:text-left flex flex-col sm:flex-row justify-between items-center md:gap-4">
           <div className="flex flex-col items-center sm:items-start">
@@ -225,18 +229,41 @@ const CraftsmanProfileCard = ({
           </div>
         </div>
         
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 md:pl-3 mb-3.5 md:-translate-x-2">
-          <button
-            onClick={handleContactDirectly}
-            className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md"
+        <div className="mt-8 flex flex-col items-center gap-3 mb-6 mt-1">
+          <Button
+            onClick={() => {
+              if (isSignedIn) {
+                setIsContactModalOpen(true);
+              } else {
+                alert("Please sign in to contact the craftsman");
+              }
+            }}
+            className="bg-[#B0CBCD] hover:bg-[#8eb7ba] text-[#00312D] w-[311px] h-[44px] rounded-md"
           >
-            {isContactUnlocked ? 'View Contact Details' : 'Contact Directly'}
-          </button>
-          <button className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md">
+            Contact Directly
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Schedule a Meeting button clicked for craftsman");
+              if (isSignedIn) {
+                setIsScheduleOpen(true);
+              } else {
+                alert("Please sign in to schedule a meeting");
+              }
+            }}
+            className="bg-white hover:bg-gray-100 border border-[#B0CBCD] text-[#00312D] w-[311px] h-[44px] rounded-md"
+          >
             Schedule a Meeting
-          </button>
+          </Button>
         </div>
       </div>
+
+      <ScheduleMeeting 
+        contact={profile} 
+        isOpen={isScheduleOpen} 
+        onClose={() => setIsScheduleOpen(false)} 
+        contactType="craftsman"
+      />
 
       <ContactDetailsModal
         isOpen={isContactModalOpen}
@@ -247,7 +274,7 @@ const CraftsmanProfileCard = ({
         contactType={contactType}
         onUnlock={() => setIsContactUnlocked(true)}
       />
-    </>
+    </div>
   );
 };
 
