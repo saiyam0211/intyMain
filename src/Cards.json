@@ -1,0 +1,243 @@
+[
+    {
+      "name": "Rahul Sharma",
+      "rate": "₹250/hr",
+      "location": "Koramangala",
+      "reviewImage": "path_to_review_image", 
+      "experience": "8+",
+      "projectsCompleted": "180+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Priya Singh",
+      "rate": "₹300/hr",
+      "location": "Indiranagar",
+      "reviewImage": "path_to_review_image", 
+      "experience": "12+",
+      "projectsCompleted": "300+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Amit Patel",
+      "rate": "₹220/hr",
+      "location": "HSR Layout",
+      "reviewImage": "path_to_review_image", 
+      "experience": "5+",
+      "projectsCompleted": "120+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Neha Gupta",
+      "rate": "₹280/hr",
+      "location": "Jayanagar",
+      "reviewImage": "path_to_review_image", 
+      "experience": "9+",
+      "projectsCompleted": "200+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Vikram Singh",
+      "rate": "₹350/hr",
+      "location": "Marathahalli",
+      "reviewImage": "path_to_review_image", 
+      "experience": "15+",
+      "projectsCompleted": "400+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Anjali Mehta",
+      "rate": "₹240/hr",
+      "location": "Bellandur",
+      "reviewImage": "path_to_review_image", 
+      "experience": "7+",
+      "projectsCompleted": "150+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Suresh Kumar",
+      "rate": "₹260/hr",
+      "location": "Electronic City",
+      "reviewImage": "path_to_review_image", 
+      "experience": "10+",
+      "projectsCompleted": "220+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Kavita Reddy",
+      "rate": "₹320/hr",
+      "location": "Bannerghatta Road",
+      "reviewImage": "path_to_review_image", 
+      "experience": "11+",
+      "projectsCompleted": "280+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Rajesh Verma",
+      "rate": "₹230/hr",
+      "location": "Sarjapur Road",
+      "reviewImage": "path_to_review_image", 
+      "experience": "6+",
+      "projectsCompleted": "130+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Pooja Desai",
+      "rate": "₹270/hr",
+      "location": "Whitefield",
+      "reviewImage": "path_to_review_image", 
+      "experience": "8+",
+      "projectsCompleted": "190+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Arun Khanna",
+      "rate": "₹290/hr",
+      "location": "Koramangala",
+      "reviewImage": "path_to_review_image", 
+      "experience": "9+",
+      "projectsCompleted": "210+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Meera Joshi",
+      "rate": "₹310/hr",
+      "location": "Indiranagar",
+      "reviewImage": "path_to_review_image", 
+      "experience": "13+",
+      "projectsCompleted": "320+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Sanjay Malhotra",
+      "rate": "₹240/hr",
+      "location": "HSR Layout",
+      "reviewImage": "path_to_review_image", 
+      "experience": "7+",
+      "projectsCompleted": "160+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Anita Rao",
+      "rate": "₹330/hr",
+      "location": "Jayanagar",
+      "reviewImage": "path_to_review_image", 
+      "experience": "14+",
+      "projectsCompleted": "350+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Vivek Bhatia",
+      "rate": "₹280/hr",
+      "location": "Marathahalli",
+      "reviewImage": "path_to_review_image", 
+      "experience": "10+",
+      "projectsCompleted": "230+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Sunita Iyer",
+      "rate": "₹260/hr",
+      "location": "Bellandur",
+      "reviewImage": "path_to_review_image", 
+      "experience": "8+",
+      "projectsCompleted": "200+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Ravi Menon",
+      "rate": "₹300/hr",
+      "location": "Electronic City",
+      "reviewImage": "path_to_review_image", 
+      "experience": "12+",
+      "projectsCompleted": "290+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Deepa Nair",
+      "rate": "₹270/hr",
+      "location": "Bannerghatta Road",
+      "reviewImage": "path_to_review_image", 
+      "experience": "9+",
+      "projectsCompleted": "210+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Manoj Srinivasan",
+      "rate": "₹250/hr",
+      "location": "Sarjapur Road",
+      "reviewImage": "path_to_review_image", 
+      "experience": "7+",
+      "projectsCompleted": "170+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    },
+    {
+      "name": "Shalini Kapoor",
+      "rate": "₹290/hr",
+      "location": "Whitefield",
+      "reviewImage": "path_to_review_image", 
+      "experience": "11+",
+      "projectsCompleted": "260+",
+      "buttons": [
+        { "label": "Contact Directly", "onClick": "contactDirectly" },
+        { "label": "Schedule a Meeting", "onClick": "scheduleMeeting" }
+      ]
+    }
+  ]
+  

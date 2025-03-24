@@ -1,0 +1,17 @@
+@import "tailwindcss";
+body{
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden !important;
+}
+
+.clerk-container{
+    display: flex;
+    justify-content: center;  /* Center horizontally */
+    align-items: center;  /* Center vertically */
+    height: 90vh;  /* Full viewport height */
+}
+
+button{
+    cursor: pointer;
+}
