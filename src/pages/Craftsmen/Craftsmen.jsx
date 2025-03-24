@@ -50,7 +50,7 @@ const Craftsmen = () => {
     const fetchCraftsmen = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:3000/api/craftsmen');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/craftsmen`);
 
         // Ensure craftsmen is always an array
         if (response.data && Array.isArray(response.data)) {
@@ -151,36 +151,40 @@ const Craftsmen = () => {
       )}
 
       {/* Carousel & Filtered Craftsman Cards */}
-      <div className="flex flex-col space-y-8 px-4 md:px-8 lg:px-16">
+      <div className="flex flex-col items-center space-y-8 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
         {!loading && filteredCraftsmen.length > 0 && filteredCraftsmen.map(craftsman => (
           <div
             key={craftsman._id || craftsman.id}
-            className="w-full flex flex-col md:flex-row justify-center items-center"
+            className="w-full flex flex-col md:flex-row items-center justify-center gap-8"
           >
-            <div className='w-full max-w-[600px]'>
+            <div className='w-full md:w-1/2 max-w-[600px]'>
               {/* Improved Portfolio Image Handling */}
               {craftsman.portfolio && Array.isArray(craftsman.portfolio) && craftsman.portfolio.length > 0 ? (
-                <div className="carousel-wrapper">
+                <div className="carousel-wrapper rounded-lg overflow-hidden shadow-lg">
                   <Carousel customImages={craftsman.portfolio} />
                 </div>
               ) : (
                 // Default carousel if no portfolio images
-                <Carousel />
+                <div className="rounded-lg overflow-hidden shadow-lg">
+                  <Carousel />
+                </div>
               )}
             </div>
-            <div className='w-full max-w-[500px]'>
+            <div className='w-full md:w-1/2 max-w-[500px]'>
               <CraftsmanProfileCard
                 id={craftsman._id || craftsman.id}
                 name={craftsman.name}
                 rate={craftsman.rate}
                 location={<><FontAwesomeIcon icon={faLocationDot} /> {craftsman.location}</>}
-                specialty={craftsman.specialty}
+                reviewImage={craftsman.reviewImage}
                 experience={craftsman.experience}
                 projectsCompleted={craftsman.projectsCompleted}
-                phoneNumber={craftsman.phoneNumber}
+                description={craftsman.description}
                 email={craftsman.email}
+                phoneNumber={craftsman.phoneNumber}
                 googleReviews={craftsman.googleReviews || "0"}
                 rating={craftsman.rating || "5"}
+                contactType="craftsman"
               />
             </div>
           </div>

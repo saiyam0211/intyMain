@@ -1,107 +1,75 @@
 // src/pages/Admin/AdminLogin.jsx
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth, useClerk } from '@clerk/clerk-react';
 
 const AdminLogin = () => {
-  const [credentials, setCredentials] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
+  const { signIn } = useClerk();
 
-  // const API_URL = 'https://inty-backend.onrender.com/api';
-  //const API_URL = 'https://inty-backend-6wzp.onrender.com/api';
-  const API_URL = 'http://localhost:3000/api';
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await axios.post(`${API_URL}/admin/login`, credentials);
-      localStorage.setItem('adminToken', response.data.token);
-      console.log('Admin token saved:', response.data.token);
-      
-      // Verify token has admin privileges
+  useEffect(() => {
+    const verifyAdmin = async () => {
       try {
-        const verifyResponse = await axios.get(`${API_URL}/admin/verify-token`, {
+        if (!isLoaded || !isSignedIn) return;
+
+        const token = await getToken();
+        console.log('Got Clerk token:', token);
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/verify-token`, {
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${response.data.token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
-        console.log('Token verification response:', verifyResponse.data);
+
+        console.log('Admin verification response:', response.status);
         
-        if (!verifyResponse.data.hasAdminFlag) {
-          console.warn('Warning: Token does not have admin flag');
-          setError('Your admin token is missing admin privileges. Please contact system administrator.');
-          return;
+        if (response.ok) {
+          console.log('Admin verified, redirecting to dashboard');
+          // Store the token in localStorage for backward compatibility with pages 
+          // that use localStorage.getItem("adminToken")
+          localStorage.setItem("adminToken", token);
+          navigate('/admin/home');
+        } else {
+          console.error('Admin verification failed:', await response.text());
+          localStorage.removeItem("adminToken");
+          navigate('/');
         }
-      } catch (verifyError) {
-        console.error('Token verification failed:', verifyError);
+      } catch (error) {
+        console.error('Error verifying admin:', error);
+        localStorage.removeItem("adminToken");
+        navigate('/');
       }
-      
-      navigate('/admin/home');
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    verifyAdmin();
+  }, [isSignedIn, isLoaded, navigate, getToken]);
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white p-6 sm:p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
-            Admin Login
-          </h2>
-        </div>
-        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded text-sm sm:text-base">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-sm sm:text-base"
-                placeholder="Email address"
-                value={credentials.email}
-                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-sm sm:text-base"
-                placeholder="Password"
-                value={credentials.password}
-                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">Admin Login</h2>
+        <div className="space-y-4">
+          <p className="text-center text-gray-600">
+            Please sign in with your admin account
+          </p>
+          {!isSignedIn && (
             <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 transition-colors"
-              disabled={loading}
+              onClick={() => signIn.authenticateWithRedirect({
+                redirectUrl: window.location.href,
+              })}
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              Sign in with Clerk
             </button>
-          </div>
-        </form>
+          )}
+        </div>
       </div>
     </div>
   );

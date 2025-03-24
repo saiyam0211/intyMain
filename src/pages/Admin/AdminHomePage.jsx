@@ -11,7 +11,8 @@ import {
   FaAddressBook, 
   FaFileExport, 
   FaFileImport, 
-  FaSignOutAlt 
+  FaSignOutAlt,
+  FaCreditCard
 } from 'react-icons/fa';
 
 const AdminHomePage = () => {
@@ -46,6 +47,13 @@ const AdminHomePage = () => {
             icon: <FaBlog className="text-3xl sm:text-4xl mb-3" />,
             path: '/admin/blogs',
             color: 'bg-gradient-to-br from-purple-500 to-purple-600'
+        },
+        {
+            title: 'Manage Subscriptions',
+            description: 'Create and manage subscription plans',
+            icon: <FaCreditCard className="text-3xl sm:text-4xl mb-3" />,
+            path: '/admin/subscriptions',
+            color: 'bg-gradient-to-br from-green-500 to-green-600'
         },
         {
             title: 'Manage Testimonials',

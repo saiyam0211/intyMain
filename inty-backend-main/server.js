@@ -20,6 +20,8 @@ const blogRoutes = require("./routes/blogRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes"); // Import Testimonial routes
 const exportRoutes = require("./routes/exportRoutes"); // Import Export routes
 const importRoutes = require("./routes/importRoutes"); // Import Import routes
+const subscriptionRoutes = require("./routes/subscriptionRoutes"); // Import Subscription routes
+const paymentRoutes = require("./routes/paymentRoutes"); // Import Payment routes
 
 const app = express();
 
@@ -76,6 +78,8 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/testimonials', testimonialRoutes); // Use Testimonial routes
 app.use('/api/export', exportRoutes); // Use Export routes
 app.use('/api/import', importRoutes); // Use Import routes
+app.use('/api/subscriptions', subscriptionRoutes); // Use Subscription routes
+app.use('/api/payments', paymentRoutes); // Use Payment routes
 
 // Simple test route
 app.use('/api/test', (req, res) => {
@@ -99,10 +103,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Get the port from environment or use default (3000)
 const PORT = process.env.PORT || 3000;
+
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Local: http://localhost:${PORT}`);
   console.log("Available routes:");
   console.log("- GET /api/companies");
   console.log("- POST /api/companies");
@@ -144,4 +151,8 @@ app.listen(PORT, () => {
   console.log("- POST /api/import/companies");
   console.log("- POST /api/import/designers");
   console.log("- POST /api/import/craftsmen");
+  console.log("- GET /api/subscriptions");
+  console.log("- POST /api/subscriptions");
+  console.log("- GET /api/payments");
+  console.log("- POST /api/payments");
 });

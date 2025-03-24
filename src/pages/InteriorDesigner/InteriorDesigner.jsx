@@ -78,7 +78,7 @@ const InteriorDesigner = () => {
     const fetchDesigners = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:3000/api/designers');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/designers`);
 
         // Ensure designers is always an array
         let designers = [];
@@ -227,6 +227,7 @@ const InteriorDesigner = () => {
                 phoneNumber={designer.phoneNumber}
                 googleReviews={designer.googleReviews || "0"}
                 rating={designer.rating || "5"}
+                contactType="designer"
               />
             </div>
           </div>

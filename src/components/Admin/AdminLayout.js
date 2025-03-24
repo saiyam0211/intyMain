@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 
 const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/admin/login');
   };
 

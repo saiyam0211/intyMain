@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import { FaEdit, FaTrash, FaEye, FaEyeSlash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const API_URL = "http://localhost:3000/api/designers";
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/designers`;
 
 const AdminDesignersList = () => {
   const navigate = useNavigate();

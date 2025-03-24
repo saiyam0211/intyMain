@@ -1,10 +1,13 @@
 // components/ProfileCard/CraftsmanProfileCard.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faStarHalfAlt,faStar as faLightStar } from "@fortawesome/free-solid-svg-icons";
 import ContactDetailsModal from "../ContactDetailsModal/ContactDetailsModal";
+import axios from 'axios';
+import { useUser, useAuth } from '@clerk/clerk-react';
 
 const CraftsmanProfileCard = ({
+  id,
   name,
   rate,
   location,
@@ -13,9 +16,55 @@ const CraftsmanProfileCard = ({
   phoneNumber = '8165XXXXXX',
   email = 'salmanXXXXXX@xxxxx.com',
   googleReviews = "0",
-  rating = "5"
+  rating = "5",
+  contactType = "craftsman"
 }) => {
+  const { isSignedIn, user } = useUser();
+  const { getToken } = useAuth();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isContactUnlocked, setIsContactUnlocked] = useState(false);
+
+  // Get user ID from Clerk or fallback to localStorage for backward compatibility
+  const userId = isSignedIn && user ? user.id : localStorage.getItem('userId');
+  const isLoggedIn = isSignedIn || !!localStorage.getItem('userId');
+
+  // Get auth headers for API requests
+  const getAuthHeaders = async () => {
+    if (isSignedIn) {
+      const token = await getToken();
+      return { Authorization: `Bearer ${token}` };
+    } else if (localStorage.getItem('token')) {
+      return { Authorization: `Bearer ${localStorage.getItem('token')}` };
+    }
+    return {};
+  };
+
+  // Check if this contact is already unlocked when component mounts
+  useEffect(() => {
+    const checkContactStatus = async () => {
+      if (!isLoggedIn || !id) return;
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const headers = await getAuthHeaders();
+        
+        const response = await axios.get(`${apiUrl}/payments/credits/${userId}`, { headers });
+        
+        if (response.data) {
+          const { viewedDesigners, viewedCraftsmen } = response.data;
+          const isUnlocked = contactType === 'designer' 
+            ? viewedDesigners.includes(id)
+            : viewedCraftsmen.includes(id);
+          
+          setIsContactUnlocked(isUnlocked);
+        }
+      } catch (error) {
+        console.error('Error checking contact unlock status:', error);
+      }
+    };
+
+    checkContactStatus();
+  }, [id, contactType, isLoggedIn, userId]);
 
   const handleContactDirectly = () => {
     setIsContactModalOpen(true);
@@ -23,6 +72,31 @@ const CraftsmanProfileCard = ({
 
   const handleCloseModal = () => {
     setIsContactModalOpen(false);
+    
+    // Check unlock status again when modal closes
+    if (isLoggedIn && id) {
+      const checkContactStatus = async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+          const headers = await getAuthHeaders();
+          
+          const response = await axios.get(`${apiUrl}/payments/credits/${userId}`, { headers });
+          
+          if (response.data) {
+            const { viewedDesigners, viewedCraftsmen } = response.data;
+            const isUnlocked = contactType === 'designer' 
+              ? viewedDesigners.includes(id)
+              : viewedCraftsmen.includes(id);
+            
+            setIsContactUnlocked(isUnlocked);
+          }
+        } catch (error) {
+          console.error('Error checking contact unlock status:', error);
+        }
+      };
+      
+      checkContactStatus();
+    }
   };
 
   // Function to mask name
@@ -117,10 +191,15 @@ const CraftsmanProfileCard = ({
 
   return (
     <>
-      <div className="bg-[rgba(0,100,82,1)] md:p-3.5 p-5  md:rounded-r-lg shadow-lg mx-auto md:pl-14 w-full max-w-md sm:max-w-lg ">
+      <div className="bg-[rgba(0,100,82,1)] md:p-3.5 p-5 md:rounded-r-lg shadow-lg mx-auto md:pl-14 w-full max-w-md sm:max-w-lg">
         <div className="text-center sm:text-left flex flex-col sm:flex-row justify-between items-center md:gap-4">
           <div className="flex flex-col items-center sm:items-start">
-            <h2 className="text-2xl font-bold text-gray-100">{maskedName}</h2>
+            <h2 className="text-2xl font-bold text-gray-100">
+              {isContactUnlocked ? name : maskedName}
+              {isContactUnlocked && (
+                <span className="ml-2 text-xs bg-white/30 px-2 py-0.5 rounded-full">Unlocked</span>
+              )}
+            </h2>
             <div className="flex flex-wrap justify-center sm:justify-start md:gap-4 gap-2 mt-2">
               <p className="font-normal text-sm text-gray-50">{rate}</p>
               <p className="font-normal text-sm text-gray-50">{location}</p>
@@ -151,7 +230,7 @@ const CraftsmanProfileCard = ({
             onClick={handleContactDirectly}
             className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md"
           >
-            Contact Directly
+            {isContactUnlocked ? 'View Contact Details' : 'Contact Directly'}
           </button>
           <button className="w-full sm:w-2xl h-10 bg-white text-teal-700 rounded-md">
             Schedule a Meeting
@@ -164,6 +243,9 @@ const CraftsmanProfileCard = ({
         onClose={handleCloseModal}
         phoneNumber={maskedPhone}
         email={maskedEmail}
+        id={id}
+        contactType={contactType}
+        onUnlock={() => setIsContactUnlocked(true)}
       />
     </>
   );

@@ -205,6 +205,15 @@ const companySchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  originalBasicPriceRange: {
+    type: String
+  },
+  originalPremiumPriceRange: {
+    type: String
+  },
+  originalLuxuryPriceRange: {
+    type: String
+  },
 
   // New field for company testimonials
   testimonials: [companyTestimonialSchema]

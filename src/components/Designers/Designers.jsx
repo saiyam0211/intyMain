@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}`;
 
 // Add only background images as hardcoded
 const backgroundImages = [

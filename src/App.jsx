@@ -40,6 +40,7 @@ import ExportDataPage from "./pages/Admin/ExportDataPage.jsx";
 import BlogDetail from "./pages/Blog/BlogDetail.jsx";
 import AdminContactsView from "./pages/Admin/AdminContactsView.jsx";
 import ImportDataPage from "./pages/Admin/ImportDataPage.jsx";
+import AdminSubscriptionPage from "./pages/Admin/AdminSubscriptionPage";
 
 const App = () => {
   useEffect(() => {
@@ -199,6 +200,11 @@ const App = () => {
           <ImportDataPage />
           </ProtectedRoute>
           } />
+        <Route path="/admin/subscriptions" element={
+          <ProtectedRoute>
+            <AdminSubscriptionPage />
+          </ProtectedRoute>
+        } />
       </Routes>
     </TopRatedContext>
   );

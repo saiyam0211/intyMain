@@ -213,10 +213,13 @@ const createCompany = async (req, res) => {
         workInTeams: req.body.workInTeams || '',
         deliveryTimeline: req.body.deliveryTimeline || '',
 
-        // New price range fields with calculated averages
+        // Store both original ranges and calculated averages
         basicPriceRange: processedBasicRange,
         premiumPriceRange: processedPremiumRange,
         luxuryPriceRange: processedLuxuryRange,
+        originalBasicPriceRange: req.body.basicPriceRange || '',
+        originalPremiumPriceRange: req.body.premiumPriceRange || '',
+        originalLuxuryPriceRange: req.body.luxuryPriceRange || '',
 
         // New search-related fields
         projectType: req.body.projectType || '',
@@ -348,14 +351,20 @@ const updateCompany = async (req, res) => {
 
       // Process price ranges to calculate averages
       if (updates.basicPriceRange) {
+        // Store original range before processing
+        updates.originalBasicPriceRange = updates.basicPriceRange;
         updates.basicPriceRange = calculateAverageFromRange(updates.basicPriceRange);
       }
 
       if (updates.premiumPriceRange) {
+        // Store original range before processing
+        updates.originalPremiumPriceRange = updates.premiumPriceRange;
         updates.premiumPriceRange = calculateAverageFromRange(updates.premiumPriceRange);
       }
 
       if (updates.luxuryPriceRange) {
+        // Store original range before processing
+        updates.originalLuxuryPriceRange = updates.luxuryPriceRange;
         updates.luxuryPriceRange = calculateAverageFromRange(updates.luxuryPriceRange);
       }
 

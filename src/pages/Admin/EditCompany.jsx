@@ -186,9 +186,10 @@ const EditCompany = () => {
                 longitude: companyDetails.longitude || "",
                 workInTeams: companyDetails.workInTeams || "",
                 deliveryTimeline: companyDetails.deliveryTimeline || "",
-                basicPriceRange: companyDetails.basicPriceRange || "",
-                premiumPriceRange: companyDetails.premiumPriceRange || "",
-                luxuryPriceRange: companyDetails.luxuryPriceRange || "",
+                // Use original price ranges if available, otherwise use the calculated values
+                basicPriceRange: companyDetails.originalBasicPriceRange || companyDetails.basicPriceRange || "",
+                premiumPriceRange: companyDetails.originalPremiumPriceRange || companyDetails.premiumPriceRange || "",
+                luxuryPriceRange: companyDetails.originalLuxuryPriceRange || companyDetails.luxuryPriceRange || "",
                 serviceCategories: companyDetails.serviceCategories || [],
                 payedStatus: companyDetails.payedStatus || "", // Initialize from existing data
             });
@@ -1497,6 +1498,64 @@ const EditCompany = () => {
                                     <option value="Pending">Pending</option>
                                     <option value="Not Paid">Not Paid</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        {/* Price Range Categories */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                            <div className="col-span-3">
+                                <h3 className="text-lg font-medium mb-2">Price Range Categories</h3>
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-gray-700 mb-2">Basic Price Range <span className="text-red-500">*</span></label>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500 mr-1">₹</span>
+                                    <input
+                                        type="text"
+                                        name="basicPriceRange"
+                                        placeholder="1000-5000"
+                                        className="w-full p-2 border rounded"
+                                        value={formData.basicPriceRange}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Format: min-max (e.g., 1000-5000)</p>
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-gray-700 mb-2">Premium Price Range <span className="text-red-500">*</span></label>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500 mr-1">₹</span>
+                                    <input
+                                        type="text"
+                                        name="premiumPriceRange"
+                                        placeholder="5000-10000"
+                                        className="w-full p-2 border rounded"
+                                        value={formData.premiumPriceRange}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Format: min-max (e.g., 5000-10000)</p>
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-gray-700 mb-2">Luxury Price Range <span className="text-red-500">*</span></label>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500 mr-1">₹</span>
+                                    <input
+                                        type="text"
+                                        name="luxuryPriceRange"
+                                        placeholder="10000-20000"
+                                        className="w-full p-2 border rounded"
+                                        value={formData.luxuryPriceRange}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Format: min-max (e.g., 10000-20000)</p>
                             </div>
                         </div>
 
