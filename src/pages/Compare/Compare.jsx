@@ -107,6 +107,11 @@ const Compare = () => {
   const [visibleCompanies, setVisibleCompanies] = useState([0, 1, 2]);
   const [activeTab, setActiveTab] = useState(0);
 
+  // Add useEffect to scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchCompaniesForComparison();

@@ -31,6 +31,11 @@ export default function ResidentialSpace() {
   const [userLocation, setUserLocation] = useState(localStorage.getItem('userLocation') || '');
   const [showLocationPopup, setShowLocationPopup] = useState(!localStorage.getItem('userLocation'));
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Get spaceType from URL params first, then localStorage, then default to "Residential"
   const [spaceType, setSpaceType] = useState(() => {
     const urlSpaceType = searchParams.get("spaceType");
