@@ -7,7 +7,7 @@ import Footer from "../../components/Footer/Footer";
 import backgroundImage from "../../assets/background.png";
 
 // Set the base URL for API requests
-const API_URL = "http://localhost:3000"; // Update this with your actual server URL
+const API_URL = "https://inty-backend.onrender.com"; // Update this with your actual server URL
 axios.defaults.baseURL = API_URL;
 
 const BlogPage = () => {

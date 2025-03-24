@@ -6,7 +6,7 @@ import axios from "axios";
 import { useTopRatedContext } from "../../Context/TopRatedContext";
 import Verified from "../../assets/iw-assured.png";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://inty-backend.onrender.com/api";
 
 export default function CompanyCard({ company, edit = false, onCompareChange }) {
   const navigate = useNavigate();

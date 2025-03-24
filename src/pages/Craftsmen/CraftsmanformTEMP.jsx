@@ -47,7 +47,7 @@ const CraftsmanForm = () => {
 
             try {
                 setFetchLoading(true);
-                const res = await axios.get(`http://localhost:3000/api/craftsmen/${id}`);
+                const res = await axios.get(`https://inty-backend.onrender.com/api/craftsmen/${id}`);
 
                 // Format the data for the form
                 const craftsman = res.data;
@@ -131,7 +131,7 @@ const CraftsmanForm = () => {
                 formData.append('file', files[0]);
                 formData.append('fileCategory', 'craftsman-portfolios');
 
-                const response = await axios.post('http://localhost:3000/api/upload', formData, {
+                const response = await axios.post('https://inty-backend.onrender.com/api/upload', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -150,7 +150,7 @@ const CraftsmanForm = () => {
                 });
                 uploadFormData.append('fileCategory', 'craftsman-portfolios');
 
-                const response = await axios.post('http://localhost:3000/api/upload/multiple', uploadFormData, {
+                const response = await axios.post('https://inty-backend.onrender.com/api/upload/multiple', uploadFormData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -257,10 +257,10 @@ const CraftsmanForm = () => {
 
             if (isEditMode) {
                 // Update existing craftsman
-                response = await axios.put(`http://localhost:3000/api/craftsmen/${id}`, submissionData);
+                response = await axios.put(`https://inty-backend.onrender.com/api/craftsmen/${id}`, submissionData);
             } else {
                 // Create new craftsman
-                response = await axios.post('http://localhost:3000/api/craftsmen', submissionData);
+                response = await axios.post('https://inty-backend.onrender.com/api/craftsmen', submissionData);
             }
 
             setMessage({

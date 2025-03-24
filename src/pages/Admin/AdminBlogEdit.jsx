@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://inty-backend.onrender.com/api";
 
 const AdminBlogEdit = () => {
   const navigate = useNavigate();

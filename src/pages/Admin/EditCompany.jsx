@@ -9,7 +9,7 @@ const EditCompany = () => {
     // Set API_URL
     //const API_URL = "https://inty-backend-6wzp.onrender.com/api";
     // const API_URL = "https://inty-backend-2.onrender.com/api";
-    const API_URL = "http://localhost:3000/api";
+    const API_URL = "https://inty-backend.onrender.com/api";
     const { id } = useParams();
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);

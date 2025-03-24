@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ResponsiveAdminContainer from '../../components/Admin/ResponsiveAdminContainer';
 
-const API_URL = "http://localhost:3000/api/blogs";
+const API_URL = "https://inty-backend.onrender.com/api/blogs";
 
 const AdminBlogList = () => {
   const navigate = useNavigate();

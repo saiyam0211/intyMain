@@ -65,7 +65,7 @@ const ExportDataPage = () => {
             setLoading(true);
             console.log('Fetching collections...');
             
-            const response = await axios.get('http://localhost:3000/api/export/collections');
+            const response = await axios.get('https://inty-backend.onrender.com/api/export/collections');
             console.log('Collections response:', response.data);
             setCollections(response.data);
             
@@ -121,7 +121,7 @@ const ExportDataPage = () => {
                 [collectionId]: { exporting: true, success: false, error: null }
             }));
 
-            const exportUrl = buildExportUrl(`http://localhost:3000/api/export/${collectionId}`);
+            const exportUrl = buildExportUrl(`https://inty-backend.onrender.com/api/export/${collectionId}`);
             console.log('Exporting with URL:', exportUrl);
 
             const response = await axios.get(exportUrl, {
@@ -194,7 +194,7 @@ const ExportDataPage = () => {
             validateDateRange();
             setFullExportStatus({ exporting: true, success: false, error: null });
             
-            const exportUrl = buildExportUrl('http://localhost:3000/api/export/full/database');
+            const exportUrl = buildExportUrl('https://inty-backend.onrender.com/api/export/full/database');
             console.log('Full export URL:', exportUrl);
 
             const response = await axios.get(exportUrl, {
@@ -253,7 +253,7 @@ const ExportDataPage = () => {
             validateDateRange();
             setJsonExportStatus({ exporting: true, success: false, error: null });
             
-            const exportUrl = buildExportUrl('http://localhost:3000/api/export/full/json');
+            const exportUrl = buildExportUrl('https://inty-backend.onrender.com/api/export/full/json');
             console.log('JSON export URL:', exportUrl);
 
             const response = await axios.get(exportUrl, {

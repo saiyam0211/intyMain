@@ -28,7 +28,7 @@ export default function PartnerWithUs() {
   const [errors, setErrors] = useState({});
 
   // API URL - using environment variable if available, otherwise hardcoded
-  const API_URL = 'http://localhost:3000/api';
+  const API_URL = 'https://inty-backend.onrender.com/api';
   
   // Debug API URL
   console.log("Using API URL:", API_URL);

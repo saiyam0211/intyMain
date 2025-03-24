@@ -34,7 +34,7 @@ export default function ContactUs() {
 
     try {
       // First save data to MongoDB
-      await axios.post('http://localhost:3000/api/contact', formData);
+      await axios.post('https://inty-backend.onrender.com/api/contact', formData);
 
       // Then submit the form to FormSubmit
       // Get the form element
@@ -240,7 +240,7 @@ export default function ContactUs() {
               <input type="hidden" name="_subject" value="New Contact Form Submission" />
               <input type="hidden" name="_captcha" value="false" />
               <input type="hidden" name="_template" value="table" />
-              <input type="hidden" name="_next" value="http://localhost:3000/" />
+              <input type="hidden" name="_next" value="https://inty-backend.onrender.com/" />
 
               {/* Name Field */}
               <motion.div

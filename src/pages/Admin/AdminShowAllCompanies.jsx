@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import ResponsiveAdminContainer from '../../components/Admin/ResponsiveAdminContainer';
 import ResponsiveAdminTable from '../../components/Admin/ResponsiveAdminTable';
 
-const API_URL = "http://localhost:3000/api/companies";
+const API_URL = "https://inty-backend.onrender.com/api/companies";
 
 const AdminShowAllCompanies = () => {
     const navigate = useNavigate();

@@ -321,7 +321,7 @@ const AdminDashboard = () => {
   ];
 
   // Set API_URL
-  const API_URL = "http://localhost:3000/api";
+  const API_URL = "https://inty-backend.onrender.com/api";
 
   // Helper function to convert file to Base64
   const fileToBase64 = (file) => {

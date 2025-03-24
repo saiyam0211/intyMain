@@ -82,13 +82,13 @@ const ImportDataPage = () => {
             let endpoint;
             switch (collectionType) {
                 case 'companies':
-                    endpoint = 'http://localhost:3000/api/import/companies';
+                    endpoint = 'https://inty-backend.onrender.com/api/import/companies';
                     break;
                 case 'designers':
-                    endpoint = 'http://localhost:3000/api/import/designers';
+                    endpoint = 'https://inty-backend.onrender.com/api/import/designers';
                     break;
                 case 'craftsmen':
-                    endpoint = 'http://localhost:3000/api/import/craftsmen';
+                    endpoint = 'https://inty-backend.onrender.com/api/import/craftsmen';
                     break;
                 default:
                     throw new Error('Unknown collection type');
