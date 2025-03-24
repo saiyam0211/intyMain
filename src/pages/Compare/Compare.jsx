@@ -282,23 +282,29 @@ const Compare = () => {
       getValue: (company) => {
         console.log('Company price data:', {
           name: company.name,
-          basicPrice: company.basicPrice,
-          luxuryPrice: company.luxuryPrice,
+          basicPriceRange: company.basicPriceRange,
+          luxuryPriceRange: company.luxuryPriceRange,
           minMaxBudget: company.minMaxBudget
         });
         
-        // Check if company has both basicPrice and luxuryPrice
-        if (company.basicPrice !== undefined && company.luxuryPrice !== undefined) {
-          const basicPricePerK = company.basicPrice * 1000;
-          const luxuryPricePerK = company.luxuryPrice * 1000;
+        // Check if company has both basicPriceRange and luxuryPriceRange
+        if (company.basicPriceRange !== undefined && company.luxuryPriceRange !== undefined) {
+          // Convert to numbers in case they are stored as strings
+          const basicPrice = parseFloat(company.basicPriceRange);
+          const luxuryPrice = parseFloat(company.luxuryPriceRange);
           
-          // Format numbers with commas for Indian numbering system (e.g., 1,00,000)
-          const formatPrice = (price) => {
-            return price.toLocaleString('en-IN');
-          };
-          
-          console.log('Calculated price range:', `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`);
-          return `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`;
+          if (!isNaN(basicPrice) && !isNaN(luxuryPrice)) {
+            const basicPricePerK = basicPrice * 1000;
+            const luxuryPricePerK = luxuryPrice * 1000;
+            
+            // Format numbers with commas for Indian numbering system (e.g., 1,00,000)
+            const formatPrice = (price) => {
+              return price.toLocaleString('en-IN');
+            };
+            
+            console.log('Calculated price range:', `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`);
+            return `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`;
+          }
         }
         
         // Fall back to the minMaxBudget if it exists
