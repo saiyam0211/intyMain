@@ -325,7 +325,7 @@ const Search = ({ onSearch }) => {
   return (
     <section className="py-5 mt-10 px-6 md:px-12 lg:px-24 text-center flex justify-center items-center mb-15">
       <div className="w-full max-w-6xl px-4 text-center" data-aos="fade-up">
-        <h2 className="text-lg md:text-xl font-semibold text-[#006452] mb-4">
+        <h2 className="text-sm md:text-lg lg:text-xl font-semibold text-[#006452] mb-3 sm:mb-4">
           We help you find and compare the best interior companies, designers and carpenters
         </h2>
         <div className={`relative bg-[#006452] text-white rounded-full flex items-center p-3 md:p-3 shadow-lg ${showValidationError ? 'ring-2 ring-red-500' : ''}`}>
@@ -349,13 +349,13 @@ const Search = ({ onSearch }) => {
         </div>
         
         {/* Helper text for required fields - show in red when validation error occurs */}
-        <div className={`text-sm ${showValidationError ? 'text-red-500 font-medium' : 'text-gray-500'} mb-2 mt-2`}>
+        <div className={`text-xs sm:text-sm ${showValidationError ? 'text-red-500 font-medium' : 'text-gray-500'} mb-2 mt-2`}>
           <span className="text-red-500">*</span> Please fill in at least one field before searching
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
           <div>
-            <label className={`block text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Space Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -374,7 +374,7 @@ const Search = ({ onSearch }) => {
           </div>
           
           <div>
-            <label className={`block text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Project Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -404,7 +404,7 @@ const Search = ({ onSearch }) => {
           </div>
           
           <div>
-            <label className={`block text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Size <span className="text-red-500">*</span>
             </label>
             <select
@@ -435,7 +435,7 @@ const Search = ({ onSearch }) => {
           </div>
           
           <div>
-            <label className={`block text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Price Range <span className="text-red-500">*</span>
             </label>
             <select

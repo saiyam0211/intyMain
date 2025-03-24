@@ -760,8 +760,8 @@ export default function ResidentialSpace() {
           <div className="flex flex-col sm:flex-row items-center">
             <h2
               className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal leading-tight ${spaceType === "Residential"
-                ? "text-3xl sm:text-4xl md:text-[64px] opacity-100"
-                : "text-xl sm:text-2xl md:text-[20px] opacity-60 hover:opacity-80"
+                ? "text-2xl sm:text-4xl md:text-[64px] opacity-100"
+                : "text-base sm:text-2xl md:text-[20px] opacity-60 hover:opacity-80"
                 }`}
               onClick={() => handleSpaceTypeChange("Residential")}
             >
@@ -773,8 +773,8 @@ export default function ResidentialSpace() {
             <div className="w-20 h-0.5 bg-white my-2 sm:hidden"></div>
             <h3
               className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal leading-tight ${spaceType === "Commercial"
-                ? "text-3xl sm:text-4xl md:text-[64px] opacity-100"
-                : "text-xl sm:text-2xl md:text-[20px] opacity-60 hover:opacity-80"
+                ? "text-2xl sm:text-4xl md:text-[64px] opacity-100"
+                : "text-base sm:text-2xl md:text-[20px] opacity-60 hover:opacity-80"
                 }`}
               onClick={() => handleSpaceTypeChange("Commercial")}
             >
@@ -807,7 +807,7 @@ export default function ResidentialSpace() {
 
         {!loading && !error && !userLocation && (
           <div className="text-center my-12 p-6 bg-gray-50 rounded-lg">
-            <p className="text-xl text-gray-600">Please select a location to see available companies.</p>
+            <p className="text-lg sm:text-xl text-gray-600">Please select a location to see available companies.</p>
           </div>
         )}
 
@@ -859,10 +859,10 @@ export default function ResidentialSpace() {
               </div>
             ) : (
               <div className="text-center my-12 p-6 bg-gray-50 rounded-lg w-full max-w-3xl">
-                <p className="text-xl text-gray-600">
+                <p className="text-lg sm:text-xl text-gray-600">
                   No companies found in {userLocation} matching your search criteria.
                 </p>
-                <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
                 {/* Debug info */}
                 <div className="mt-4 p-2 border border-gray-300 bg-gray-100 text-xs text-left">
                   <p>Debug Info:</p>

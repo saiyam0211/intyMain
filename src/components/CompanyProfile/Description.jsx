@@ -125,7 +125,7 @@ const Description = ({ company }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   <Counter target={stat.value} />
                   {stat.value !== 2023 && '+'}
                 </p>

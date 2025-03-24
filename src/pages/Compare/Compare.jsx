@@ -478,7 +478,7 @@ const Compare = () => {
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[rgba(250,250,250,0.85)] to-[rgba(0,100,82,0.85)]"></div>
-        <h2 className="z-50 font-inter font-black text-2xl sm:text-3xl md:text-5xl leading-tight text-white text-center">
+        <h2 className="z-50 font-inter font-black text-xl sm:text-3xl md:text-5xl leading-tight text-white text-center">
           Compare Companies
         </h2>
       </section>
@@ -559,7 +559,7 @@ const Compare = () => {
                       key={rowIndex}
                       className="grid grid-cols-4 gap-6 relative"
                     >
-                      <div className="p-2 sm:p-4 bg-white font-bold flex items-center justify-start text-sm sm:text-base min-w-[200px]">
+                      <div className="p-2 sm:p-4 bg-white font-bold flex items-center justify-start text-xs sm:text-sm md:text-base min-w-[200px]">
                         {row.label}
                       </div>
                       {/* Add horizontal line with fixed width calculation */}
@@ -585,14 +585,14 @@ const Compare = () => {
                                   : idx === 1
                                   ? "bg-orange-200"
                                   : "bg-blue-200"
-                              } flex items-center justify-center font-semibold text-sm sm:text-base min-w-[200px]`}
+                              } flex items-center justify-center font-semibold text-xs sm:text-base min-w-[200px]`}
                             >
                               {row.isImage ? (
                                 <div className="w-full h-[200px] sm:h-[280px] md:h-[320px]">
                                   <CompanyImagesCarousel company={company} />
                                 </div>
                               ) : (
-                                <div className="text-sm sm:text-base md:text-lg font-semibold break-words">
+                                <div className="text-xs sm:text-base md:text-lg font-semibold break-words">
                                   {row.render ? 
                                     row.render(getCompanyValue(company, row), company || {}) : 
                                     getCompanyValue(company, row)}
@@ -679,7 +679,7 @@ const Compare = () => {
                       key={rowIndex}
                       className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-[19px] relative"
                     >
-                      <div className="p-2 sm:p-4 bg-white font-bold flex items-center justify-start text-sm sm:text-base">
+                      <div className="p-2 sm:p-4 bg-white font-bold flex items-center justify-start text-xs sm:text-sm md:text-base">
                         {row.label}
                       </div>
                       {/* Add horizontal line with fixed width calculation */}
@@ -705,14 +705,14 @@ const Compare = () => {
                                   : idx === 1
                                   ? "bg-orange-200"
                                   : "bg-blue-200"
-                              } flex items-center justify-center font-semibold text-sm sm:text-base`}
+                              } flex items-center justify-center font-semibold text-xs sm:text-base`}
                             >
                               {row.isImage ? (
                                 <div className="w-full h-[200px] sm:h-[280px] md:h-[320px]">
                                   <CompanyImagesCarousel company={company} />
                                 </div>
                               ) : (
-                                <div className="text-sm sm:text-base md:text-lg font-semibold break-words">
+                                <div className="text-xs sm:text-base md:text-lg font-semibold break-words">
                                   {row.render ? 
                                     row.render(getCompanyValue(company, row), company || {}) : 
                                     getCompanyValue(company, row)}
@@ -730,7 +730,7 @@ const Compare = () => {
         )}
 
         {/* Mobile-specific instructions */}
-        <div className="md:hidden mt-4 p-3 bg-blue-50 text-blue-800 rounded text-sm">
+        <div className="md:hidden mt-4 p-3 bg-blue-50 text-blue-800 rounded text-xs sm:text-sm">
           <p>Swipe horizontally to view the full comparison table.</p>
         </div>
       </div>
