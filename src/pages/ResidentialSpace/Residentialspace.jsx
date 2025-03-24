@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from "react-toastify"; // Import Toast
@@ -478,8 +478,11 @@ export default function ResidentialSpace() {
       // Ensure we have the latest spaceType
       const currentSpaceType = filters.type || spaceType;
 
+      // Use a larger limit for non-logged in users to ensure we get enough matches
+      const limit = isSignedIn ? ITEMS_PER_PAGE : 15;
+
       // Construct the API URL with query parameters
-      let apiUrl = `${API_URL}?page=${page}&limit=${ITEMS_PER_PAGE}`;
+      let apiUrl = `${API_URL}?page=${page}&limit=${limit}`;
 
       // Add filters to the URL if they exist
       if (filters.search) apiUrl += `&search=${encodeURIComponent(filters.search)}`;
@@ -806,8 +809,9 @@ export default function ResidentialSpace() {
           <div className="flex flex-col items-center w-full">
             {companies.length > 0 ? (
               <div className="w-full max-w-6xl px-4 md:px-8 lg:px-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {companies.map((company) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+                  {/* For non-logged-in users, only take first 3 companies from all pages */}
+                  {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
                     <CompanyCard
                       key={company._id}
                       company={company}
@@ -815,6 +819,37 @@ export default function ResidentialSpace() {
                     />
                   ))}
                 </div>
+                
+                {/* Login card for non-logged-in users if more companies exist */}
+                {!isSignedIn && companies.length > 3 && (
+                  <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-8 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white p-4 rounded-full mb-4">
+                        <img src={lock} alt="Lock" className="w-10 h-10" />
+                      </div>
+                      <h3 className="text-white text-2xl font-bold mb-2">
+                        {companies.length - 3} More Companies Available
+                      </h3>
+                      <p className="text-white/90 mb-6 max-w-lg">
+                        Create a free account to unlock all companies matching your search criteria and access advanced comparison features.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <button 
+                          onClick={() => navigate('/login')}
+                          className="bg-white text-[#006452] hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold shadow-lg transition-all"
+                        >
+                          Login
+                        </button>
+                        <button 
+                          onClick={() => navigate('/signup')}
+                          className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-all"
+                        >
+                          Sign Up
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center my-12 p-6 bg-gray-50 rounded-lg w-full max-w-3xl">
@@ -833,7 +868,8 @@ export default function ResidentialSpace() {
               </div>
             )}
 
-            {companies.length > 0 && (
+            {/* Show pagination only for logged-in users */}
+            {companies.length > 0 && isSignedIn && (
               <div>
                 <Pagination
                   currentPage={currentPage}
