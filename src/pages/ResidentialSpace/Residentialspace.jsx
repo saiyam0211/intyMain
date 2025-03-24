@@ -747,29 +747,32 @@ export default function ResidentialSpace() {
       )}
 
       <section
-        className="relative h-[515px] bg-cover bg-center text-white flex items-center justify-center"
+        className="relative h-[300px] sm:h-[400px] md:h-[515px] bg-cover bg-center text-white flex items-center justify-center"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[rgba(250,250,250,0.85)] to-[rgba(0,100,82,0.85)]"></div>
-        <div className="z-2 flex flex-col items-center">
-          <div className="flex items-center">
+        <div className="z-2 flex flex-col items-center px-4 text-center">
+          <div className="flex flex-col sm:flex-row items-center">
             <h2
-              className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal ${spaceType === "Residential"
-                ? "text-4xl md:text-[64px] leading-[77.45px] opacity-100"
-                : "text-2xl md:text-[20px] leading-[77.45px] opacity-60 hover:opacity-80"
-                }`}
+              className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal ${
+                spaceType === "Residential"
+                  ? "text-3xl sm:text-4xl md:text-[64px] leading-tight md:leading-[77.45px] opacity-100"
+                  : "text-xl sm:text-2xl md:text-[20px] leading-tight md:leading-[77.45px] opacity-60 hover:opacity-80"
+              }`}
               onClick={() => handleSpaceTypeChange("Residential")}
             >
               Residential Space
             </h2>
-            <h1 className="font-inter font-black mx-2 text-4xl md:text-[64px] leading-[77.45px] tracking-normal text-white">
+            <h1 className="font-inter font-black mx-2 hidden sm:block text-4xl md:text-[64px] leading-[77.45px] tracking-normal text-white">
               |
             </h1>
+            <span className="w-20 h-0.5 bg-white my-2 sm:hidden"></span>
             <h3
-              className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal ${spaceType === "Commercial"
-                ? "text-4xl md:text-[64px] leading-[77.45px] opacity-100"
-                : "text-2xl md:text-[20px] leading-[77.45px] opacity-60 hover:opacity-80"
-                }`}
+              className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal ${
+                spaceType === "Commercial"
+                  ? "text-3xl sm:text-4xl md:text-[64px] leading-tight md:leading-[77.45px] opacity-100"
+                  : "text-xl sm:text-2xl md:text-[20px] leading-tight md:leading-[77.45px] opacity-60 hover:opacity-80"
+              }`}
               onClick={() => handleSpaceTypeChange("Commercial")}
             >
               Commercial Space
