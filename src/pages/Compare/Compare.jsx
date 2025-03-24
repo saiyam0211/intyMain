@@ -276,9 +276,40 @@ const Compare = () => {
     },
     {
       key: "price",
-      label: "Price Range",
+      label: "Price Range per 1000 sq ft",
       valueKey: "minMaxBudget",
       defaultValue: "N/A",
+      getValue: (company) => {
+        console.log('Company price data:', {
+          name: company.name,
+          basicPrice: company.basicPrice,
+          luxuryPrice: company.luxuryPrice,
+          minMaxBudget: company.minMaxBudget
+        });
+        
+        // Check if company has both basicPrice and luxuryPrice
+        if (company.basicPrice !== undefined && company.luxuryPrice !== undefined) {
+          const basicPricePerK = company.basicPrice * 1000;
+          const luxuryPricePerK = company.luxuryPrice * 1000;
+          
+          // Format numbers with commas for Indian numbering system (e.g., 1,00,000)
+          const formatPrice = (price) => {
+            return price.toLocaleString('en-IN');
+          };
+          
+          console.log('Calculated price range:', `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`);
+          return `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`;
+        }
+        
+        // Fall back to the minMaxBudget if it exists
+        if (company.minMaxBudget) {
+          console.log('Using minMaxBudget fallback:', company.minMaxBudget);
+          return company.minMaxBudget;
+        }
+        
+        console.log('No price data found, returning N/A');
+        return "N/A";
+      }
     },
     {
       key: "googleRating",
@@ -328,6 +359,7 @@ const Compare = () => {
     }
     
     if (metric.getValue) {
+      console.log('Using getValue function for metric:', metric.key);
       return metric.getValue(company);
     }
     
