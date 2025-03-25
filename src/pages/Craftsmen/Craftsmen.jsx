@@ -151,26 +151,27 @@ const Craftsmen = () => {
       )}
 
       {/* Carousel & Filtered Craftsman Cards */}
-      <div className="flex flex-col items-center space-y-8 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
+      <div className="flex flex-col space-y-16 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto mb-16">
         {!loading && filteredCraftsmen.length > 0 && filteredCraftsmen.map(craftsman => (
           <div
             key={craftsman._id || craftsman.id}
-            className="w-full flex flex-col md:flex-row items-center justify-center gap-8"
+            className="w-full flex flex-col md:flex-row shadow-lg rounded-lg overflow-hidden"
+            style={{ height: 'auto', minHeight: { md: '380px' } }}
           >
-            <div className='w-full md:w-1/2 max-w-[600px]'>
+            <div className='w-full md:w-1/2 h-[300px] md:h-[380px]'>
               {/* Improved Portfolio Image Handling */}
               {craftsman.portfolio && Array.isArray(craftsman.portfolio) && craftsman.portfolio.length > 0 ? (
-                <div className="carousel-wrapper rounded-lg overflow-hidden shadow-lg">
+                <div className="h-full">
                   <Carousel customImages={craftsman.portfolio} />
                 </div>
               ) : (
                 // Default carousel if no portfolio images
-                <div className="rounded-lg overflow-hidden shadow-lg">
+                <div className="h-full">
                   <Carousel />
                 </div>
               )}
             </div>
-            <div className='w-full md:w-1/2 max-w-[500px]'>
+            <div className='w-full md:w-1/2 h-auto md:h-[380px]'>
               <CraftsmanProfileCard
                 id={craftsman._id || craftsman.id}
                 name={craftsman.name}

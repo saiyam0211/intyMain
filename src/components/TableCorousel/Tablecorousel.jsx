@@ -28,8 +28,8 @@ const TableCorousel = ({ customImages = [] }) => {
    }
 
    return (
-     <div className="relative w-full max-w-[600px] mx-auto">
-       <div className="relative flex justify-center items-center">
+     <div className="relative w-full h-full">
+       <div className="relative flex justify-center items-center h-full">
          {/* Previous button - only show if more than one image */}
          {carouselImages.length > 1 && (
            <button
@@ -43,7 +43,8 @@ const TableCorousel = ({ customImages = [] }) => {
          <img
            src={carouselImages[currentIndex]}
            alt={`Portfolio Image ${currentIndex + 1}`}
-           className="w-full md:h-[313px] sm:h-80 object-cover s:rounded-t-md md:rounded-l-md lg:rounded-l-md"
+           className="w-full h-full object-cover"
+           style={{ height: '100%', objectFit: 'cover' }}
          />
          
          {/* Next button - only show if more than one image */}

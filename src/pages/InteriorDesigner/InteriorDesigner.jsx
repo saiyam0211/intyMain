@@ -196,24 +196,27 @@ const InteriorDesigner = () => {
       )}
 
       {/* Carousel & Filtered Designer Cards */}
-      <div className="flex flex-col space-y-8 px-4 md:px-8 lg:px-16">
+      <div className="flex flex-col space-y-16 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto mb-16">
         {!loading && filteredDesigners.length > 0 && filteredDesigners.map(designer => (
           <div
             key={designer._id || designer.id}
-            className="w-full flex flex-col md:flex-row justify-center items-center"
+            className="w-full flex flex-col md:flex-row shadow-lg rounded-lg overflow-hidden"
+            style={{ height: 'auto', minHeight: { md: '380px' } }}
           >
-            <div className='w-full max-w-[600px]'>
+            <div className='w-full md:w-1/2 h-[300px] md:h-[380px]'>
               {/* Improved Portfolio Image Handling */}
               {designer.portfolio && Array.isArray(designer.portfolio) && designer.portfolio.length > 0 ? (
-                <div className="carousel-wrapper">
+                <div className="h-full">
                   <Carousel customImages={designer.portfolio} />
                 </div>
               ) : (
                 // Default carousel if no portfolio images
-                <Carousel />
+                <div className="h-full">
+                  <Carousel />
+                </div>
               )}
             </div>
-            <div className='w-full max-w-[500px]'>
+            <div className='w-full md:w-1/2 h-auto md:h-[380px]'>
               <ProfileCard
                 id={designer._id || designer.id}
                 name={designer.name}
