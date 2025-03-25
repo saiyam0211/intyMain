@@ -15,7 +15,7 @@ const Hero = () => {
   >
     {/* Left Content */}
     <div className="max-w-xl text-white text-center lg:text-left lg:ml-16"  data-aos="fade-up">
-      <h1 className="text-4xl pt-2 sm:text-5xl md:text-6xl lg:text-6xl font-bold">
+      <h1 className="text-4xl pt-2 sm:text-5xl md:text-6xl lg:text-6xl font-bold welcome-text">
         Welcome to Inty
       </h1>
       <p className="mt-4 text-xl sm:text-2xl md:text-2xl">

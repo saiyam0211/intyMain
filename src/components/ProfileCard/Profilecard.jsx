@@ -5,8 +5,7 @@ import ContactDetailsModal from "../ContactDetailsModal/ContactDetailsModal";
 import axios from 'axios';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { SignIn } from '@clerk/clerk-react';
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/router';
+import { Button } from "../../components/ui/Button";
 import ScheduleMeeting from '../ScheduleMeeting/ScheduleMeeting';
 
 const ProfileCard = ({
@@ -194,8 +193,16 @@ const ProfileCard = ({
   const maskedEmail = maskEmail(email);
   const maskedPhone = maskPhone(phoneNumber);
 
+  // Create profile object for ScheduleMeeting component
+  const profile = {
+    id,
+    name,
+    email,
+    phoneNumber
+  };
+
   return (
-    <>
+    <div className="relative group w-full sm:w-[350px] h-[600px] bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 mt-8">
       <div className="bg-[rgba(0,100,82,1)] md:p-3.5 p-5  md:rounded-r-lg shadow-lg mx-auto md:pl-14 w-full max-w-md sm:max-w-lg ">
         <div className="text-center sm:text-left flex flex-col sm:flex-row justify-between items-center md:gap-4">
           <div className="flex flex-col items-center sm:items-start">
@@ -275,7 +282,7 @@ const ProfileCard = ({
         contactType={contactType}
         onUnlock={() => setIsContactUnlocked(true)}
       />
-    </>
+    </div>
   );
 };
 

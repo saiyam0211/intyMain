@@ -4,10 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faStarHalfAlt,faStar as faLightStar } from "@fortawesome/free-solid-svg-icons";
 import ContactDetailsModal from "../ContactDetailsModal/ContactDetailsModal";
 import axios from 'axios';
-import { useUser, useAuth } from '@clerk/clerk-react';
-import { SignIn } from '@clerk/clerk-react';
-import { Button } from '@/components/ui/button';
-import ScheduleMeeting from '../ScheduleMeeting/ScheduleMeeting';
+import { useUser, useAuth } from "@clerk/clerk-react";
+import { SignIn } from "@clerk/clerk-react";
+import { Button } from "../../components/ui/Button";
+import ScheduleMeeting from "../ScheduleMeeting/ScheduleMeeting";
 
 const CraftsmanProfileCard = ({
   id,
@@ -177,9 +177,9 @@ const CraftsmanProfileCard = ({
     const emptyStars = totalStars - fullStars - (hasHalfStar ? 1 : 0);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
-        <FontAwesomeIcon   
+        <FontAwesomeIcon 
           key={`empty-${i}`}
-          icon={faLightStar} 
+          icon={faLightStar}
           className="text-gray-300"
         />
       );
@@ -259,7 +259,7 @@ const CraftsmanProfileCard = ({
       </div>
 
       <ScheduleMeeting 
-        contact={profile} 
+        contact={{ id, name, email, phoneNumber }} 
         isOpen={isScheduleOpen} 
         onClose={() => setIsScheduleOpen(false)} 
         contactType="craftsman"

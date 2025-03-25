@@ -3,6 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 
 const ScheduleMeeting = ({ company, isOpen, onClose }) => {
+  console.log('ScheduleMeeting rendering:', { isOpen, companyName: company?.name });
   const { isSignedIn, user } = useUser();
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -112,6 +113,20 @@ const ScheduleMeeting = ({ company, isOpen, onClose }) => {
     }
   };
 
+  // Handle close function with error handling
+  const handleClose = () => {
+    console.log('Modal close function called');
+    try {
+      if (typeof onClose === 'function') {
+        onClose();
+      } else {
+        console.error('onClose is not a function', onClose);
+      }
+    } catch (error) {
+      console.error('Error in onClose function:', error);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -206,7 +221,7 @@ const ScheduleMeeting = ({ company, isOpen, onClose }) => {
           <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100 transition-colors mb-2 sm:mb-0"
               disabled={isSubmitting}
             >
