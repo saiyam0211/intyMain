@@ -35,6 +35,17 @@ const CompanyProfile = () => {
       const { data: { companyDetails } } = await axios.get(`${API_URL}/getCompany/${id}`);
       setCompany(companyDetails);
       console.log("Company Details: ", companyDetails);
+      
+      // Log specific details about banner images
+      console.log("Banner Images Array:", companyDetails.bannerImages);
+      
+      // Check for individual bannerImage properties
+      const bannerImageProps = Object.keys(companyDetails).filter(key => key.includes("bannerImage"));
+      console.log("Individual bannerImage properties:", bannerImageProps);
+      bannerImageProps.forEach(key => {
+        console.log(`${key}:`, companyDetails[key]);
+      });
+      
     } catch (err) {
       console.error("Error fetching companies:", err);
       setError(
@@ -51,6 +62,19 @@ const CompanyProfile = () => {
   useEffect(() => {
     if (!id) return;
     getCompanyById();
+    
+    // Direct fetch to check raw API response
+    fetch(`${API_URL}/getCompany/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Direct API Response:", data);
+        if (data.companyDetails) {
+          console.log("Direct bannerImages check:", data.companyDetails.bannerImages);
+        }
+      })
+      .catch(err => {
+        console.error("Error in direct fetch:", err);
+      });
   }, [id]);
 
   const images = [banner, banner, banner, banner];

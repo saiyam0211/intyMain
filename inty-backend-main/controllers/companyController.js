@@ -119,18 +119,27 @@ const getCompanies = async (req, res) => {
 
 const getCompanyById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const company = await Company.findById(id);
-    return res.status(201).json({
-      ok: true,
-      companyDetails: company
+    const companyDetails = await Company.findById(req.params.id);
+    
+    if (!companyDetails) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    // Add detailed logging for banner images
+    console.log(`Company ${companyDetails.name} found - ID: ${companyDetails._id}`);
+    console.log("Banner Images array:", companyDetails.bannerImages);
+    
+    // Check for individual bannerImage fields
+    const bannerProps = Object.keys(companyDetails._doc).filter(key => key.includes('bannerImage'));
+    console.log("Banner image properties:", bannerProps);
+    bannerProps.forEach(prop => {
+      console.log(`${prop}:`, companyDetails[prop]);
     });
+
+    res.json({ companyDetails });
   } catch (error) {
-    console.error('Error in getCompanies:', error);
-    res.status(500).json({
-      message: 'Error fetching companies',
-      error: error.message
-    });
+    console.error('Error retrieving company by ID:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 

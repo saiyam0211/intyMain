@@ -23,14 +23,39 @@ const RollingGallery = ({ autoplay = true, pauseOnHover = true, company }) => {
 
   const [images, setImages] = useState([])
   const [showGrid, setShowGrid] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!company) return;
-    Object.keys(company).forEach((key) => {
-      if (key.includes("bannerImage")) {
-        setImages(prev => [...prev, company[key]]) 
-      }
-    });
+    
+    setIsLoading(true);
+    // Clear images first to avoid duplicates
+    setImages([]);
+    
+    console.log("Company in RollingGallery:", company);
+    console.log("bannerImages property:", company.bannerImages);
+    
+    // Handle bannerImages array (from MongoDB)
+    if (company.bannerImages && Array.isArray(company.bannerImages)) {
+      console.log("Using bannerImages array with", company.bannerImages.length, "images");
+      setImages(company.bannerImages.filter(img => img));
+    } 
+    // Fallback to individual bannerImage properties
+    else {
+      console.log("Falling back to individual bannerImage properties");
+      Object.keys(company).forEach((key) => {
+        if (key.includes("bannerImage") && company[key]) {
+          console.log("Found bannerImage property:", key, company[key]);
+          setImages(prev => [...prev, company[key]]);
+        }
+      });
+    }
+    
+    // Log final images state after processing
+    setTimeout(() => {
+      console.log("Final images state:", images);
+      setIsLoading(false);
+    }, 100);
   }, [company])
 
   // Add pagination state
@@ -43,9 +68,9 @@ const RollingGallery = ({ autoplay = true, pauseOnHover = true, company }) => {
   const currentImages = images?.slice(indexOfFirstImage, indexOfLastImage);
   const totalPages = Math.ceil((images?.length || 0) / imagesPerPage);
 
-  const cylinderWidth = 2400;
+  const cylinderWidth = 3000;
   const faceCount = images.length;
-  const faceWidth = (cylinderWidth / faceCount) * 1.55;
+  const faceWidth = (cylinderWidth / faceCount) * 1.6;
   const radius = cylinderWidth / (2 * Math.PI);
 
   const rotation = useMotionValue(0);
@@ -92,110 +117,120 @@ const RollingGallery = ({ autoplay = true, pauseOnHover = true, company }) => {
   };
 
   return (
-    <div className="w-full mb-30">
-      <h2 className="text-4xl font-bold text-center mb-16 mt-8">
+    <div className="w-full mb-30 px-4 md:px-8 max-w-[1600px] mx-auto">
+      <h2 className="text-4xl font-bold text-center mb-16 mt-12">
         See our previous works
       </h2>
       
-      <div className="flex flex-col min-h-[600px]">
-        {/* Rolling Gallery - Desktop only */}
-        {!showGrid && (
-          <div className="relative hidden md:block h-[500px] w-full overflow-hidden">
-            <div className="absolute top-0 left-0 h-full w-[48px] z-10 bg-gradient-to-l from-transparent to-white" />
-            <div className="absolute top-0 right-0 h-full w-[48px] z-10 bg-gradient-to-r from-transparent to-white" />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#006452]"></div>
+        </div>
+      ) : images.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="text-xl">No gallery images available for this company.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col min-h-[600px] mb-16">
+          {/* Rolling Gallery - Desktop only */}
+          {!showGrid && (
+            <div className="relative hidden md:block h-[600px] w-full overflow-hidden">
+              <div className="absolute top-0 left-0 h-full w-[48px] z-10 bg-gradient-to-l from-transparent to-white" />
+              <div className="absolute top-0 right-0 h-full w-[48px] z-10 bg-gradient-to-r from-transparent to-white" />
 
-            <div className="flex h-full items-center justify-center [perspective:1000px]">
-              <motion.div
-                drag="x"
-                dragElastic={0}
-                onDrag={handleDrag}
-                onDragEnd={handleDragEnd}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                animate={controls}
-                style={{
-                  transform,
-                  rotateY: rotation,
-                  width: cylinderWidth,
-                  transformStyle: "preserve-3d",
-                }}
-                className="flex min-h-[200px] cursor-grab items-center justify-center"
-              >
-                {images?.map((url, i) => (
-                  <div
-                    key={i}
-                    className="group absolute flex h-fit items-center justify-center p-[6%]"
-                    style={{
-                      width: `${faceWidth}px`,
-                      transform: `rotateY(${(360 / faceCount) * i
-                        }deg) translateZ(${radius}px)`,
-                      backfaceVisibility: "hidden",
-                    }}
-                  >
-                    <div className="relative  w-[290px] h-[200px] md:w-[400px] md:h-[300px] rounded-[30px] overflow-hidden shadow-lg transform transition-transform duration-300 group-hover:scale-105">
-                      <img
-                        src={url}
-                        alt={`gallery-${i}`}
-                        className="w-full h-full object-cover border-4 border-white rounded-[30px]"
-                      />
+              <div className="flex h-full items-center justify-center [perspective:1200px]">
+                <motion.div
+                  drag="x"
+                  dragElastic={0}
+                  onDrag={handleDrag}
+                  onDragEnd={handleDragEnd}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  animate={controls}
+                  style={{
+                    transform,
+                    rotateY: rotation,
+                    width: cylinderWidth,
+                    transformStyle: "preserve-3d",
+                  }}
+                  className="flex min-h-[200px] cursor-grab items-center justify-center"
+                >
+                  {images?.map((url, i) => (
+                    <div
+                      key={i}
+                      className="group absolute flex h-fit items-center justify-center p-[6%]"
+                      style={{
+                        width: `${faceWidth}px`,
+                        transform: `rotateY(${(360 / faceCount) * i
+                          }deg) translateZ(${radius}px)`,
+                        backfaceVisibility: "hidden",
+                      }}
+                    >
+                      <div className="relative w-[350px] h-[250px] md:w-[500px] md:h-[375px] rounded-[30px] overflow-hidden shadow-lg transform transition-transform duration-300 group-hover:scale-105">
+                        <img
+                          src={url}
+                          alt={`gallery-${i}`}
+                          className="w-full h-full object-cover border-4 border-white rounded-[30px]"
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </div>
+          )}
+
+          {/* Grid view - Always show on mobile, show on desktop only when showGrid is true */}
+          <div className={`mt-8 px-4 flex-grow ${!showGrid ? 'md:hidden' : ''}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              {/* Show currentImages on mobile, show all images on desktop */}
+              {(window.innerWidth < 768 ? currentImages : images)?.map((url, i) => (
+                <div
+                  key={i}
+                  className="relative rounded-lg overflow-hidden shadow-lg aspect-video hover:shadow-xl transition-shadow"
+                >
+                  <img
+                    src={url}
+                    alt={`gallery-${i}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls - Mobile only */}
+            <div className="md:hidden flex justify-center items-center gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-md bg-teal-600 text-white disabled:bg-gray-300"
+              >
+                Previous
+              </button>
+              <span className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-md bg-teal-600 text-white disabled:bg-gray-300"
+              >
+                Next
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Grid view - Always show on mobile, show on desktop only when showGrid is true */}
-        <div className={`mt-8 px-4 flex-grow ${!showGrid ? 'md:hidden' : ''}`}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Show currentImages on mobile, show all images on desktop */}
-            {(window.innerWidth < 768 ? currentImages : images)?.map((url, i) => (
-              <div
-                key={i}
-                className="relative rounded-lg overflow-hidden shadow-lg aspect-video hover:shadow-xl transition-shadow"
-              >
-                <img
-                  src={url}
-                  alt={`gallery-${i}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination Controls - Mobile only */}
-          <div className="md:hidden flex justify-center items-center gap-2 mt-6">
+          {/* Toggle button - Desktop only */}
+          <div className="hidden md:block text-center mt-8">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md bg-teal-600 text-white disabled:bg-gray-300"
+              onClick={() => setShowGrid(!showGrid)}
+              className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
             >
-              Previous
-            </button>
-            <span className="text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md bg-teal-600 text-white disabled:bg-gray-300"
-            >
-              Next
+              {showGrid ? 'Show As Gallery' : 'Show As Grid'}
             </button>
           </div>
         </div>
-
-        {/* Toggle button - Desktop only */}
-        <div className="hidden md:block text-center mt-8">
-          <button
-            onClick={() => setShowGrid(!showGrid)}
-            className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
-          >
-            {showGrid ? 'Show As Gallery' : 'Show As Grid'}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
