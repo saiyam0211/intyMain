@@ -194,7 +194,7 @@ const ContactDetailsModal = ({ isOpen, onClose, phoneNumber, email, id, contactT
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_QlRKi8hhbOXwiK",
           amount: orderResponse.data.amount,
           currency: orderResponse.data.currency,
-          name: 'Inty',
+          name: 'inty',
           description: `${selectedSubscription.name} - ${selectedSubscription.contactsCount} contacts`,
           order_id: orderResponse.data.orderId,
           handler: function(response) {

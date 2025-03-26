@@ -74,7 +74,7 @@ export default function ResidentialSpace() {
       if (coordinates) {
         console.log("Received exact coordinates:", coordinates);
 
-        // Store the live location data properly to ensure Inty Assured image works
+        // Store the live location data properly to ensure inty Assured image works
         const liveLocationData = {
           latitude: coordinates.lat || coordinates.latitude,
           longitude: coordinates.lng || coordinates.longitude,
@@ -226,7 +226,7 @@ export default function ResidentialSpace() {
     }
 
     // Update document title
-    document.title = `${effectiveSpaceType} Space | Inty`;
+    document.title = `${effectiveSpaceType} Space | inty`;
 
     // Check if we have live location data
     const userLiveLocationStr = localStorage.getItem('userLiveLocation');
@@ -511,7 +511,7 @@ export default function ResidentialSpace() {
         console.log("Received companies:", processedCompanies.length);
         console.log("First company:", processedCompanies[0]);
 
-        // Ensure userLiveLocation is set for proper Inty verified image display
+        // Ensure userLiveLocation is set for proper inty verified image display
         const userLiveLocationStr = localStorage.getItem('userLiveLocation');
         if (!userLiveLocationStr && userLocation) {
           // If we have a location but no live location data, create it
@@ -682,7 +682,7 @@ export default function ResidentialSpace() {
     setSearchParams(params);
 
     // Update document title
-    document.title = `${newSpaceType} Space | Inty`;
+    document.title = `${newSpaceType} Space | inty`;
 
     // Reset to page 1
     setCurrentPage(1);

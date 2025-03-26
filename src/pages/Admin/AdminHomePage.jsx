@@ -111,7 +111,7 @@ const AdminHomePage = () => {
                 <div className="max-w-6xl mx-auto mb-10 text-center">
                     <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Admin Dashboard</h1>
                     <p className="text-gray-600 max-w-2xl mx-auto">
-                        Welcome to the Inty admin panel. Manage your website content, view customer inquiries, and more.
+                        Welcome to the inty admin panel. Manage your website content, view customer inquiries, and more.
                     </p>
                 </div>
 

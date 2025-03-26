@@ -20,7 +20,7 @@ const Footer = () => {
           <div className="text-center sm:text-left space-y-4">
             <img src={logo} alt="Logo" className="h-12 mx-auto sm:mx-0 mb-4" />
             <p className="text-gray-400 text-sm leading-relaxed">
-              Transform your space into something extraordinary with Inty's expert interior design services.
+              Transform your space into something extraordinary with inty's expert interior design services.
             </p>
             <div className="flex justify-center sm:justify-start gap-6 pt-2">
               <a href="https://www.facebook.com/share/1BPc7Pywr5/?mibextid=wwXIfr" 
@@ -106,7 +106,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center sm:text-left">
-              &copy; {new Date().getFullYear()} Inty. All rights reserved.
+              &copy; {new Date().getFullYear()} inty. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <a href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>

@@ -136,6 +136,27 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
+  const navigate = useNavigate();
+
+  // Helper function for background removal in both views
+  const getLogoWithoutBackground = (imageUrl) => {
+    if (!imageUrl) return "";
+    
+    // Check if it's a Cloudinary URL
+    if (imageUrl.includes('cloudinary.com')) {
+      try {
+        // Split and join approach for reliable URL transformation
+        const parts = imageUrl.split('/upload/');
+        if (parts.length === 2) {
+          // Apply background removal effect
+          return parts[0] + '/upload/e_bgremoval/' + parts[1];
+        }
+      } catch (err) {
+        console.error('Error applying background removal:', err);
+      }
+    }
+    return imageUrl;
+  };
 
   const fetchCompanies = async (page = 1, search = "") => {
     try {
@@ -239,12 +260,12 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
       </div>
 
       <div 
-        className="flex items-center justify-center md:h-[460px] md:-translate-y-20 overflow-hidden"
+        className="flex md:hidden items-center justify-center overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="flex items-center w-[100%] md:w-[90%] m-auto gap-8 overflow-x-hidden">
+        <div className="flex items-center w-[100%] m-auto gap-8 overflow-x-hidden">
           <button
             onClick={handlePrevious}
             disabled={isAnimating}
@@ -278,6 +299,89 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
             <ChevronRight className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
           </button>
         </div>
+      </div>
+      
+      {/* Desktop view - horizontal scrollable cards */}
+      <div className="hidden md:block relative px-8 mx-auto max-w-7xl">
+        <button
+          onClick={handlePrevious}
+          disabled={isAnimating}
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
+        >
+          <ChevronLeft className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+        </button>
+        
+        <div className="overflow-hidden px-8">
+          <div className="flex gap-6 transition-transform duration-700" 
+               style={{ transform: `translateX(-${currentIndex * (300 + 24)}px)` }}>
+            {companies?.map((card, index) => {
+              if (card.show) return (
+                <div key={card._id} className="flex-shrink-0 w-[300px]">
+                  <div className="bg-white rounded-lg shadow-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-1">
+                        <img src={googlereview} alt="Google Icon" className="w-10" />
+                        <span className="text-sm text-gray-600">{card.googleReviews} Reviews</span>
+                        <div className="flex items-center gap-1">
+                          {[...Array(Math.min(5, Math.max(1, Math.round(card.reviews / 10))))].map((_, idx) => (
+                            <Star key={idx} className="w-2 h-2 text-orange-500" fill="currentColor" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center mb-4 bg-white">
+                      <img 
+                        src={getLogoWithoutBackground(card.logo)} 
+                        alt="Interior Company Logo" 
+                        className="h-12 object-contain"
+                        onError={(e) => {
+                          console.error("Error loading logo with background removal");
+                          e.target.onerror = null;
+                          e.target.src = card.logo;
+                        }}
+                      />
+                    </div>
+
+                    <div className="bg-[#006452] p-4 rounded-lg">
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-2xl font-bold text-white">{card.projects}+</span>
+                        </div>
+                        <span className="text-sm text-white">Projects Completed</span>
+                      </div>
+
+                      <div className="mb-4">
+                        <div className="text-2xl font-bold text-white">{card.experience}+</div>
+                        <span className="text-sm text-white">Years of Experience</span>
+                      </div>
+
+                      <div className="mb-4">
+                        <div className="text-2xl font-bold text-white">{card.branches}+</div>
+                        <span className="text-sm text-white">Branches</span>
+                      </div>
+
+                      <button className="mt-1 p-2 cursor-pointer bg-white w-full rounded-4xl text-blue-500" onClick={() => {
+                        navigate(`/CompanyProfile/${card._id}`)
+                      }}>
+                        Know More
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+              return null;
+            })}
+          </div>
+        </div>
+        
+        <button
+          onClick={handleNext}
+          disabled={isAnimating}
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
+        >
+          <ChevronRight className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+        </button>
       </div>
       
       {/* Pagination dots for mobile */}
