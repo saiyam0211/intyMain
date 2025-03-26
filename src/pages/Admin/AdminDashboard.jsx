@@ -1140,7 +1140,7 @@ const AdminDashboard = () => {
       setFormData(prev => {
         const updatedData = {
           ...prev,
-          bannerImages: [...prev.bannerImages, ...uploadedUrls].slice(0, 10)
+          bannerImages: [...prev.bannerImages, ...uploadedUrls]
         };
 
         // Save to localStorage

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import Header from "../../components/CompanyProfile/Header";
 import Description from "../../components/CompanyProfile/Description";
-import RollingGallery from "../../components/CompanyProfile/RollingGallery/RollingGallery";
+import MasonryGallery from "../../components/CompanyProfile/MasonryGallery";
 import TestimonialCarousel from "../../components/TestimonialCarousel/TestimonialCarousel";
 import CompanyTestimonials from "../../components/TestimonialCarousel/CompanyTestimonials";
 import Footer from "../../components/Footer/Footer";
@@ -11,10 +11,11 @@ import banner from "../../assets/banner.png";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { apiClient, API_URL } from "../../services/apiService";
 
 // const API_URL = "https://inty-backend-6wzp.onrender.com/api/companies";
 // const API_URL = "https://inty-backend-2.onrender.com/api/companies";
-const API_URL = "https://inty-backend.onrender.com/api/companies";
+// const API_URL = "https://inty-backend.onrender.com/api/companies";
 
 
 const CompanyProfile = () => {
@@ -32,7 +33,7 @@ const CompanyProfile = () => {
   const getCompanyById = async () => {
     try {
       setLoading(true);
-      const { data: { companyDetails } } = await axios.get(`${API_URL}/getCompany/${id}`);
+      const { data: { companyDetails } } = await apiClient.get(`/companies/getCompany/${id}`);
       setCompany(companyDetails);
       console.log("Company Details: ", companyDetails);
       
@@ -62,19 +63,6 @@ const CompanyProfile = () => {
   useEffect(() => {
     if (!id) return;
     getCompanyById();
-    
-    // Direct fetch to check raw API response
-    fetch(`${API_URL}/getCompany/${id}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log("Direct API Response:", data);
-        if (data.companyDetails) {
-          console.log("Direct bannerImages check:", data.companyDetails.bannerImages);
-        }
-      })
-      .catch(err => {
-        console.error("Error in direct fetch:", err);
-      });
   }, [id]);
 
   const images = [banner, banner, banner, banner];
@@ -105,7 +93,7 @@ const CompanyProfile = () => {
       </div>
       <Header company={company} isEnquiryOpen={isEnquiryOpen} setIsEnquiryOpen={setIsEnquiryOpen} />
       <Description company={company} />
-      <RollingGallery company={company} autoplay={true} pauseOnHover={true} />
+      <MasonryGallery company={company} />
       
       {/* Display company-specific testimonials if available */}
       {hasCompanyTestimonials && (

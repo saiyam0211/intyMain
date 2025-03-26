@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import axios from "axios"
 import { useNavigate, useParams } from 'react-router-dom'
-
-
+import { uploadClient, API_URL } from '../../services/apiService'
 
 const EditCompany = () => {
-
-    // Set API_URL
-    //const API_URL = "https://inty-backend-6wzp.onrender.com/api";
-    // const API_URL = "https://inty-backend-2.onrender.com/api";
-    const API_URL = "https://inty-backend.onrender.com/api";
+    // No need to define API_URL here anymore
     const { id } = useParams();
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -36,7 +30,7 @@ const EditCompany = () => {
         phoneNumber: "",
         minMaxBudget: "",
         type: [],
-        bannerImages: Array(10).fill(null),
+        bannerImages: [],
         discountsOfferTimeline: "",
         numberOfProjectsCompleted: "",
         digitalBrochure: null,
@@ -70,7 +64,7 @@ const EditCompany = () => {
 
     // Add these new state variables
     const [existingLogo, setExistingLogo] = useState(null);
-    const [existingBannerImages, setExistingBannerImages] = useState(Array(10).fill(null));
+    const [existingBannerImages, setExistingBannerImages] = useState([]);
 
     // Inside the EditCompany component, add these new state variables
     const [citySearchInput, setCitySearchInput] = useState("");
@@ -85,7 +79,7 @@ const EditCompany = () => {
     const getCompanyById = async () => {
         try {
             setLoading(true);
-            const { data: { companyDetails } } = await axios.get(`${API_URL}/companies/getCompany/${id}`);
+            const { data: { companyDetails } } = await uploadClient.get(`/companies/getCompany/${id}`);
             setCompany(companyDetails);
             console.log("Company Details: ", companyDetails);
 
@@ -95,22 +89,34 @@ const EditCompany = () => {
             }
 
             // Set existing banner images
-            const bannerImagesArray = Array(10).fill(null);
+            const bannerImagesArray = [];
             // Check for individual banner image fields in the API response
-            for (let i = 0; i < 10; i++) {
+            let i = 0;
+            let hasMoreImages = true;
+            
+            while (hasMoreImages) {
                 const bannerKey = `bannerImage${i+1}`;
                 if (companyDetails[bannerKey]) {
-                    bannerImagesArray[i] = companyDetails[bannerKey];
+                    bannerImagesArray.push(companyDetails[bannerKey]);
+                    i++;
+                } else {
+                    hasMoreImages = false;
                 }
             }
             
             // Also check for array of banner images if that's how they're stored
             if (companyDetails.bannerImages && Array.isArray(companyDetails.bannerImages)) {
-                companyDetails.bannerImages.forEach((img, idx) => {
-                    if (idx < 10 && img) {
-                        bannerImagesArray[idx] = img;
-                    }
-                });
+                // If we don't have any images yet, use the array directly
+                if (bannerImagesArray.length === 0) {
+                    bannerImagesArray.push(...companyDetails.bannerImages.filter(img => img));
+                } else {
+                    // Otherwise append any additional images
+                    companyDetails.bannerImages.forEach((img) => {
+                        if (img && !bannerImagesArray.includes(img)) {
+                            bannerImagesArray.push(img);
+                        }
+                    });
+                }
             }
             
             setExistingBannerImages(bannerImagesArray);
@@ -170,7 +176,7 @@ const EditCompany = () => {
                 phoneNumber: companyDetails.phoneNumber || "",
                 minMaxBudget: companyDetails.minMaxBudget || "",
                 type: processedTypes,
-                bannerImages: Array(10).fill(null),
+                bannerImages: [],
                 discountsOfferTimeline: companyDetails.discountsOfferTimeline || "",
                 numberOfProjectsCompleted: companyDetails.numberOfProjectsCompleted || "",
                 digitalBrochure: null,
@@ -288,17 +294,6 @@ const EditCompany = () => {
 
     // Payed status options
     const payedStatusOptions = ["Paid", "Pending", "Not Paid"];
-
-
-
-    // useEffect(() => {
-    //     // Check if user is authenticated
-    //     const token = localStorage.getItem("adminToken");
-    //     if (!token) {
-    //         navigate("/admin/login");
-    //     }
-    //     setLoading(false);
-    // }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("adminToken");
@@ -604,12 +599,26 @@ const EditCompany = () => {
         
         Object.keys(sanitizedFormData).forEach((key) => {
             if (key === 'bannerImages') {
-                sanitizedFormData.bannerImages.forEach((file, index) => {
+                // Instead of using dynamic indices which might exceed what the backend expects
+                // Append each banner image with the standardized field names expected by the backend
+                sanitizedFormData.bannerImages.forEach((file) => {
                     if (file) {
-                        console.log(`bannerImage${index}: ${file.name}`);
-                        data.append(`bannerImage${index}`, file);
+                        // Use bannerImages[] format which works better with backend Multer configuration
+                        console.log(`Appending bannerImage: ${file.name}`);
+                        data.append(`bannerImages`, file);
                     }
                 });
+                
+                // Include existing banner images as a separate field
+                const existingBannerImagesArray = existingBannerImages
+                    .filter(image => image && typeof image === 'string')
+                    .map(url => url);
+                
+                if (existingBannerImagesArray.length > 0) {
+                    // Send as a JSON string
+                    data.append('existingBannerImagesUrls', JSON.stringify(existingBannerImagesArray));
+                    console.log('Sending existing banner images:', existingBannerImagesArray);
+                }
             } else if (key === 'availableCities') {
                 // Handle availableCities array
                 if (Array.isArray(sanitizedFormData.availableCities)) {
@@ -652,7 +661,7 @@ const EditCompany = () => {
                 console.log(`Skipping ${key} field to avoid potential issues`);
             } else if (sanitizedFormData[key] !== null && sanitizedFormData[key] !== '') {
                 if (sanitizedFormData[key] instanceof File) {
-                    console.log(`${key}: ${sanitizedFormData[key].name}`);
+                    console.log(`${key}: File - ${sanitizedFormData[key].name} (${sanitizedFormData[key].size} bytes)`);
                     data.append(key, sanitizedFormData[key]);
                 } else {
                     console.log(`${key}: ${sanitizedFormData[key]}`);
@@ -664,15 +673,31 @@ const EditCompany = () => {
         try {
             console.log("Submitting to URL:", `${API_URL}/companies/edit/${id}`);
 
+            // Debug what's being sent
+            console.log("Form data entries:");
+            for (let [key, value] of data.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+                } else if (key.includes('Urls') && typeof value === 'string') {
+                    console.log(`${key}: JSON data (length: ${value.length})`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
+            }
+
             const token = localStorage.getItem("adminToken");
             console.log("Using token:", token ? "Token exists" : "No token");
 
-            const response = await axios.put(`${API_URL}/companies/edit/${id}`, data, {
+            const response = await uploadClient.put(`/companies/edit/${id}`, data, {
                 headers: {
                     Authorization: token ? `Bearer ${token}` : '',
-                    "Content-Type": "multipart/form-data",
+                    // Remove explicit Content-Type to let browser set it automatically with proper boundary
                 },
                 timeout: 120000, // 2min second timeout
+                // Add additional debugging
+                onUploadProgress: (progressEvent) => {
+                    console.log(`Upload Progress: ${Math.round((progressEvent.loaded / progressEvent.total) * 100)}%`);
+                }
             });
 
             console.log("Response received:", response);
@@ -697,7 +722,7 @@ const EditCompany = () => {
                 phoneNumber: "",
                 minMaxBudget: "",
                 type: [],
-                bannerImages: Array(10).fill(null),
+                bannerImages: [],
                 discountsOfferTimeline: "",
                 numberOfProjectsCompleted: "",
                 digitalBrochure: null,
@@ -770,7 +795,7 @@ const EditCompany = () => {
             const token = localStorage.getItem("adminToken");
             console.log("Using token:", token ? "Token exists" : "No token");
 
-            const response = await axios.delete(`${API_URL}/companies/delete/${id}`, {
+            const response = await uploadClient.delete(`/companies/delete/${id}`, {
                 headers: {
                     Authorization: token ? `Bearer ${token}` : '',
                 },
@@ -1195,18 +1220,16 @@ const EditCompany = () => {
                                             // Focus the file input for that slot
                                             const fileInput = document.getElementById(`bannerImage${emptyIndex}`);
                                             if (fileInput) fileInput.click();
-                                        } else if (existingBannerImages.length < 10) {
+                                        } else {
                                             // Add a new empty slot
                                             setExistingBannerImages([...existingBannerImages, null]);
-                                        } else {
-                                            alert("Maximum 10 banner images allowed. Please remove one to add another.");
                                         }
                                     }}
                                 >
                                     Add Banner Image
                                 </button>
                                 <span className="ml-2 text-sm text-gray-500">
-                                    {existingBannerImages.filter(Boolean).length} of 10 banner images used
+                                    {existingBannerImages.filter(Boolean).length} banner images used
                                 </span>
                             </div>
                             

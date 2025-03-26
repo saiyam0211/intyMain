@@ -1,0 +1,112 @@
+.masonry-grid {
+  display: flex;
+  width: 100%;
+  margin-left: -16px; /* Same as columnGap */
+}
+
+.masonry-grid_column {
+  padding-left: 16px; /* Same as columnGap */
+  background-clip: padding-box;
+}
+
+.masonry-item {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  break-inside: avoid;
+  position: relative;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.masonry-item:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+.masonry-item img {
+  display: block;
+  width: 100%;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+/* Add a subtle border to the images */
+.masonry-item img {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.masonry-gallery-container {
+  padding: 10px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Add spacing to properly separate items */
+@media (max-width: 700px) {
+  .masonry-grid {
+    margin-left: -8px;
+  }
+  
+  .masonry-grid_column {
+    padding-left: 8px;
+  }
+  
+  .masonry-item {
+    margin-bottom: 15px;
+  }
+  
+  /* Ensure images scale nicely on mobile */
+  .masonry-item img {
+    height: auto;
+    max-height: 350px;
+    object-fit: cover;
+  }
+}
+
+/* Style for the View More button */
+.masonry-gallery-container button {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.masonry-gallery-container button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 100, 82, 0.3);
+}
+
+.masonry-gallery-container button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 100, 82, 0.2);
+}
+
+/* Enhance mobile view */
+@media (max-width: 768px) {
+  .masonry-gallery-container {
+    padding: 5px;
+  }
+  
+  .masonry-grid {
+    margin-left: -6px;
+  }
+  
+  .masonry-grid_column {
+    padding-left: 6px;
+  }
+  
+  .masonry-item {
+    margin-bottom: 12px;
+  }
+}
+
+/* Custom styling for the zoom image component */
+:root {
+  --rmiz-modal-background: rgba(0, 0, 0, 0.8);
+  --rmiz-modal-z-index: 999;
+  --rmiz-btn-border-radius: 50%;
+}
+
+.masonry-item [data-rmiz-btn-close] {
+  background-color: rgba(255, 255, 255, 0.8);
+} 

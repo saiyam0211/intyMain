@@ -33,6 +33,8 @@
     "react-fast-marquee": "^1.6.5",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
+    "react-masonry-css": "^1.0.16",
+    "react-medium-image-zoom": "^5.2.14",
     "react-responsive-carousel": "^3.2.23",
     "react-router-dom": "^7.2.0",
     "react-slick": "^0.30.3",

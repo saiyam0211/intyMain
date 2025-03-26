@@ -88,12 +88,18 @@ export const CompanyImagesCarousel = ({ company }) => {
       images.push(...company.bannerImages.filter(img => img));
     }
     
-    // Check for individual bannerImage fields (checking up to 10 to ensure we get all)
-    for (let i = 1; i <= 10; i++) {
+    // Check for individual bannerImage fields without a fixed limit
+    let i = 1;
+    let hasMoreImages = true;
+    
+    while (hasMoreImages) {
       const fieldName = `bannerImage${i}`;
       if (company?.[fieldName]) {
         console.log(`Found ${fieldName}:`, company[fieldName]); // Debug log
         images.push(company[fieldName]);
+        i++;
+      } else {
+        hasMoreImages = false;
       }
     }
     
