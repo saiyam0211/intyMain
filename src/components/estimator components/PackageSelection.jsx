@@ -16,8 +16,10 @@ const packages = [
       "Necessary furnishings",
       "Premium Emulsion paint"
     ],
-    bgColor: "bg-[#2c5a2e]",
-    contentBgColor: "bg-[#f0f9e8]"
+    bgColor: "bg-gradient-to-r from-emerald-600 to-green-500",
+    contentBgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    iconBg: "bg-emerald-400"
   },
   { 
     name: "Premium", 
@@ -33,8 +35,10 @@ const packages = [
       "Wide range of furnishings",
       "Royale Shyne/Royale Emulsion paint"
     ],
-    bgColor: "bg-[#1e40af]",
-    contentBgColor: "bg-[#e6f0ff]"
+    bgColor: "bg-gradient-to-r from-blue-600 to-indigo-500",
+    contentBgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    iconBg: "bg-blue-400"
   },
   { 
     name: "Luxury", 
@@ -50,8 +54,10 @@ const packages = [
       "Extensive array of furnishings",
       "Royale Glitz/Royale Shyne paint"
     ],
-    bgColor: "bg-[#713f12]",
-    contentBgColor: "bg-[#fef9c3]"
+    bgColor: "bg-gradient-to-r from-amber-600 to-yellow-500",
+    contentBgColor: "bg-amber-50",
+    borderColor: "border-amber-200",
+    iconBg: "bg-amber-400"
   }
 ];
 
@@ -84,66 +90,66 @@ const PackageSelection = ({ formData, setFormData }) => {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-24 sm:mb-32">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center">
+      <h2 className="text-xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-gray-800">
         Select a Package
       </h2>
       
-      {/* Mobile scrollable view */}
-      <div className="block mt-20 sm:hidden">
-        <div 
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar"
-          style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none'
-          }}
-        >
+      {/* Mobile vertical layout */}
+      <div className="block sm:hidden mt-8 overflow-y-auto max-h-[85vh] pb-4">
+        <div className="flex flex-col space-y-6">
           {packages.map((pkg, index) => (
             <div 
               key={pkg.name}
-              className="flex-shrink-0 w-[90vw] max-w-sm mx-2 snap-start"
-              style={{ scrollSnapAlign: 'start' }}
+              className={`rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${pkg.borderColor} ${
+                selectedPackage === pkg.name 
+                  ? 'ring-2 ring-offset-2 ring-gray-800 transform scale-[1.02]' 
+                  : 'border'
+              }`}
+              onClick={() => handlePackageSelect(pkg)}
             >
-              <div 
-                className={`flex flex-col h-full border border-gray-200 rounded-lg overflow-hidden shadow-lg ${
-                  selectedPackage === pkg.name ? 'ring-2 ring-gray-800' : ''
-                }`}
-                onClick={() => handlePackageSelect(pkg)}
-              >
-                <div className={`${pkg.bgColor} text-white p-3 flex items-center justify-between relative overflow-hidden`}>
-                  <div className="absolute top-0 right-0 w-full h-full">
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <path d="M0 0 L100 100 L100 0 Z" fill="white" fillOpacity="0.1" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium relative z-10">{pkg.name}</h3>
-                  <div className="text-white w-5 h-5 relative z-10">{pkg.icon}</div>
+              <div className={`${pkg.bgColor} text-white p-5 flex items-center justify-between relative overflow-hidden`}>
+                <div className="absolute top-0 right-0 w-full h-full opacity-30">
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0 0 L100 100 L100 0 Z" fill="white" />
+                  </svg>
                 </div>
-                <div className={`${pkg.contentBgColor} p-3 flex-grow flex flex-col`}>
-                  <ul className="space-y-2 mb-4 flex-grow">
-                    {pkg.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <svg className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-xs">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto relative pb-2">
-                    <button
-                      className={`w-24 py-1.5 px-3 border border-gray-800 rounded-full text-gray-800 hover:bg-gray-800 hover:text-white transition-colors duration-200 flex items-center justify-between text-sm ${
-                        selectedPackage === pkg.name ? 'bg-gray-800 text-white' : ''
-                      }`}
-                    >
-                      <span>Select</span>
-                      <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
+                <div className="flex items-center space-x-3">
+                  <div className={`${pkg.iconBg} bg-opacity-90 rounded-full p-2.5 shadow-md`}>
+                    <div className="text-white w-5 h-5">{pkg.icon}</div>
                   </div>
+                  <h3 className="text-lg font-semibold relative z-10">{pkg.name}</h3>
+                </div>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+                  selectedPackage === pkg.name ? 'bg-white' : 'border-2 border-white'
+                }`}>
+                  {selectedPackage === pkg.name && (
+                    <svg className="w-5 h-5 text-gray-800" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className={`${pkg.contentBgColor} p-5`}>
+                <ul className="space-y-3">
+                  {pkg.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start">
+                      <svg className="h-5 w-5 text-green-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6 text-center">
+                  <button
+                    className={`py-2.5 px-8 rounded-full text-sm font-medium transition-all duration-300 shadow-md ${
+                      selectedPackage === pkg.name 
+                        ? 'bg-gray-800 text-white transform scale-105' 
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {selectedPackage === pkg.name ? 'Selected' : 'Select Package'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -152,50 +158,60 @@ const PackageSelection = ({ formData, setFormData }) => {
       </div>
       
       {/* Desktop grid view */}
-      <div className="hidden sm:block sm:mt-20">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-0 relative">
+      <div className="hidden sm:block sm:mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
           {packages.map((pkg, index) => (
             <div 
               key={pkg.name}
-              className={`flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:transform hover:scale-102 cursor-pointer border-t sm:border-t-0 ${
-                index === 0 ? 'sm:rounded-l-lg overflow-hidden sm:border-r' : 
-                index === packages.length - 1 ? 'sm:rounded-r-lg overflow-hidden' : 
-                'sm:border-r'
-              } border-gray-200 relative z-10 ${
-                selectedPackage === pkg.name ? 'sm:bg-gray-50' : ''
+              className={`flex flex-col h-full transition-all duration-300 hover:shadow-xl rounded-xl overflow-hidden ${pkg.borderColor} cursor-pointer ${
+                selectedPackage === pkg.name 
+                  ? 'ring-2 ring-offset-2 ring-gray-800 transform scale-[1.02] shadow-lg border-0' 
+                  : 'border shadow-md hover:transform hover:scale-[1.01]'
               }`}
               onClick={() => handlePackageSelect(pkg)}
             >
-              <div className={`${pkg.bgColor} text-white p-4 flex items-center justify-between relative overflow-hidden`}>
-                <div className="absolute top-0 right-0 w-full h-full">
+              <div className={`${pkg.bgColor} text-white p-5 flex items-center justify-between relative overflow-hidden`}>
+                <div className="absolute top-0 right-0 w-full h-full opacity-30">
                   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0 0 L100 100 L100 0 Z" fill="white" fillOpacity="0.1" />
+                    <path d="M0 0 L100 100 L100 0 Z" fill="white" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium relative z-10">{pkg.name}</h3>
-                <div className="text-white w-6 h-6 relative z-10">{pkg.icon}</div>
+                <div className="flex items-center">
+                  <div className={`${pkg.iconBg} bg-opacity-90 rounded-full p-2.5 mr-3 shadow-md`}>
+                    <div className="text-white w-6 h-6">{pkg.icon}</div>
+                  </div>
+                  <h3 className="text-xl font-semibold relative z-10">{pkg.name}</h3>
+                </div>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+                  selectedPackage === pkg.name ? 'bg-white' : 'border-2 border-white'
+                }`}>
+                  {selectedPackage === pkg.name && (
+                    <svg className="w-5 h-5 text-gray-800" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
               </div>
-              <div className={`${pkg.contentBgColor} p-4 flex-grow flex flex-col`}>
+              <div className={`${pkg.contentBgColor} p-6 flex-grow flex flex-col`}>
                 <ul className="space-y-4 mb-6 flex-grow">
                   {pkg.features.map((feature, index) => (
                     <li key={index} className="flex items-start">
-                      <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-green-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-sm">{feature}</span>
+                      <span className="text-sm text-gray-700">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-auto relative pb-2">
+                <div className="mt-auto pb-2 text-center">
                   <button
-                    className={`w-32 py-2 px-4 border border-gray-800 rounded-full text-gray-800 hover:bg-gray-800 hover:text-white transition-colors duration-200 flex items-center justify-between text-base ${
-                      selectedPackage === pkg.name ? 'bg-gray-800 text-white' : ''
+                    className={`w-full py-2.5 px-4 rounded-full font-medium transition-all duration-300 text-sm ${
+                      selectedPackage === pkg.name 
+                        ? 'bg-gray-800 text-white transform scale-105 shadow-md' 
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <span>Select</span>
-                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    {selectedPackage === pkg.name ? 'Selected' : 'Select Package'}
                   </button>
                 </div>
               </div>
@@ -203,16 +219,16 @@ const PackageSelection = ({ formData, setFormData }) => {
           ))}
         </div>
       </div>
-      {/* CSS for hiding scrollbar */}
-      <style jsx>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      
+      {/* Next button */}
+      <div className="mt-10 mb-16 sm:mb-8 text-center">
+        <button 
+          onClick={handleNext}
+          className="mt-4 bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-900 hover:to-gray-800 text-white font-medium py-3 px-10 sm:px-14 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105"
+        >
+          Continue to Next Step
+        </button>
+      </div>
     </div>
   );
 };

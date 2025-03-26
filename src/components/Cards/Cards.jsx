@@ -465,12 +465,12 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
   }
 
   return (
-    <div className="ml-5 w-[294px] mt-10 h-auto bg-white shadow-2xl rounded-[16px] relative hover:shadow-emerald-950">
+    <div className="w-full sm:w-[294px] mt-10 h-auto bg-white shadow-2xl rounded-[16px] relative hover:shadow-emerald-950 mx-auto">
       {/* Show distance if available, otherwise show top rated badge */}
       {showDistance() && (
-        <div className="absolute bg-[#006452] top-[-35px] left-[-12px] rounded-r-lg flex items-center gap-2 mt-4 ml-3 p-2">
+        <div className="absolute bg-[#006452] top-[-35px] left-[-5px] sm:left-[-12px] rounded-r-lg flex items-center gap-2 mt-4 ml-2 p-2 text-xs sm:text-sm">
           <svg 
-            className="w-4 h-4 text-white" 
+            className="w-3 h-3 sm:w-4 sm:h-4 text-white" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24" 
@@ -489,13 +489,13 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          <div className={`text-sm font-medium ${distance !== null ? 'text-white-600' : 'text-white-400'}`}>
+          <div className={`text-xs sm:text-sm font-medium ${distance !== null ? 'text-white-600' : 'text-white-400'}`}>
             {distance !== null ? (
               <>
                 <span className="font-semibold text-white">{distance}</span> <span className="font-semibold text-white">km away</span>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <span>Calculating distance</span>
                 <span className="flex gap-1">
                   <span className="animate-bounce delay-0">.</span>
@@ -510,9 +510,9 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
       
       {/* "Nearest" badge */}
       {isNearest() && (
-        <div className="absolute bg-orange-500 top-[-35px] right-[-12px] rounded-l-lg flex items-center gap-1 mt-4 mr-3 p-2 z-10">
+        <div className="absolute bg-orange-500 top-[-35px] right-[-5px] sm:right-[-12px] rounded-l-lg flex items-center gap-1 mt-4 mr-2 sm:mr-3 p-2 z-10">
           <svg 
-            className="w-4 h-4 text-white" 
+            className="w-3 h-3 sm:w-4 sm:h-4 text-white" 
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -523,7 +523,7 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
               d="M5.05025 4.05025C7.78392 1.31658 12.2161 1.31658 14.9497 4.05025C17.6834 6.78392 17.6834 11.2161 14.9497 13.9497L10 18.8995L5.05025 13.9497C2.31658 11.2161 2.31658 6.78392 5.05025 4.05025ZM10 11C11.1046 11 12 10.1046 12 9C12 7.89543 11.1046 7 10 7C8.89543 7 8 7.89543 8 9C8 10.1046 8.89543 11 10 11Z"
             />
           </svg>
-          <span className="font-semibold text-white text-sm">Nearest</span>
+          <span className="font-semibold text-white text-xs sm:text-sm">Nearest</span>
         </div>
       )}
       

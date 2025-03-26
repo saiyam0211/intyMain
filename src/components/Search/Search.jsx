@@ -323,19 +323,16 @@ const Search = ({ onSearch }) => {
   };
 
   return (
-    <section className="py-5 mt-10 px-6 md:px-12 lg:px-24 text-center flex justify-center items-center mb-15">
-      <div className="w-full max-w-6xl px-4 text-center" data-aos="fade-up">
-        <h2 className="text-sm md:text-lg lg:text-xl font-semibold text-[#006452] mb-3 sm:mb-4">
-          We help you find and compare the best interior companies, designers and carpenters
-        </h2>
-        <div className={`relative bg-[#006452] text-white rounded-full flex items-center p-3 md:p-3 shadow-lg ${showValidationError ? 'ring-2 ring-red-500' : ''}`}>
+    <section className="max-w-full overflow-hidden">
+      <div className="p-4 md:p-6 rounded-lg shadow-md">
+        <div className="relative flex items-center bg-[#006452] rounded-full overflow-hidden">
           <input
             type="text"
-            placeholder="What you are Looking for..."
-            className="flex-1 bg-transparent outline-none placeholder-white px-4"
+            placeholder="Search interior designers, companies..."
+            className="w-full pl-4 pr-10 py-2 md:py-3 focus:outline-none bg-[#006452] text-white placeholder-gray-300"
             value={searchQuery}
             onChange={handleSearchInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
           />
           <button 
             className={`p-2 ${isSearching ? 'opacity-50' : ''}`} 
@@ -353,7 +350,7 @@ const Search = ({ onSearch }) => {
           <span className="text-red-500">*</span> Please fill in at least one field before searching
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-2">
           <div>
             <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Space Type <span className="text-red-500">*</span>
@@ -462,10 +459,10 @@ const Search = ({ onSearch }) => {
         </div>
 
         {/* Go Button */}
-        <div className="mt-6">
+        <div className="mt-4 md:mt-6 text-center">
           <button
             onClick={handleGoClick}
-            className={`bg-[#006452] hover:bg-[#005345] text-white font-medium py-2 px-12 rounded-full transition-colors duration-300 shadow-md inline-block ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-[#006452] hover:bg-[#005345] text-white font-medium py-2 px-8 md:px-12 rounded-full transition-colors duration-300 shadow-md inline-block ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isSearching}
           >
             {isSearching ? 'Searching...' : 'Go'}

@@ -701,7 +701,7 @@ export default function ResidentialSpace() {
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white overflow-x-hidden">
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar={true} />
 
       <div className="absolute top-0 left-0 w-full bg-transparent z-50">
@@ -728,9 +728,9 @@ export default function ResidentialSpace() {
                 });
               }
             }}
-            className="bg-[#006452] hover:bg-[#005443] text-white px-6 py-3 rounded-lg shadow-lg"
+            className="bg-[#006452] hover:bg-[#005443] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg text-sm sm:text-base"
           >
-            Compare Selected ({compareCount})
+            Compare ({compareCount})
           </Button>
         </div>
       )}
@@ -757,11 +757,11 @@ export default function ResidentialSpace() {
       )}
 
       <section
-        className="relative h-[300px] sm:h-[400px] md:h-[515px] bg-cover bg-center text-white flex items-center justify-center"
+        className="relative h-[300px] sm:h-[400px] md:h-[515px] bg-cover bg-center text-white flex items-center justify-center overflow-hidden"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[rgba(250,250,250,0.85)] to-[rgba(0,100,82,0.85)]"></div>
-        <div className="z-2 flex flex-col items-center px-4">
+        <div className="z-2 flex flex-col items-center px-4 max-w-full">
           <div className="flex flex-col sm:flex-row items-center">
             <h2
               className={`font-inter font-black transition-all duration-300 cursor-pointer text-white tracking-normal leading-tight ${spaceType === "Residential"
@@ -770,7 +770,7 @@ export default function ResidentialSpace() {
                 }`}
               onClick={() => handleSpaceTypeChange("Residential")}
             >
-              Residential Space
+              Residential
             </h2>
             <span className="hidden sm:block font-inter font-black mx-2 text-4xl md:text-[64px] tracking-normal text-white">
               |
@@ -783,7 +783,7 @@ export default function ResidentialSpace() {
                 }`}
               onClick={() => handleSpaceTypeChange("Commercial")}
             >
-              Commercial Space
+              Commercial
             </h3>
           </div>
           <div className="mt-4 text-xs sm:text-sm bg-black bg-opacity-50 px-3 py-1 rounded">
@@ -792,8 +792,8 @@ export default function ResidentialSpace() {
         </div>
       </section>
 
-      <div className="p-4">
-        <div className="bg-white p-4">
+      <div className="px-2 sm:px-4 md:px-6">
+        <div className="bg-white p-2 sm:p-4">
           {/* Pass the handleSearch function to the Search component */}
           <Search onSearch={handleSearch} />
         </div>
@@ -819,8 +819,8 @@ export default function ResidentialSpace() {
         {!loading && !error && userLocation && (
           <div className="flex flex-col items-center w-full">
             {companies.length > 0 ? (
-              <div className="w-full max-w-6xl px-4 md:px-8 lg:px-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+              <div className="w-full max-w-6xl px-2 sm:px-4 md:px-8 lg:px-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative">
                   {/* For non-logged-in users, only take first 3 companies from all pages */}
                   {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
                     <CompanyCard
@@ -833,27 +833,27 @@ export default function ResidentialSpace() {
                 
                 {/* Login card for non-logged-in users if more companies exist */}
                 {!isSignedIn && companies.length > 3 && (
-                  <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-8 text-center">
+                  <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
                     <div className="flex flex-col items-center">
-                      <div className="bg-white p-4 rounded-full mb-4">
-                        <img src={lock} alt="Lock" className="w-10 h-10" />
+                      <div className="bg-white p-3 sm:p-4 rounded-full mb-4">
+                        <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
                       </div>
-                      <h3 className="text-white text-2xl font-bold mb-2">
+                      <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
                         {companies.length - 3} More Companies Available
                       </h3>
-                      <p className="text-white/90 mb-6 max-w-lg">
+                      <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
                         Create a free account to unlock all companies matching your search criteria and access advanced comparison features.
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <button 
                           onClick={() => navigate('/login')}
-                          className="bg-white text-[#006452] hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold shadow-lg transition-all"
+                          className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
                         >
                           Login
                         </button>
                         <button 
                           onClick={() => navigate('/signup')}
-                          className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-all"
+                          className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
                         >
                           Sign Up
                         </button>
