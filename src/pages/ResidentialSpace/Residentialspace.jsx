@@ -792,110 +792,111 @@ export default function ResidentialSpace() {
         </div>
       </section>
 
-      <div className="px-2 sm:px-4 md:px-6">
-        <div className="bg-white p-2 sm:p-4">
-          {/* Pass the handleSearch function to the Search component */}
-          <Search onSearch={handleSearch} />
-        </div>
-
-        {error && (
-          <div className="text-red-500 text-center my-4 p-4 bg-red-50 rounded">
-            {error}
+      <div className="flex justify-center w-full">
+        <div className="w-full max-w-6xl px-2 sm:px-4 md:px-8 lg:px-12">
+          <div className="bg-white p-2 sm:p-4">
+            {/* Pass the handleSearch function to the Search component */}
+            <Search onSearch={handleSearch} />
           </div>
-        )}
 
-        {loading && (
-          <div className="flex justify-center items-center my-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#006452]"></div>
-          </div>
-        )}
+          {error && (
+            <div className="text-red-500 text-center my-4 p-4 bg-red-50 rounded">
+              {error}
+            </div>
+          )}
 
-        {!loading && !error && !userLocation && (
-          <div className="text-center my-12 p-6 bg-gray-50 rounded-lg">
-            <p className="text-lg sm:text-xl text-gray-600">Please select a location to see available companies.</p>
-          </div>
-        )}
+          {loading && (
+            <div className="flex justify-center items-center my-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#006452]"></div>
+            </div>
+          )}
 
-        {!loading && !error && userLocation && (
-          <div className="flex flex-col items-center w-full">
-            {companies.length > 0 ? (
-              <div className="w-full max-w-6xl px-2 sm:px-4 md:px-8 lg:px-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative">
-                  {/* For non-logged-in users, only take first 3 companies from all pages */}
-                  {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
-                    <CompanyCard
-                      key={company._id}
-                      company={company}
-                      onCompareChange={handleCompareChange}
-                    />
-                  ))}
-                </div>
-                
-                {/* Login card for non-logged-in users if more companies exist */}
-                {!isSignedIn && companies.length > 3 && (
-                  <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="bg-white p-3 sm:p-4 rounded-full mb-4">
-                        <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
-                      </div>
-                      <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
-                        {companies.length - 3} More Companies Available
-                      </h3>
-                      <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
-                        Create a free account to unlock all companies matching your search criteria and access advanced comparison features.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <button 
-                          onClick={() => navigate('/login')}
-                          className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
-                        >
-                          Login
-                        </button>
-                        <button 
-                          onClick={() => navigate('/signup')}
-                          className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
-                        >
-                          Sign Up
-                        </button>
+          {!loading && !error && !userLocation && (
+            <div className="text-center my-12 p-6 bg-gray-50 rounded-lg">
+              <p className="text-lg sm:text-xl text-gray-600">Please select a location to see available companies.</p>
+            </div>
+          )}
+
+          {!loading && !error && userLocation && (
+            <div className="flex flex-col items-center w-full">
+              {companies.length > 0 ? (
+                <div className="w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative">
+                    {/* For non-logged-in users, only take first 3 companies from all pages */}
+                    {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
+                      <CompanyCard
+                        key={company._id}
+                        company={company}
+                        onCompareChange={handleCompareChange}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Login card for non-logged-in users if more companies exist */}
+                  {!isSignedIn && companies.length > 3 && (
+                    <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="bg-white p-3 sm:p-4 rounded-full mb-4">
+                          <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
+                        </div>
+                        <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+                          {companies.length - 3} More Companies Available
+                        </h3>
+                        <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
+                          Create a free account to unlock all companies matching your search criteria and access advanced comparison features.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                          <button 
+                            onClick={() => navigate('/login')}
+                            className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+                          >
+                            Login
+                          </button>
+                          <button 
+                            onClick={() => navigate('/signup')}
+                            className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+                          >
+                            Sign Up
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center my-12 p-6 bg-gray-50 rounded-lg w-full max-w-3xl">
+                  <p className="text-lg sm:text-xl text-gray-600">
+                    No companies found in {userLocation} matching your search criteria.
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
+                  {/* Debug info */}
+                  <div className="mt-4 p-2 border border-gray-300 bg-gray-100 text-xs text-left">
+                    <p>Debug Info:</p>
+                    <p>Current Space Type: {spaceType}</p>
+                    <p>Companies Count: {companies.length}</p>
+                    <p>Current Page: {currentPage}</p>
+                    <p>Total Pages: {totalPages}</p>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center my-12 p-6 bg-gray-50 rounded-lg w-full max-w-3xl">
-                <p className="text-lg sm:text-xl text-gray-600">
-                  No companies found in {userLocation} matching your search criteria.
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
-                {/* Debug info */}
-                <div className="mt-4 p-2 border border-gray-300 bg-gray-100 text-xs text-left">
-                  <p>Debug Info:</p>
-                  <p>Current Space Type: {spaceType}</p>
-                  <p>Companies Count: {companies.length}</p>
-                  <p>Current Page: {currentPage}</p>
-                  <p>Total Pages: {totalPages}</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Show pagination only for logged-in users */}
-            {companies.length > 0 && isSignedIn && (
-              <div>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  className="mt-6"
-                />
-                <div className="text-xs text-gray-500 text-center mt-2">
-                  Page {currentPage} of {totalPages} ({companies.length} companies shown)
+              {/* Show pagination only for logged-in users */}
+              {companies.length > 0 && isSignedIn && (
+                <div>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    className="mt-6"
+                  />
+                  <div className="text-xs text-gray-500 text-center mt-2">
+                    Page {currentPage} of {totalPages} ({companies.length} companies shown)
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mt-20">

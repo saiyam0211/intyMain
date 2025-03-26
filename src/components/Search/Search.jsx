@@ -323,150 +323,168 @@ const Search = ({ onSearch }) => {
   };
 
   return (
-    <section className="max-w-full overflow-hidden">
-      <div className="p-4 md:p-6 rounded-lg shadow-md">
-        <div className="relative flex items-center bg-[#006452] rounded-full overflow-hidden">
-          <input
-            type="text"
-            placeholder="Search interior designers, companies..."
-            className="w-full pl-4 pr-10 py-2 md:py-3 focus:outline-none bg-[#006452] text-white placeholder-gray-300"
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            onKeyDown={handleKeyPress}
-          />
-          <button 
-            className={`p-2 ${isSearching ? 'opacity-50' : ''}`} 
-            onClick={handleGoClick}
-            disabled={isSearching}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="white" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Helper text for required fields - show in red when validation error occurs */}
-        <div className={`text-xs sm:text-sm ${showValidationError ? 'text-red-500 font-medium' : 'text-gray-500'} mb-2 mt-2`}>
-          <span className="text-red-500">*</span> Please fill in at least one field before searching
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-2">
-          <div>
-            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
-              Space Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
+    <section className="w-full flex justify-center items-center">
+      <div className="w-full max-w-6xl">
+        <div className="search-container bg-white p-4 shadow-sm rounded-lg">
+          {/* Search Input */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="What you are Looking for..."
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              onKeyDown={handleKeyPress}
+              className={`w-full p-2 pl-3 border rounded-lg bg-[#006452] text-white placeholder-white focus:outline-none focus:ring-1 ${
                 showValidationError 
                   ? 'border-red-500 focus:ring-red-500' 
-                  : 'focus:ring-[#006452]'
+                  : 'focus:ring-white'
               }`}
-              value={spaceType}
-              onChange={handleSpaceTypeChange}
-            >
-              <option className="text-xs sm:text-sm">Space Type</option>
-              <option className="text-xs sm:text-sm">Residential</option>
-              <option className="text-xs sm:text-sm">Commercial</option>
-            </select>
+              style={{ 
+                background: "linear-gradient(91.13deg, #006452 0%, #008069 100%)",
+              }}
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <button type="button" onClick={handleGoClick}>
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="cursor-pointer"
+                >
+                  <path 
+                    d="M21.7099 20.2899L17.9999 16.6099C19.44 14.8143 20.1374 12.5352 19.9487 10.2412C19.76 7.94721 18.6996 5.81269 16.9854 4.27655C15.2713 2.74041 13.0337 1.91941 10.7328 1.98237C8.43194 2.04534 6.24263 2.98747 4.61505 4.61505C2.98747 6.24263 2.04534 8.43194 1.98237 10.7328C1.91941 13.0337 2.74041 15.2713 4.27655 16.9854C5.81269 18.6996 7.94721 19.76 10.2412 19.9487C12.5352 20.1374 14.8143 19.44 16.6099 17.9999L20.2899 21.6799C20.3829 21.7736 20.4935 21.848 20.6153 21.8988C20.7372 21.9496 20.8679 21.9757 20.9999 21.9757C21.1319 21.9757 21.2626 21.9496 21.3845 21.8988C21.5063 21.848 21.6169 21.7736 21.7099 21.6799C21.8036 21.5869 21.8781 21.4762 21.9288 21.3544C21.9796 21.2325 22.0057 21.1019 22.0057 20.9699C22.0057 20.8379 21.9796 20.7072 21.9288 20.5854C21.8781 20.4635 21.8036 20.3529 21.7099 20.2599V20.2899ZM3.99992 10.9999C3.99992 9.61544 4.41054 8.26206 5.17969 7.11091C5.94885 5.95977 7.04235 5.06234 8.32116 4.53275C9.59996 4.00316 11.0077 3.86431 12.3656 4.13441C13.7235 4.4045 14.9708 5.07119 15.9497 6.05015C16.9287 7.02912 17.5954 8.27637 17.8655 9.6343C18.1356 10.9922 17.9967 12.3999 17.4671 13.6787C16.9375 14.9575 16.0401 16.051 14.889 16.8202C13.7378 17.5893 12.3844 17.9999 10.9999 17.9999C9.14339 17.9999 7.36298 17.2624 6.05015 15.9497C4.73731 14.637 3.99992 12.8565 3.99992 10.9999Z" 
+                    fill="white"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
           
-          <div>
-            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
-              Project Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
-                showValidationError 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : 'focus:ring-[#006452]'
-              }`}
-              value={projectType}
-              onChange={handleProjectTypeChange}
-            >
-              <option className="text-xs sm:text-sm">Project Type</option>
-              <option className="text-xs sm:text-sm">Studio</option>
-              <option className="text-xs sm:text-sm">1 BHK</option>
-              <option className="text-xs sm:text-sm">2 BHK</option>
-              <option className="text-xs sm:text-sm">3 BHK</option>
-              <option className="text-xs sm:text-sm">4 BHK</option>
-              <option className="text-xs sm:text-sm">5 BHK</option>
-              <option className="text-xs sm:text-sm">Duplex</option>
-              <option className="text-xs sm:text-sm">Penthouse</option>
-              <option className="text-xs sm:text-sm">Villa</option>
-              <option className="text-xs sm:text-sm">Commercial</option>
-              <option className="text-xs sm:text-sm">Kitchen</option>
-              <option className="text-xs sm:text-sm">Bedroom</option>
-              <option className="text-xs sm:text-sm">Bathroom</option>
-            </select>
+          {/* Validation Error Message */}
+          <div className={`text-red-500 text-xs my-1 ${showValidationError ? 'block' : 'hidden'}`}>
+            <span className="text-red-500">*</span> Please fill in at least one field before searching
           </div>
           
-          <div>
-            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
-              Size <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
-                showValidationError 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : 'focus:ring-[#006452]'
-              }`}
-              value={size}
-              onChange={handleSizeChange}
-            >
-              <option className="text-xs sm:text-sm">Size (sq ft)</option>
-              <option className="text-xs sm:text-sm">400 to 600</option>
-              <option className="text-xs sm:text-sm">600 - 800</option>
-              <option className="text-xs sm:text-sm">800 - 1000</option>
-              <option className="text-xs sm:text-sm">1000 - 1200</option>
-              <option className="text-xs sm:text-sm">1200 - 1400</option>
-              <option className="text-xs sm:text-sm">1400 - 1600</option>
-              <option className="text-xs sm:text-sm">1600 - 1800</option>
-              <option className="text-xs sm:text-sm">1800 - 2000</option>
-              <option className="text-xs sm:text-sm">2000 - 2400</option>
-              <option className="text-xs sm:text-sm">2400 - 2800</option>
-              <option className="text-xs sm:text-sm">2800 - 3200</option>
-              <option className="text-xs sm:text-sm">3200 - 4000</option>
-              <option className="text-xs sm:text-sm">4000 - 5000</option>
-              <option className="text-xs sm:text-sm">5000+</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-2">
+            <div>
+              <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+                Space Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
+                  showValidationError 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'focus:ring-[#006452]'
+                }`}
+                value={spaceType}
+                onChange={handleSpaceTypeChange}
+              >
+                <option className="text-xs sm:text-sm">Space Type</option>
+                <option className="text-xs sm:text-sm">Residential</option>
+                <option className="text-xs sm:text-sm">Commercial</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+                Project Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
+                  showValidationError 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'focus:ring-[#006452]'
+                }`}
+                value={projectType}
+                onChange={handleProjectTypeChange}
+              >
+                <option className="text-xs sm:text-sm">Project Type</option>
+                <option className="text-xs sm:text-sm">Studio</option>
+                <option className="text-xs sm:text-sm">1 BHK</option>
+                <option className="text-xs sm:text-sm">2 BHK</option>
+                <option className="text-xs sm:text-sm">3 BHK</option>
+                <option className="text-xs sm:text-sm">4 BHK</option>
+                <option className="text-xs sm:text-sm">5 BHK</option>
+                <option className="text-xs sm:text-sm">Duplex</option>
+                <option className="text-xs sm:text-sm">Penthouse</option>
+                <option className="text-xs sm:text-sm">Villa</option>
+                <option className="text-xs sm:text-sm">Commercial</option>
+                <option className="text-xs sm:text-sm">Kitchen</option>
+                <option className="text-xs sm:text-sm">Bedroom</option>
+                <option className="text-xs sm:text-sm">Bathroom</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+                Size <span className="text-red-500">*</span>
+              </label>
+              <select
+                className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
+                  showValidationError 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'focus:ring-[#006452]'
+                }`}
+                value={size}
+                onChange={handleSizeChange}
+              >
+                <option className="text-xs sm:text-sm">Size (sq ft)</option>
+                <option className="text-xs sm:text-sm">400 to 600</option>
+                <option className="text-xs sm:text-sm">600 - 800</option>
+                <option className="text-xs sm:text-sm">800 - 1000</option>
+                <option className="text-xs sm:text-sm">1000 - 1200</option>
+                <option className="text-xs sm:text-sm">1200 - 1400</option>
+                <option className="text-xs sm:text-sm">1400 - 1600</option>
+                <option className="text-xs sm:text-sm">1600 - 1800</option>
+                <option className="text-xs sm:text-sm">1800 - 2000</option>
+                <option className="text-xs sm:text-sm">2000 - 2400</option>
+                <option className="text-xs sm:text-sm">2400 - 2800</option>
+                <option className="text-xs sm:text-sm">2800 - 3200</option>
+                <option className="text-xs sm:text-sm">3200 - 4000</option>
+                <option className="text-xs sm:text-sm">4000 - 5000</option>
+                <option className="text-xs sm:text-sm">5000+</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+                Price Range <span className="text-red-500">*</span>
+              </label>
+              <select
+                className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
+                  showValidationError 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'focus:ring-[#006452]'
+                }`}
+                value={priceRange}
+                onChange={handlePriceRangeChange}
+              >
+                <option className="text-xs sm:text-sm">Price Range</option>
+                <option className="text-xs sm:text-sm">1Lakh to 3Lakh</option>
+                <option className="text-xs sm:text-sm">3Lakh to 6Lakh</option>
+                <option className="text-xs sm:text-sm">6Lakh to 10Lakh</option>
+                <option className="text-xs sm:text-sm">10Lakh to 15Lakh</option>
+                <option className="text-xs sm:text-sm">15Lakh to 20Lakh</option>
+                <option className="text-xs sm:text-sm">20Lakh to 25Lakh</option>
+                <option className="text-xs sm:text-sm">25Lakh to 30Lakh</option>
+                <option className="text-xs sm:text-sm">30Lakh to 40Lakh</option>
+                <option className="text-xs sm:text-sm">40Lakh+</option>
+              </select>
+            </div>
           </div>
-          
-          <div>
-            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
-              Price Range <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-1 ${
-                showValidationError 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : 'focus:ring-[#006452]'
-              }`}
-              value={priceRange}
-              onChange={handlePriceRangeChange}
-            >
-              <option className="text-xs sm:text-sm">Price Range</option>
-              <option className="text-xs sm:text-sm">1Lakh to 3Lakh</option>
-              <option className="text-xs sm:text-sm">3Lakh to 6Lakh</option>
-              <option className="text-xs sm:text-sm">6Lakh to 10Lakh</option>
-              <option className="text-xs sm:text-sm">10Lakh to 15Lakh</option>
-              <option className="text-xs sm:text-sm">15Lakh to 20Lakh</option>
-              <option className="text-xs sm:text-sm">20Lakh to 25Lakh</option>
-              <option className="text-xs sm:text-sm">25Lakh to 30Lakh</option>
-              <option className="text-xs sm:text-sm">30Lakh to 40Lakh</option>
-              <option className="text-xs sm:text-sm">40Lakh+</option>
-            </select>
-          </div>
-        </div>
 
-        {/* Go Button */}
-        <div className="mt-4 md:mt-6 text-center">
-          <button
-            onClick={handleGoClick}
-            className={`bg-[#006452] hover:bg-[#005345] text-white font-medium py-2 px-8 md:px-12 rounded-full transition-colors duration-300 shadow-md inline-block ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={isSearching}
-          >
-            {isSearching ? 'Searching...' : 'Go'}
-          </button>
+          {/* Go Button */}
+          <div className="mt-4 md:mt-6 text-center">
+            <button
+              onClick={handleGoClick}
+              className={`bg-[#006452] hover:bg-[#005345] text-white font-medium py-2 px-8 md:px-12 rounded-full transition-colors duration-300 shadow-md inline-block ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isSearching}
+            >
+              {isSearching ? 'Searching...' : 'Go'}
+            </button>
+          </div>
         </div>
       </div>
     </section>
