@@ -713,25 +713,9 @@ export default function ResidentialSpace() {
         <LocationPopup onLocationSelect={handleLocationSelect} />
       )}
 
-      {/* Show current location with change option */}
-      {userLocation && (
-        <div className="fixed top-20 right-4 z-40 bg-white rounded-lg shadow-md p-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Location: </span>
-            <span className="font-medium">{userLocation}</span>
-            <button
-              onClick={handleChangeLocation}
-              className="text-xs text-teal-600 hover:text-teal-800"
-            >
-              Change
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Floating Compare Button */}
       {isSignedIn && compareCount > 0 && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-16 sm:bottom-20 right-4 z-50">
           <Button
             onClick={() => {
               if (compareCount >= 2 && compareCount <= 3) {
@@ -748,6 +732,27 @@ export default function ResidentialSpace() {
           >
             Compare Selected ({compareCount})
           </Button>
+        </div>
+      )}
+
+      {/* Location Toggle Button */}
+      {userLocation && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-white rounded-full shadow-lg p-1.5">
+            <div className="flex items-center gap-2 px-3 py-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#006452]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="font-medium text-sm">{userLocation}</span>
+              <button
+                onClick={handleChangeLocation}
+                className="ml-2 text-sm text-[#006452] hover:text-[#005345] font-medium"
+              >
+                Change
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

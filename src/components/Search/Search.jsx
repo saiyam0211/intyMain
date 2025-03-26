@@ -355,7 +355,7 @@ const Search = ({ onSearch }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
           <div>
-            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Space Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -367,14 +367,14 @@ const Search = ({ onSearch }) => {
               value={spaceType}
               onChange={handleSpaceTypeChange}
             >
-              <option className="text-sm">Space Type</option>
-              <option className="text-sm">Residential</option>
-              <option className="text-sm">Commercial</option>
+              <option className="text-xs sm:text-sm">Space Type</option>
+              <option className="text-xs sm:text-sm">Residential</option>
+              <option className="text-xs sm:text-sm">Commercial</option>
             </select>
           </div>
           
           <div>
-            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Project Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -386,25 +386,25 @@ const Search = ({ onSearch }) => {
               value={projectType}
               onChange={handleProjectTypeChange}
             >
-              <option className="text-sm">Project Type</option>
-              <option className="text-sm">Studio</option>
-              <option className="text-sm">1 BHK</option>
-              <option className="text-sm">2 BHK</option>
-              <option className="text-sm">3 BHK</option>
-              <option className="text-sm">4 BHK</option>
-              <option className="text-sm">5 BHK</option>
-              <option className="text-sm">Duplex</option>
-              <option className="text-sm">Penthouse</option>
-              <option className="text-sm">Villa</option>
-              <option className="text-sm">Commercial</option>
-              <option className="text-sm">Kitchen</option>
-              <option className="text-sm">Bedroom</option>
-              <option className="text-sm">Bathroom</option>
+              <option className="text-xs sm:text-sm">Project Type</option>
+              <option className="text-xs sm:text-sm">Studio</option>
+              <option className="text-xs sm:text-sm">1 BHK</option>
+              <option className="text-xs sm:text-sm">2 BHK</option>
+              <option className="text-xs sm:text-sm">3 BHK</option>
+              <option className="text-xs sm:text-sm">4 BHK</option>
+              <option className="text-xs sm:text-sm">5 BHK</option>
+              <option className="text-xs sm:text-sm">Duplex</option>
+              <option className="text-xs sm:text-sm">Penthouse</option>
+              <option className="text-xs sm:text-sm">Villa</option>
+              <option className="text-xs sm:text-sm">Commercial</option>
+              <option className="text-xs sm:text-sm">Kitchen</option>
+              <option className="text-xs sm:text-sm">Bedroom</option>
+              <option className="text-xs sm:text-sm">Bathroom</option>
             </select>
           </div>
           
           <div>
-            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Size <span className="text-red-500">*</span>
             </label>
             <select
@@ -416,26 +416,26 @@ const Search = ({ onSearch }) => {
               value={size}
               onChange={handleSizeChange}
             >
-              <option className="text-sm">Size (sq ft)</option>
-              <option className="text-sm">400 to 600</option>
-              <option className="text-sm">600 - 800</option>
-              <option className="text-sm">800 - 1000</option>
-              <option className="text-sm">1000 - 1200</option>
-              <option className="text-sm">1200 - 1400</option>
-              <option className="text-sm">1400 - 1600</option>
-              <option className="text-sm">1600 - 1800</option>
-              <option className="text-sm">1800 - 2000</option>
-              <option className="text-sm">2000 - 2400</option>
-              <option className="text-sm">2400 - 2800</option>
-              <option className="text-sm">2800 - 3200</option>
-              <option className="text-sm">3200 - 4000</option>
-              <option className="text-sm">4000 - 5000</option>
-              <option className="text-sm">5000+</option>
+              <option className="text-xs sm:text-sm">Size (sq ft)</option>
+              <option className="text-xs sm:text-sm">400 to 600</option>
+              <option className="text-xs sm:text-sm">600 - 800</option>
+              <option className="text-xs sm:text-sm">800 - 1000</option>
+              <option className="text-xs sm:text-sm">1000 - 1200</option>
+              <option className="text-xs sm:text-sm">1200 - 1400</option>
+              <option className="text-xs sm:text-sm">1400 - 1600</option>
+              <option className="text-xs sm:text-sm">1600 - 1800</option>
+              <option className="text-xs sm:text-sm">1800 - 2000</option>
+              <option className="text-xs sm:text-sm">2000 - 2400</option>
+              <option className="text-xs sm:text-sm">2400 - 2800</option>
+              <option className="text-xs sm:text-sm">2800 - 3200</option>
+              <option className="text-xs sm:text-sm">3200 - 4000</option>
+              <option className="text-xs sm:text-sm">4000 - 5000</option>
+              <option className="text-xs sm:text-sm">5000+</option>
             </select>
           </div>
           
           <div>
-            <label className={`block text-xs sm:text-sm font-medium ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
+            <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
               Price Range <span className="text-red-500">*</span>
             </label>
             <select
@@ -447,16 +447,16 @@ const Search = ({ onSearch }) => {
               value={priceRange}
               onChange={handlePriceRangeChange}
             >
-              <option className="text-sm">Price Range</option>
-              <option className="text-sm">1Lakh to 3Lakh</option>
-              <option className="text-sm">3Lakh to 6Lakh</option>
-              <option className="text-sm">6Lakh to 10Lakh</option>
-              <option className="text-sm">10Lakh to 15Lakh</option>
-              <option className="text-sm">15Lakh to 20Lakh</option>
-              <option className="text-sm">20Lakh to 25Lakh</option>
-              <option className="text-sm">25Lakh to 30Lakh</option>
-              <option className="text-sm">30Lakh to 40Lakh</option>
-              <option className="text-sm">40Lakh+</option>
+              <option className="text-xs sm:text-sm">Price Range</option>
+              <option className="text-xs sm:text-sm">1Lakh to 3Lakh</option>
+              <option className="text-xs sm:text-sm">3Lakh to 6Lakh</option>
+              <option className="text-xs sm:text-sm">6Lakh to 10Lakh</option>
+              <option className="text-xs sm:text-sm">10Lakh to 15Lakh</option>
+              <option className="text-xs sm:text-sm">15Lakh to 20Lakh</option>
+              <option className="text-xs sm:text-sm">20Lakh to 25Lakh</option>
+              <option className="text-xs sm:text-sm">25Lakh to 30Lakh</option>
+              <option className="text-xs sm:text-sm">30Lakh to 40Lakh</option>
+              <option className="text-xs sm:text-sm">40Lakh+</option>
             </select>
           </div>
         </div>
