@@ -219,16 +219,6 @@ const PackageSelection = ({ formData, setFormData }) => {
           ))}
         </div>
       </div>
-      
-      {/* Next button */}
-      <div className="mt-10 mb-16 sm:mb-8 text-center">
-        <button 
-          onClick={handleNext}
-          className="mt-4 bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-900 hover:to-gray-800 text-white font-medium py-3 px-10 sm:px-14 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105"
-        >
-          Continue to Next Step
-        </button>
-      </div>
     </div>
   );
 };
