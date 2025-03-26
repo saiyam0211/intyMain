@@ -30,15 +30,15 @@ const CarouselCard = ({ data, position, image, showOnlyImages, largeImage }) => 
   const getCardStyles = () => {
     switch (position) {
       case "center":
-        return "translate-x-0 scale-105 opacity-100 z-10";
+        return "translate-x-0 scale-100 opacity-100 z-10";
       case "left":
-        return "-translate-x-[120%] scale-95 opacity-60 z-0";
+        return "-translate-x-[95%] scale-90 opacity-70 z-0";
       case "right":
-        return "translate-x-[120%] scale-95 opacity-60 z-0";
+        return "translate-x-[95%] scale-90 opacity-70 z-0";
       case "farLeft":
-        return "-translate-x-[240%] scale-90 opacity-30 z-0";
+        return "-translate-x-[190%] scale-85 opacity-40 z-0";
       case "farRight":
-        return "translate-x-[240%] scale-90 opacity-30 z-0";
+        return "translate-x-[190%] scale-85 opacity-40 z-0";
       default:
         return "translate-x-0 opacity-0";
     }
@@ -134,6 +134,8 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
 
   const fetchCompanies = async (page = 1, search = "") => {
     try {
@@ -207,6 +209,26 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
     setTimeout(() => setIsAnimating(false), 700);
   };
 
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX - touchEndX > 50) {
+      // Swipe left
+      handleNext();
+    }
+    if (touchEndX - touchStartX > 50) {
+      // Swipe right
+      handlePrevious();
+    }
+  };
+
   return (
     <div className="py-8 md:py-12">
       <div className="text-center mb-8">
@@ -216,17 +238,22 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
         <div className="w-24 h-1 bg-[#006452] mx-auto mt-4"></div>
       </div>
 
-      <div className="flex items-center justify-center md:h-[460px] md:-translate-y-20">
-        <div className="flex items-center w-[100%] md:w-[90%] m-auto gap-8">
+      <div 
+        className="flex items-center justify-center md:h-[460px] md:-translate-y-20 overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="flex items-center w-[100%] md:w-[90%] m-auto gap-8 overflow-x-hidden">
           <button
             onClick={handlePrevious}
             disabled={isAnimating}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
+            className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
           >
             <ChevronLeft className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
           </button>
 
-          <div className="relative w-full h-[600px] overflow-hidden">
+          <div className="relative w-full h-[600px] overflow-x-hidden">
             <div className="absolute inset-0 flex items-center w-full justify-center gap-6">
               {companies?.map((card, index) => {
                 if (card.show) return (
@@ -246,11 +273,29 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
           <button
             onClick={handleNext}
             disabled={isAnimating}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
+            className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-black/30 hover:bg-black/40 transition-colors group z-10"
           >
             <ChevronRight className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
           </button>
         </div>
+      </div>
+      
+      {/* Pagination dots for mobile */}
+      <div className="flex justify-center mt-4 md:hidden">
+        {companies?.filter(card => card.show)?.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              if (isAnimating) return;
+              setIsAnimating(true);
+              setCurrentIndex(index);
+              setTimeout(() => setIsAnimating(false), 700);
+            }}
+            className={`w-2 h-2 mx-1 rounded-full transition-all ${
+              index === currentIndex ? "bg-[#006452] w-3 h-3" : "bg-gray-300"
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
