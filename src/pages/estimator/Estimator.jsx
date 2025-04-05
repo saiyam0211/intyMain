@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import backgroundImage from "../../assets/background.png";
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios for API calls
+import { useUser } from '@clerk/clerk-react'; // Import useUser from Clerk
 
 function Estimator() {
     // Get the company pricing data from navigation state
@@ -19,6 +20,7 @@ function Estimator() {
     const companyId = location.state?.companyId;
     const companyName = location.state?.companyName;
     const navigate = useNavigate();
+    const { isSignedIn } = useUser(); // Get user authentication status from Clerk
 
     // State for averaged pricing data from all companies
     const [averagePricing, setAveragePricing] = useState({
@@ -88,6 +90,18 @@ function Estimator() {
                     alert('Please select a package');
                     return false;
                 }
+                
+                // Check if user is logged in before proceeding to user details
+                if (!isSignedIn) {
+                    // Save current estimator data to session storage to retrieve after login
+                    sessionStorage.setItem('estimatorData', JSON.stringify(formData));
+                    // Show alert about login requirement
+                    alert('Please log in to continue with your cost estimation');
+                    // Redirect to login page with a return URL to come back to the estimator
+                    navigate('/login', { state: { returnUrl: '/cost-estimator' } });
+                    return false;
+                }
+                
                 return true;
 
             case 5: // User Details
@@ -128,6 +142,26 @@ function Estimator() {
                 return true;
         }
     };
+
+    // Restore saved estimator data after login
+    useEffect(() => {
+        if (isSignedIn) {
+            const savedData = sessionStorage.getItem('estimatorData');
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    setFormData(prevData => ({
+                        ...prevData,
+                        ...parsedData
+                    }));
+                    // Clear the saved data after restoring
+                    sessionStorage.removeItem('estimatorData');
+                } catch (error) {
+                    console.error('Error parsing saved estimator data:', error);
+                }
+            }
+        }
+    }, [isSignedIn]);
 
     // Fetch average pricing data from all companies
     useEffect(() => {

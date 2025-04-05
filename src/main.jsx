@@ -18,8 +18,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       routing="path"
       signInUrl="/login"
       signUpUrl="/signup"
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
     >
       <App />
     </ClerkProvider>

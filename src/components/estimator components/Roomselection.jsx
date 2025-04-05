@@ -18,11 +18,32 @@ const RoomSelection = ({ formData, setFormData }) => {
     'Dining': 1
   });
 
+  // Maximum limits for bedroom and bathroom based on home type
+  const getMaxRoomLimits = () => {
+    const homeType = formData.homeType?.split(' ')[0]; // Extract the number from home type (e.g., "3" from "3 BHK")
+    const bhkNumber = parseInt(homeType) || 1;
+    
+    return {
+      'Bedroom': bhkNumber,
+      'Bathroom': bhkNumber
+    };
+  };
+
   useEffect(() => {
     // When component mounts or formData.homeType changes, initialize room counts
     if (formData.homeType) {
-      // You can set default counts based on home type if needed
-      const initialCounts = { ...roomCounts };
+      // Extract number of bedrooms and bathrooms from home type
+      const homeType = formData.homeType?.split(' ')[0]; // Extract the number from home type (e.g., "3" from "3 BHK")
+      const bhkNumber = parseInt(homeType) || 1;
+      
+      // Set default counts based on home type
+      const initialCounts = { 
+        ...roomCounts,
+        'Bedroom': bhkNumber, // Set bedrooms to match BHK number
+        'Bathroom': bhkNumber // Set bathrooms to match BHK number
+      };
+      
+      setRoomCounts(initialCounts);
       
       // Update rooms in formData based on initial counts
       updateFormDataRooms(initialCounts);
@@ -51,6 +72,18 @@ const RoomSelection = ({ formData, setFormData }) => {
   };
 
   const incrementRoom = (roomType) => {
+    // Get maximum limits based on home type
+    const maxLimits = getMaxRoomLimits();
+    
+    // Check if the room type has a limit and if it's already at maximum
+    if (
+      (roomType === 'Bedroom' || roomType === 'Bathroom') && 
+      roomCounts[roomType] >= maxLimits[roomType]
+    ) {
+      // Don't increment beyond the BHK limit for bedrooms and bathrooms
+      return;
+    }
+    
     const newCounts = { ...roomCounts, [roomType]: roomCounts[roomType] + 1 };
     setRoomCounts(newCounts);
     updateFormDataRooms(newCounts);
@@ -63,6 +96,9 @@ const RoomSelection = ({ formData, setFormData }) => {
       updateFormDataRooms(newCounts);
     }
   };
+
+  // Get maximum limits for UI display
+  const maxLimits = getMaxRoomLimits();
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6">
@@ -77,6 +113,11 @@ const RoomSelection = ({ formData, setFormData }) => {
           >
             <div className="text-base sm:text-lg font-medium">
               {roomType}
+              {(roomType === 'Bedroom' || roomType === 'Bathroom') && (
+                <span className="text-sm text-gray-500 ml-2">
+                  (Max: {maxLimits[roomType]})
+                </span>
+              )}
             </div>
             <div className="flex items-center">
               <button
@@ -95,8 +136,13 @@ const RoomSelection = ({ formData, setFormData }) => {
               
               <button
                 onClick={() => incrementRoom(roomType)}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#006452] text-white flex items-center justify-center shadow-sm hover:bg-[#005443] transition-colors"
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-sm transition-colors ${
+                  (roomType === 'Bedroom' || roomType === 'Bathroom') && roomCounts[roomType] >= maxLimits[roomType]
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-[#006452] text-white hover:bg-[#005443]'
+                }`}
                 aria-label={`Increase ${roomType}`}
+                disabled={(roomType === 'Bedroom' || roomType === 'Bathroom') && roomCounts[roomType] >= maxLimits[roomType]}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />

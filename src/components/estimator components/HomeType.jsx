@@ -34,7 +34,7 @@ const HomeType = ({ formData, setFormData }) => {
       </div>
 
       <input
-        type="text"
+        type="number"
         placeholder="Enter carpet area in sq. ft."
         value={formData.carpetArea}
         onChange={handleCarpetAreaChange}
