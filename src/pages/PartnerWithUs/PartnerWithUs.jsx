@@ -29,7 +29,7 @@ export default function PartnerWithUs() {
 
   // API URL - using environment variable if available, otherwise hardcoded
   // Add fallback to production API if localhost fails
-  const LOCAL_API_URL = 'http://localhost:3000/api';
+  const LOCAL_API_URL = 'https://inty-backend.onrender.com/api';
   const PRODUCTION_API_URL = 'https://inty-backend.onrender.com/api';
   const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
 

@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar/Navbar';
 import { FaEdit, FaTrash, FaEye, FaEyeSlash, FaPlus, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
 
 const AdminTestimonialsList = () => {
     const [testimonials, setTestimonials] = useState([]);

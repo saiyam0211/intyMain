@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import { FaEdit, FaTrash, FaEye, FaEyeSlash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const API_URL = "http://localhost:3000/api/craftsmen";
+const API_URL = "https://inty-backend.onrender.com/api/craftsmen";
 
 const AdminCraftsmenList = () => {
   const navigate = useNavigate();

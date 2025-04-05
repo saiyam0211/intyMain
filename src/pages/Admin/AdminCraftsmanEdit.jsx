@@ -4,7 +4,7 @@ import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
 import 'leaflet/dist/leaflet.css';
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://inty-backend.onrender.com/api";
 
 // Search component using Nominatim
 function SearchBox({ onPlaceSelected }) {

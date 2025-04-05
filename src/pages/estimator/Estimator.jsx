@@ -168,7 +168,7 @@ function Estimator() {
         const fetchAveragePrices = async () => {
             try {
                 setLoadingPrices(true);
-                const response = await axios.get('http://localhost:3000/api/companies');
+                const response = await axios.get('https://inty-backend.onrender.com/api/companies');
                 const companies = response.data;
 
                 if (companies && companies.length > 0) {
@@ -357,10 +357,10 @@ function Estimator() {
             }
 
             // Show request being made
-            console.log('Sending data to:', 'http://localhost:3000/api/users/quote');
+            console.log('Sending data to:', 'https://inty-backend.onrender.com/api/users/quote');
             console.log('Request data:', JSON.stringify(submissionData, null, 2));
 
-            const response = await fetch('http://localhost:3000/api/users/quote', {
+            const response = await fetch('https://inty-backend.onrender.com/api/users/quote', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

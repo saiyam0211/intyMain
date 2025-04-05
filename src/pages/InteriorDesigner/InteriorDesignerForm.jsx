@@ -317,7 +317,7 @@ const DesignerForm = () => {
       
       try {
         setFetchLoading(true);
-        const res = await axios.get(`http://localhost:3000/api/designers/${id}`);
+        const res = await axios.get(`https://inty-backend.onrender.com/api/designers/${id}`);
         
         // Format the data for the form
         const designer = res.data;
@@ -402,7 +402,7 @@ const DesignerForm = () => {
         formData.append('file', file);
         formData.append('fileCategory', 'designer-portfolios');
         
-        const response = await axios.post('http://localhost:3000/api/upload', formData, {
+        const response = await axios.post('https://inty-backend.onrender.com/api/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -518,10 +518,10 @@ const DesignerForm = () => {
       
       if (isEditMode) {
         // Update existing designer
-        response = await axios.put(`http://localhost:3000/api/designers/${id}`, submissionData);
+        response = await axios.put(`https://inty-backend.onrender.com/api/designers/${id}`, submissionData);
       } else {
         // Create new designer
-        response = await axios.post('http://localhost:3000/api/designers', submissionData);
+        response = await axios.post('https://inty-backend.onrender.com/api/designers', submissionData);
       }
       
       setMessage({ 

@@ -26,8 +26,8 @@ const AdminEnquiriesPage = () => {
                 
                 // Get the base URL based on environment
                 const baseURL = process.env.NODE_ENV === 'production' 
-                    ? 'http://localhost:3000' 
-                    : 'http://localhost:3000';
+                    ? 'https://inty-backend.onrender.com' 
+                    : 'https://inty-backend.onrender.com';
                 
                 const response = await axios.get(`${baseURL}/api/contact/enquiries`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -63,8 +63,8 @@ const AdminEnquiriesPage = () => {
             
             // Get the base URL based on environment
             const baseURL = process.env.NODE_ENV === 'production' 
-                ? 'http://localhost:3000' 
-                : 'http://localhost:3000';
+                ? 'https://inty-backend.onrender.com' 
+                : 'https://inty-backend.onrender.com';
             
             await axios.patch(
                 `${baseURL}/api/contact/enquiry/${id}/status`, 
@@ -99,8 +99,8 @@ const AdminEnquiriesPage = () => {
             
             // Get the base URL based on environment
             const baseURL = process.env.NODE_ENV === 'production' 
-                ? 'http://localhost:3000' 
-                : 'http://localhost:3000';
+                ? 'https://inty-backend.onrender.com' 
+                : 'https://inty-backend.onrender.com';
             
             await axios.patch(
                 `${baseURL}/api/contact/enquiry/${id}/read`, 
@@ -139,8 +139,8 @@ const AdminEnquiriesPage = () => {
             
             // Get the base URL based on environment
             const baseURL = process.env.NODE_ENV === 'production' 
-                ? 'http://localhost:3000' 
-                : 'http://localhost:3000';
+                ? 'https://inty-backend.onrender.com' 
+                : 'https://inty-backend.onrender.com';
             
             await axios.delete(
                 `${baseURL}/api/contact/enquiry/${id}`, 

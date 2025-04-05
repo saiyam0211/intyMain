@@ -177,8 +177,8 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
 
       // Get the base URL based on environment
       const baseURL = process.env.NODE_ENV === 'production'
-        ? 'http://localhost:3000'
-        : 'http://localhost:3000';
+        ? 'https://inty-backend.onrender.com'
+        : 'https://inty-backend.onrender.com';
 
       const response = await axios.post(`${baseURL}/api/contact/enquiry`, enquiryData);
 

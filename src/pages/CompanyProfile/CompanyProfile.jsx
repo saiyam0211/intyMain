@@ -15,7 +15,7 @@ import { apiClient, API_URL } from "../../services/apiService";
 
 // const API_URL = "https://inty-backend-6wzp.onrender.com/api/companies";
 // const API_URL = "https://inty-backend-2.onrender.com/api/companies";
-// const API_URL = "http://localhost:3000/api/companies";
+// const API_URL = "https://inty-backend.onrender.com/api/companies";
 
 
 const CompanyProfile = () => {

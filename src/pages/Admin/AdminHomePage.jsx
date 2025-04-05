@@ -39,12 +39,12 @@ const AdminHomePage = () => {
                 }
 
                 // Fetch designers that need approval (isListed = false)
-                const designersResponse = await axios.get('http://localhost:3000/api/designers?showAll=true', {
+                const designersResponse = await axios.get('https://inty-backend.onrender.com/api/designers?showAll=true', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
                 // Fetch craftsmen that need approval (isListed = false)
-                const craftsmenResponse = await axios.get('http://localhost:3000/api/craftsmen?showAll=true', {
+                const craftsmenResponse = await axios.get('https://inty-backend.onrender.com/api/craftsmen?showAll=true', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 

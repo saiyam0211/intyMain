@@ -4,8 +4,8 @@ import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 
 // Configuration
-const LOCAL_URL = 'http://localhost:3000';
-const RENDER_URL = 'http://localhost:3000';
+const LOCAL_URL = 'https://inty-backend.onrender.com';
+const RENDER_URL = 'https://inty-backend.onrender.com';
 
 // Get the current directory path
 const __filename = fileURLToPath(import.meta.url);
