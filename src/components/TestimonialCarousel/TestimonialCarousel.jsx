@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './TestimonialCarousel.css';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const TestimonialCarousel = () => {
   const [testimonials, setTestimonials] = useState([]);

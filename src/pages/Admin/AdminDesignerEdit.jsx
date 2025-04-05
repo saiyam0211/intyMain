@@ -1,9 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
+import 'leaflet/dist/leaflet.css';
 
-const API_URL = "https://inty-backend.onrender.com/api";
+const API_URL = "http://localhost:3000/api";
+
+// Search component using Nominatim
+function SearchBox({ onPlaceSelected }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Function to handle the search using Nominatim
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      setIsSearching(true);
+
+      // Regular search using Nominatim
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}${searchQuery.toLowerCase().includes('india') ? '' : ', india'}&limit=5&countrycodes=in`,
+        {
+          headers: {
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        const result = response.data[0];
+        onPlaceSelected({
+          lat: parseFloat(result.lat),
+          lng: parseFloat(result.lon),
+          address: result.display_name
+        });
+        setSearchQuery(''); // Clear the search input after successful search
+      } else {
+        alert('Location not found in India. Please try a more specific search term.');
+      }
+    } catch (error) {
+      console.error('Error searching for location:', error);
+      alert('Error searching for location. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  return (
+    <div>
+      <div className="bg-white p-2 rounded shadow-md">
+        <div className="flex">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search for a location in India"
+            className="p-2 border rounded-l w-full"
+            disabled={isSearching}
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            className={`${isSearching ? 'bg-[#006452]/60' : 'bg-[#006452] hover:bg-[#004d3b]'} text-white px-4 py-2 rounded-r flex items-center justify-center min-w-[100px]`}
+            disabled={isSearching}
+          >
+            {isSearching ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Searching...
+              </>
+            ) : 'Search'}
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mt-1">For better results, include city/state name (e.g., "Koramangala, Bangalore")</p>
+    </div>
+  );
+}
 
 const AdminDesignerEdit = () => {
   const navigate = useNavigate();
@@ -15,6 +101,14 @@ const AdminDesignerEdit = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Map related states
+  const mapContainerRef = useRef(null);
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [searchAddress, setSearchAddress] = useState("");
+
   const [formData, setFormData] = useState({
     name: '',
     rate: '',
@@ -26,6 +120,8 @@ const AdminDesignerEdit = () => {
     portfolio: [],
     googleReviews: '',
     rating: '5', // Default value
+    latitude: '',
+    longitude: '',
   });
 
   useEffect(() => {
@@ -41,6 +137,71 @@ const AdminDesignerEdit = () => {
       fetchDesigner();
     }
   }, [navigate, isAddMode, id]);
+
+  // Initialize Leaflet map
+  useEffect(() => {
+    // Skip if no container or if map is already initialized
+    if (!mapContainerRef.current || map) return;
+
+    // Import Leaflet dynamically to avoid SSR issues
+    import('leaflet').then(L => {
+      // Fix for default marker icon
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      });
+
+      // Clean up any existing map instance first
+      if (map) {
+        map.remove();
+        setMap(null);
+        setMarker(null);
+      }
+
+      // Create map centered on India
+      const newMap = L.map(mapContainerRef.current).setView([20.5937, 78.9629], 5);
+
+      // Use CartoDB Voyager tiles for better India coverage
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(newMap);
+
+      // Add scale control for better distance reference
+      L.control.scale().addTo(newMap);
+
+      // Add click handler
+      newMap.on('click', handleMapClick);
+
+      // Save map reference
+      setMap(newMap);
+      setMapLoading(false);
+
+      // If we have coordinates already, add a marker
+      if (formData.latitude && formData.longitude) {
+        const lat = parseFloat(formData.latitude);
+        const lng = parseFloat(formData.longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const newMarker = L.marker([lat, lng]).addTo(newMap);
+          setMarker(newMarker);
+          newMap.setView([lat, lng], 13);
+          fetchAddressFromCoordinates(lat, lng);
+        }
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (map) {
+        map.remove();
+        setMap(null);
+        setMarker(null);
+      }
+    };
+  }, [mapContainerRef.current, formData.latitude, formData.longitude]);
 
   const fetchDesigner = async () => {
     try {
@@ -59,6 +220,8 @@ const AdminDesignerEdit = () => {
         portfolio: designerData.portfolio || [],
         googleReviews: designerData.googleReviews || '',
         rating: designerData.rating || '5',
+        latitude: designerData.latitude || '',
+        longitude: designerData.longitude || '',
       });
     } catch (err) {
       console.error('Error fetching designer:', err);
@@ -66,6 +229,137 @@ const AdminDesignerEdit = () => {
     } finally {
       setFetchLoading(false);
     }
+  };
+
+  // Handle map click
+  const handleMapClick = (e) => {
+    const { lat, lng } = e.latlng;
+
+    // Update form data
+    setFormData({
+      ...formData,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    });
+
+    // Update marker
+    if (marker) {
+      marker.setLatLng([lat, lng]);
+    } else if (map) {
+      const newMarker = L.marker([lat, lng]).addTo(map);
+      setMarker(newMarker);
+    }
+
+    // Get address from coordinates using Nominatim
+    fetchAddressFromCoordinates(lat, lng);
+  };
+
+  // Fetch address from coordinates
+  const fetchAddressFromCoordinates = async (lat, lng) => {
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&countrycodes=in`,
+        {
+          headers: {
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        }
+      );
+
+      if (response.data && response.data.display_name) {
+        setSearchAddress(response.data.display_name);
+        // Extract the city or neighborhood from the address
+        const address = response.data;
+        let locationName = address.address?.city || 
+                          address.address?.town || 
+                          address.address?.village || 
+                          address.address?.suburb ||
+                          address.address?.neighbourhood ||
+                          address.address?.county;
+        
+        if (locationName) {
+          setFormData(prev => ({
+            ...prev,
+            location: locationName
+          }));
+        } else {
+          // If we can't extract a specific part, use the first part of the display name
+          const shortLocation = address.display_name.split(',')[0];
+          if (shortLocation) {
+            setFormData(prev => ({
+              ...prev,
+              location: shortLocation
+            }));
+          }
+        }
+      } else {
+        setSearchAddress("");
+      }
+    } catch (error) {
+      console.error("Error getting address from coordinates:", error);
+      setSearchAddress("");
+    }
+  };
+
+  // Handle place selection from search
+  const handlePlaceSelected = (place) => {
+    if (!place) return;
+
+    const { lat, lng, address } = place;
+
+    setSearchAddress(address);
+
+    // Update form data with coordinates
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    }));
+
+    // Try to extract city or neighborhood
+    const addressParts = address.split(', ');
+    if (addressParts.length > 0) {
+      // Use the first part as the location name
+      setFormData(prev => ({
+        ...prev,
+        location: addressParts[0]
+      }));
+    }
+
+    // Update map and marker
+    if (map) {
+      map.setView([lat, lng], 13);
+
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        const newMarker = L.marker([lat, lng]).addTo(map);
+        setMarker(newMarker);
+      }
+    }
+  };
+
+  // Function to clear location selection
+  const clearLocationSelection = () => {
+    setSearchAddress("");
+
+    // Remove marker
+    if (marker && map) {
+      map.removeLayer(marker);
+      setMarker(null);
+    }
+
+    // Reset map view
+    if (map) {
+      map.setView([20.5937, 78.9629], 5);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      latitude: "",
+      longitude: "",
+      location: ""
+    }));
   };
 
   const handleChange = (e) => {
@@ -256,8 +550,8 @@ const AdminDesignerEdit = () => {
                   placeholder="₹ 250/hr"
                 />
               </div>
-              
-              <div>
+
+              {/* <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Location *
                 </label>
@@ -268,8 +562,54 @@ const AdminDesignerEdit = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="Area/Neighborhood"
+                  placeholder="Area/Neighborhood/City"
                 />
+                <p className="text-xs text-gray-500 mt-1">This field is automatically filled when selecting a location on the map, but can be edited manually if needed.</p>
+              </div> */}
+
+              {/* Location Selection with Map */}
+              <div className="col-span-1 md:col-span-2 mt-4">
+                <h3 className="text-lg font-medium mb-4">Designer Location</h3>
+                <p className="text-sm text-gray-600 mb-2">Search for a location or click on the map to select the designer's location.</p>
+
+                {/* Search Box */}
+                <SearchBox onPlaceSelected={handlePlaceSelected} />
+
+                <div style={{ position: 'relative', height: '400px', width: '100%', marginTop: '12px' }}>
+                  {/* Leaflet Map */}
+                  <div
+                    ref={mapContainerRef}
+                    style={{ height: '100%', width: '100%' }}
+                    className="rounded border border-gray-300"
+                  ></div>
+
+                  {mapLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#006452]"></div>
+                        <p className="mt-2 text-[#006452]">Loading map...</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Display selected address if available */}
+                {searchAddress && (
+                  <div className="mt-2 p-2 bg-gray-100 rounded flex justify-between items-center">
+                    <p className="text-sm"><strong>Selected Address:</strong> {searchAddress}</p>
+                    <button
+                      type="button"
+                      onClick={clearLocationSelection}
+                      className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {/* Hidden coordinates fields */}
+                <input type="hidden" name="latitude" value={formData.latitude} />
+                <input type="hidden" name="longitude" value={formData.longitude} />
               </div>
               
               <div>

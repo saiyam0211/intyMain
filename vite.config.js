@@ -10,7 +10,7 @@ export default defineConfig({
     allowedHosts: ["inty-3-1.onrender.com"], // Add your Render domain here
     proxy: {
       '/api': {
-        target: 'https://inty-backend.onrender.com',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

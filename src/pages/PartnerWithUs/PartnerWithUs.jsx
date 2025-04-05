@@ -28,14 +28,24 @@ export default function PartnerWithUs() {
   const [errors, setErrors] = useState({});
 
   // API URL - using environment variable if available, otherwise hardcoded
-  const API_URL = 'https://inty-backend.onrender.com/api';
-  
+  // Add fallback to production API if localhost fails
+  const LOCAL_API_URL = 'http://localhost:3000/api';
+  const PRODUCTION_API_URL = 'https://inty-backend.onrender.com/api';
+  const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
+
   // Debug API URL
-  console.log("Using API URL:", API_URL);
+  console.log("Using API URL:", apiUrl);
+
+  // Add function to switch API URLs if needed
+  const switchToProductionApi = () => {
+    console.log("Switching to production API URL");
+    setApiUrl(PRODUCTION_API_URL);
+    return PRODUCTION_API_URL;
+  };
 
   useEffect(() => {
     setIsVisible(true);
-  }, [API_URL]);
+  }, [apiUrl]);
 
   // Animation variants
   const fadeIn = {
@@ -148,23 +158,82 @@ export default function PartnerWithUs() {
       return;
     }
 
+    // First, check if email is already registered with this role
+    // This pre-check helps provide better user experience before full signup
+    try {
+      const checkResponse = await axios.get(`${apiUrl}/users/check-email`, {
+        params: {
+          email: formData.email,
+          role: formData.role
+        }
+      }).catch(err => {
+        // If the endpoint doesn't exist yet, just continue with normal registration
+        console.log("Email check endpoint not available, continuing with standard registration");
+        return { data: { exists: false, otherRoles: [] } };
+      });
+      
+      if (checkResponse.data && checkResponse.data.exists) {
+        toast.error(`This email is already registered as a ${formData.role}.`);
+        
+        // Show login prompt
+        setTimeout(() => {
+          if (window.confirm("Would you like to log in instead?")) {
+            setIsLoginMode(true);
+          }
+        }, 1000);
+        
+        return;
+      }
+      
+      // If email exists with other roles, inform user but continue
+      if (checkResponse.data && checkResponse.data.otherRoles && checkResponse.data.otherRoles.length > 0) {
+        const roles = checkResponse.data.otherRoles;
+        toast.info(`You're already registered as: ${roles.join(', ')}. You can use the same email for different roles.`);
+      }
+    } catch (checkError) {
+      // Just log the error but continue with registration
+      console.log("Error checking email:", checkError);
+    }
+
     setIsLoading(true);
     toast.info("Creating your account...", { autoClose: false, toastId: "signup-progress" });
 
     try {
-      console.log("Sending signup request to:", `${API_URL}/users/register`);
+      console.log("Sending signup request to:", `${apiUrl}/users/register`);
       console.log("Signup data:", {
         email: formData.email,
         password: formData.password,
         role: formData.role
       });
       
-      // Register the user
-      const response = await axios.post(`${API_URL}/users/register`, {
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      });
+      let currentApiUrl = apiUrl;
+      let response;
+
+      try {
+        // First try with current API URL
+        response = await axios.post(`${currentApiUrl}/users/register`, {
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        });
+      } catch (initialError) {
+        console.error("Initial API request failed:", initialError);
+        
+        // If using localhost and got an error, try the production API
+        if (currentApiUrl === LOCAL_API_URL) {
+          toast.info("Local server connection failed. Trying remote server...");
+          currentApiUrl = switchToProductionApi();
+          
+          response = await axios.post(`${currentApiUrl}/users/register`, {
+            email: formData.email,
+            password: formData.password,
+            role: formData.role
+          });
+        } else {
+          // If already using production API, rethrow the error
+          throw initialError;
+        }
+      }
 
       console.log("Registration response:", response.data);
       
@@ -174,11 +243,16 @@ export default function PartnerWithUs() {
       if (response.data.success) {
         toast.success("Registration successful! You can now complete your profile.");
 
+        // Show notification about admin review
+        toast.info(
+          "After profile completion, your listing will be reviewed by our admin team before being published on the website.", 
+          { autoClose: 5000 }
+        );
+
         // Redirect based on role
         setTimeout(() => {
           toast.info(`Taking you to your ${formData.role} profile setup...`);
           
-          // You can connect these routes later
           switch (formData.role) {
             case "company":
               navigate("/add-company");
@@ -209,18 +283,79 @@ export default function PartnerWithUs() {
         const statusCode = error.response.status;
         const errorData = error.response.data;
         
+        console.log("Error response data:", errorData);
+        
         switch (statusCode) {
           case 400:
-            toast.error(`Input Error: ${errorData.message || "Please check your information"}`);
+            // Handle different types of 400 errors
+            if (errorData.code === 'DUPLICATE_EMAIL_ROLE') {
+              // This is from our updated backend
+              toast.error(errorData.message || `This email is already registered as a ${formData.role}`);
+              
+              // Prompt to login instead
+              setTimeout(() => {
+                if (window.confirm("Would you like to log in instead?")) {
+                  setIsLoginMode(true);
+                }
+              }, 1000);
+            }
+            else if (errorData.message && errorData.message.includes("already registered as a")) {
+              // Handle duplicate email for the same role (updated backend)
+              toast.error(errorData.message);
+              toast.info("You can use the same email to register for different roles (company, designer, or craftsman).");
+              
+              // Prompt to login instead
+              setTimeout(() => {
+                if (window.confirm("Would you like to log in instead?")) {
+                  setIsLoginMode(true);
+                }
+              }, 1000);
+            } 
+            else if (errorData.message && errorData.message === "Email is already registered") {
+              // This is the message from the old backend code
+              toast.error("This email is already registered in our system.");
+              
+              // Try to get other roles this email might be registered with
+              try {
+                // This is a fallback check for older backends
+                axios.get(`${apiUrl}/users/check-email`, {
+                  params: { email: formData.email }
+                }).then(response => {
+                  if (response.data && response.data.otherRoles && response.data.otherRoles.length > 0) {
+                    const roles = response.data.otherRoles;
+                    toast.info(`You're already registered as: ${roles.join(', ')}`);
+                  }
+                }).catch(() => {
+                  // Endpoint doesn't exist, just show the generic message
+                  toast.info("Please try registering with a different email address or contact support.");
+                });
+              } catch (checkError) {
+                console.log("Error in fallback email check:", checkError);
+              }
+              
+              // Optional: Show a popup that helps the user navigate to login instead
+              setTimeout(() => {
+                if (window.confirm("Do you already have an account with this email? Would you like to log in instead?")) {
+                  setIsLoginMode(true);
+                }
+              }, 1000);
+            } else {
+              toast.error(`Input Error: ${errorData.message || "Please check your information"}`);
+            }
             break;
           case 409:
-            toast.error(`Account Already Exists: ${errorData.message || "This email is already registered"}`);
+            toast.error(`Account Error: ${errorData.message || "This email is already registered with this role"}`);
+            toast.info("You can use the same email to register for different roles (company, designer, or craftsman).");
+            break;
+          case 500:
+            // Display more details for server errors
+            const errorDetails = errorData.details || errorData.error || errorData.message || "Unknown server error";
+            console.error("Server error details:", errorDetails);
+            toast.error("Server Error: Registration failed due to a technical issue.");
+            toast.info("Please try again later or contact support if the issue persists.");
             break;
           case 422:
             toast.error(`Validation Error: ${errorData.message || "Please check your information"}`);
-            break;
-          case 500:
-            toast.error("Server Error: We're experiencing technical difficulties. Please try again later.");
             break;
           default:
             toast.error(errorData.message || "Registration failed. Please try again.");
@@ -228,6 +363,24 @@ export default function PartnerWithUs() {
       } else if (error.request) {
         // The request was made but no response was received
         toast.error("Network Error: Please check your internet connection and try again.");
+        
+        // If using localhost, suggest trying the production server
+        if (apiUrl === LOCAL_API_URL) {
+          setTimeout(() => {
+            toast.info("Server might be offline. Would you like to try our production server?", {
+              autoClose: false,
+              closeOnClick: false,
+              draggable: false,
+              closeButton: false,
+              position: "bottom-center",
+              onClick: () => {
+                toast.dismiss();
+                switchToProductionApi();
+                toast.info("Switched to production server. Please try registering again.");
+              }
+            });
+          }, 1000);
+        }
       } else {
         // Something happened in setting up the request
         toast.error("Error: Something went wrong. Please try again later.");
@@ -250,53 +403,60 @@ export default function PartnerWithUs() {
     }
 
     setIsLoading(true);
-    toast.info("Logging you in...", { autoClose: false, toastId: "login-progress" });
+    toast.info("Logging in...", { autoClose: false, toastId: "login-progress" });
 
     try {
-      console.log("Sending login request to:", `${API_URL}/users/login`);
+      console.log("Sending login request to:", `${apiUrl}/users/login`);
       
-      // Login the user
-      const response = await axios.post(`${API_URL}/users/login`, {
-        email: formData.email,
-        password: formData.password
-      });
+      let currentApiUrl = apiUrl;
+      let response;
 
+      try {
+        // First try with current API URL
+        response = await axios.post(`${currentApiUrl}/users/login`, {
+          email: formData.email,
+          password: formData.password
+        });
+      } catch (initialError) {
+        console.error("Initial API request failed:", initialError);
+        
+        // If using localhost and got an error, try the production API
+        if (currentApiUrl === LOCAL_API_URL) {
+          toast.info("Local server connection failed. Trying remote server...");
+          currentApiUrl = switchToProductionApi();
+          
+          response = await axios.post(`${currentApiUrl}/users/login`, {
+            email: formData.email,
+            password: formData.password
+          });
+        } else {
+          // If already using production API, rethrow the error
+          throw initialError;
+        }
+      }
+      
       console.log("Login response:", response.data);
       
       // Close the progress toast
       toast.dismiss("login-progress");
       
       if (response.data.success) {
-        // Store token and user info
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-
         toast.success("Login successful!");
-
+        
+        // Save token in localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userEmail", formData.email);
+        localStorage.setItem("userRole", response.data.user.role);
+        
         // Redirect based on role
         setTimeout(() => {
-          const role = response.data.user.role;
-          toast.info(`Welcome back! Taking you to your dashboard...`);
-          
-          switch (role) {
-            case "company":
-              navigate("/add-company");
-              break;
-            case "designer":
-              navigate("/add-designer");
-              break;
-            case "craftsman":
-              navigate("/add-craftsman");
-              break;
-            default:
-              toast.warning("Role not recognized. Redirecting to homepage.");
-              navigate("/"); // Go to home if something went wrong
-          }
+          toast.info(`Taking you to your dashboard...`);
+          navigate("/"); // For now, just go to home
         }, 1500);
       } else {
-        toast.error(response.data.message || "Login failed. Please check your credentials.");
+        toast.error(response.data.message || "Login failed. Please try again.");
       }
-
+      
     } catch (error) {
       console.error("Login error:", error);
       
@@ -315,24 +475,33 @@ export default function PartnerWithUs() {
           case 401:
             toast.error(`Authentication Error: ${errorData.message || "Invalid email or password"}`);
             break;
-          case 403:
-            toast.error(`Access Denied: ${errorData.message || "Your account has been suspended or deactivated"}`);
-            break;
-          case 404:
-            toast.error(`Account Not Found: ${errorData.message || "No account found with this email"}`);
-            break;
-          case 429:
-            toast.error(`Too Many Attempts: ${errorData.message || "Too many login attempts. Please try again later."}`);
-            break;
           case 500:
             toast.error("Server Error: We're experiencing technical difficulties. Please try again later.");
             break;
           default:
-            toast.error(errorData.message || "Login failed. Please check your credentials.");
+            toast.error(errorData.message || "Login failed. Please try again.");
         }
       } else if (error.request) {
         // The request was made but no response was received
         toast.error("Network Error: Please check your internet connection and try again.");
+        
+        // If using localhost, suggest trying the production server
+        if (apiUrl === LOCAL_API_URL) {
+          setTimeout(() => {
+            toast.info("Server might be offline. Would you like to try our production server?", {
+              autoClose: false,
+              closeOnClick: false,
+              draggable: false,
+              closeButton: false,
+              position: "bottom-center",
+              onClick: () => {
+                toast.dismiss();
+                switchToProductionApi();
+                toast.info("Switched to production server. Please try logging in again.");
+              }
+            });
+          }, 1000);
+        }
       } else {
         // Something happened in setting up the request
         toast.error("Error: Something went wrong. Please try again later.");

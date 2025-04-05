@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar/Navbar';
 import { toast } from 'react-toastify';
 import { FaSave, FaArrowLeft, FaImage } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const AdminTestimonialForm = () => {
     const { id } = useParams();

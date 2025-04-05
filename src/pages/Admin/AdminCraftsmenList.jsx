@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import { FaEdit, FaTrash, FaEye, FaEyeSlash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const API_URL = "https://inty-backend.onrender.com/api/craftsmen";
+const API_URL = "http://localhost:3000/api/craftsmen";
 
 const AdminCraftsmenList = () => {
   const navigate = useNavigate();
@@ -13,6 +13,8 @@ const AdminCraftsmenList = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // For tracking loading states (delete, list, unlist)
   const [successMessage, setSuccessMessage] = useState('');
+  const [pendingCraftsmen, setPendingCraftsmen] = useState([]);
+  const [listedCraftsmen, setListedCraftsmen] = useState([]);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -32,16 +34,30 @@ const AdminCraftsmenList = () => {
       const response = await axios.get(`${API_URL}?showAll=true`);
       console.log("Fetched craftsmen response:", response.data);
       
+      let allCraftsmen = [];
       if (response.data && Array.isArray(response.data)) {
-        // Sort craftsmen by order to ensure correct display
-        const sortedCraftsmen = response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setCraftsmen(sortedCraftsmen);
+        allCraftsmen = response.data;
       } else if (response.data && Array.isArray(response.data.data)) {
-        const sortedCraftsmen = response.data.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setCraftsmen(sortedCraftsmen);
+        allCraftsmen = response.data.data;
       } else {
         throw new Error('Unexpected data format');
       }
+      
+      // Sort craftsmen by order to ensure correct display
+      const sortedCraftsmen = allCraftsmen.sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      // Split into pending and listed craftsmen
+      const pending = sortedCraftsmen.filter(craftsman => 
+        craftsman.isListed === false || craftsman.show === false
+      );
+      
+      const listed = sortedCraftsmen.filter(craftsman => 
+        craftsman.isListed !== false && craftsman.show !== false
+      );
+      
+      setCraftsmen(sortedCraftsmen);
+      setPendingCraftsmen(pending);
+      setListedCraftsmen(listed);
     } catch (err) {
       console.error('Error fetching craftsmen:', err);
       setError('Failed to load craftsmen. Please try again later.');
@@ -98,7 +114,8 @@ const AdminCraftsmenList = () => {
       // Use the standard update endpoint instead of toggle-status
       await axios.put(`${API_URL}/${id}`, 
         { 
-          show: !currentStatus // Toggle the current status
+          show: !currentStatus, // Toggle the current status
+          isListed: !currentStatus // Also update the isListed field
         },
         {
           headers: {
@@ -164,6 +181,113 @@ const AdminCraftsmenList = () => {
     }
   };
 
+  const renderCraftsmanTable = (craftsmenList, isPending = false) => {
+    return (
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className={`${isPending ? 'bg-amber-50' : 'bg-gray-50'}`}>
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Order
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Name
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Location
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Category
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rate
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rating
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className={`${isPending ? 'bg-amber-50/30' : 'bg-white'} divide-y divide-gray-200`}>
+          {craftsmenList.map((craftsman, index) => (
+            <tr key={craftsman._id} className={`${isPending ? 'hover:bg-amber-50/50' : 'hover:bg-gray-50'} ${isPending && 'animate-pulse-slow'}`}>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <span className="text-gray-900 mr-3">{craftsman.order || '0'}</span>
+                  <div className="flex flex-col">
+                    <button 
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0 || isPending}
+                      className={`text-gray-500 ${index === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <FaArrowUp />
+                    </button>
+                    <button 
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === craftsmenList.length - 1 || isPending}
+                      className={`text-gray-500 ${index === craftsmenList.length - 1 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <FaArrowDown />
+                    </button>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{craftsman.name}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{craftsman.location}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{craftsman.category}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{craftsman.rate}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{craftsman.rating} ★</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${
+                  isPending ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {isPending ? 'Pending Approval' : 'Listed'}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  onClick={() => handleEdit(craftsman._id)}
+                  className="text-indigo-600 hover:text-indigo-900 mr-4"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleListingToggle(craftsman._id, craftsman.name, !isPending)}
+                  className={`mr-4 ${isPending ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'}`}
+                  disabled={actionLoading === `status-${craftsman._id}`}
+                >
+                  {actionLoading === `status-${craftsman._id}` ? 'Processing...' : 
+                    (isPending ? 'Approve & List' : 'Unlist')}
+                </button>
+                <button
+                  onClick={() => handleDelete(craftsman._id, craftsman.name)}
+                  className="text-red-600 hover:text-red-900"
+                  disabled={actionLoading === `delete-${craftsman._id}`}
+                >
+                  {actionLoading === `delete-${craftsman._id}` ? 'Deleting...' : 'Delete'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative top-0 left-0 w-full bg-transparent z-50">
@@ -205,109 +329,30 @@ const AdminCraftsmenList = () => {
             <p className="text-gray-600">No craftsmen found. Click "Add New Craftsman" to create one.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rate
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rating
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {craftsmen.map((craftsman, index) => (
-                  <tr key={craftsman._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-gray-900 mr-3">{craftsman.order || '0'}</span>
-                        <div className="flex flex-col">
-                          <button 
-                            onClick={() => handleMoveUp(index)}
-                            disabled={index === 0}
-                            className={`text-gray-500 ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
-                          >
-                            <FaArrowUp />
-                          </button>
-                          <button 
-                            onClick={() => handleMoveDown(index)}
-                            disabled={index === craftsmen.length - 1}
-                            className={`text-gray-500 ${index === craftsmen.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
-                          >
-                            <FaArrowDown />
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{craftsman.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{craftsman.location}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{craftsman.category}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{craftsman.rate}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{craftsman.rating} ★</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${
-                        craftsman.show !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {craftsman.show !== false ? 'Listed' : 'Unlisted'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(craftsman._id)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleListingToggle(craftsman._id, craftsman.name, craftsman.show !== false)}
-                        className={`mr-4 ${craftsman.show !== false ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'}`}
-                        disabled={actionLoading === `status-${craftsman._id}`}
-                      >
-                        {actionLoading === `status-${craftsman._id}` ? 'Processing...' : 
-                          (craftsman.show !== false ? 'Unlist' : 'List')}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(craftsman._id, craftsman.name)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={actionLoading === `delete-${craftsman._id}`}
-                      >
-                        {actionLoading === `delete-${craftsman._id}` ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-8">
+            {/* Pending Craftsmen */}
+            {pendingCraftsmen.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-amber-700 mb-4 flex items-center">
+                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                  Pending Approval ({pendingCraftsmen.length})
+                </h2>
+                <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-amber-500">
+                  {renderCraftsmanTable(pendingCraftsmen, true)}
+                </div>
+              </div>
+            )}
+
+            {/* Listed Craftsmen */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                Listed Craftsmen ({listedCraftsmen.length})
+              </h2>
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                {renderCraftsmanTable(listedCraftsmen, false)}
+              </div>
+            </div>
           </div>
         )}
 

@@ -15,6 +15,12 @@ import CraftsmanProfileCard from '../../components/ProfileCard/CraftsmanProfileC
 import DesignersWrapper from '../../components/DesignerWrapper/DesignerWrapper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
+import lock from "../../assets/lock.png";
+import { toast, ToastContainer } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
+import LocationPopup from '../../components/LocationPopup/LocationPopup';
 
 // Fallback to sample data if API fails
 const sampleProfiles = [
@@ -44,42 +50,182 @@ const Craftsmen = () => {
   const [craftsmen, setCraftsmen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isSignedIn } = useUser();
+  const navigate = useNavigate();
+  const [userLocation, setUserLocation] = useState(localStorage.getItem('userLocation') || '');
+  const [showLocationPopup, setShowLocationPopup] = useState(!localStorage.getItem('userLocation'));
+
+  // Restrict category selection for non-logged in users
+  const handleCategorySelect = (category) => {
+    if (!isSignedIn && (category === "Standard" || category === "Premium" || category === "Luxury")) {
+      // Show toast notification about premium content
+      toast.info("Login required to access " + category + " category craftsmen");
+      // Still set the category to show the login box
+      setSelectedCategory(category);
+      return;
+    }
+    setSelectedCategory(category);
+  };
+
+  // Handle location selection
+  const handleLocationSelect = (location, coordinates, address) => {
+    console.log(`Selected location: ${location}, Coordinates:`, coordinates);
+    if (location) {
+      setUserLocation(location);
+      localStorage.setItem('userLocation', location);
+
+      // Store exact coordinates if available
+      if (coordinates) {
+        const liveLocationData = {
+          latitude: coordinates.latitude || coordinates.lat,
+          longitude: coordinates.longitude || coordinates.lng,
+          address: address || location,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
+      } else {
+        // If no coordinates but we have a location name, try to get default coordinates for that city
+        const cityCoordinates = {
+          'Bengaluru': { lat: 12.9716, lng: 77.5946 },
+          'Indore': { lat: 22.7196, lng: 75.8577 },
+          'Nagpur': { lat: 21.1458, lng: 79.0882 },
+          'Mumbai': { lat: 19.0760, lng: 72.8777 },
+          'Delhi': { lat: 28.6139, lng: 77.2090 },
+          'Chennai': { lat: 13.0827, lng: 80.2707 },
+          'Kolkata': { lat: 22.5726, lng: 88.3639 },
+          'Hyderabad': { lat: 17.3850, lng: 78.4867 },
+          'Pune': { lat: 18.5204, lng: 73.8567 },
+          'Ahmedabad': { lat: 23.0225, lng: 72.5714 },
+          'Jaipur': { lat: 26.9124, lng: 75.7873 }
+        };
+
+        if (cityCoordinates[location]) {
+          const liveLocationData = {
+            latitude: cityCoordinates[location].lat,
+            longitude: cityCoordinates[location].lng,
+            timestamp: new Date().toISOString()
+          };
+          localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
+        } else {
+          // Use center of India as fallback
+          const liveLocationData = {
+            latitude: 20.5937,
+            longitude: 78.9629,
+            timestamp: new Date().toISOString()
+          };
+          localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
+        }
+      }
+
+      // Fetch craftsmen with the selected location
+      fetchCraftsmenWithLocation(location);
+    } else {
+      // If no location is selected, clear the location data
+      localStorage.removeItem('userLocation');
+      localStorage.removeItem('userLiveLocation');
+
+      // Show location popup
+      setShowLocationPopup(true);
+    }
+
+    // Hide location popup if a location was selected
+    if (location) {
+      setShowLocationPopup(false);
+    }
+  };
+
+  const fetchCraftsmenWithLocation = (locationValue) => {
+    console.log(`Fetching craftsmen with location: ${locationValue}`);
+    fetchCraftsmen(locationValue);
+  };
+
+  const handleChangeLocation = () => {
+    // Clear location data
+    setUserLocation('');
+    localStorage.removeItem('userLocation');
+    localStorage.removeItem('userLiveLocation');
+
+    // Show location popup
+    setShowLocationPopup(true);
+  };
 
   // Fetch craftsmen from API
-  useEffect(() => {
-    const fetchCraftsmen = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/craftsmen`);
+  const fetchCraftsmen = async (location = null) => {
+    try {
+      setLoading(true);
+      
+      let apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/craftsmen`;
+      
+      // Add location parameter if provided
+      if (location) {
+        apiUrl += `?location=${encodeURIComponent(location)}`;
+      }
+      
+      const response = await axios.get(apiUrl);
 
-        // Ensure craftsmen is always an array
-        if (response.data && Array.isArray(response.data)) {
-          console.log('Craftsman data is an array:', response.data);
-          setCraftsmen(response.data);
-        } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.data)) {
-          // If response has a nested data property that's an array
-          console.log('Craftsman data is in a nested property:', response.data.data);
-          setCraftsmen(response.data.data);
+      // Ensure craftsmen is always an array
+      if (response.data && Array.isArray(response.data)) {
+        console.log('Craftsman data is an array:', response.data);
+        setCraftsmen(response.data);
+      } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.data)) {
+        // If response has a nested data property that's an array
+        console.log('Craftsman data is in a nested property:', response.data.data);
+        setCraftsmen(response.data.data);
+      } else {
+        // Default to empty array if data format is unexpected
+        console.error('Unexpected API response format:', response.data);
+        setCraftsmen([]);
+        setError('Received unexpected data format from server');
+      }
+    } catch (err) {
+      console.error('Error fetching craftsmen:', err);
+      setError('Failed to load craftsmen. Using sample data instead.');
+      setCraftsmen(sampleProfiles);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    // Check if we have live location data
+    const userLiveLocationStr = localStorage.getItem('userLiveLocation');
+    if (userLiveLocationStr) {
+      console.log("Found live location data in localStorage");
+      try {
+        // Parse the live location to verify it's valid
+        const userLiveLocation = JSON.parse(userLiveLocationStr);
+        if (userLiveLocation.latitude && userLiveLocation.longitude) {
+          console.log("Live location data is valid:", userLiveLocation);
+          console.log(`User's exact coordinates: ${userLiveLocation.latitude}, ${userLiveLocation.longitude}`);
         } else {
-          // Default to empty array if data format is unexpected
-          console.error('Unexpected API response format:', response.data);
-          setCraftsmen([]);
-          setError('Received unexpected data format from server');
+          console.log("Live location data is invalid, removing it");
+          localStorage.removeItem('userLiveLocation');
         }
       } catch (err) {
-        console.error('Error fetching craftsmen:', err);
-        setError('Failed to load craftsmen. Using sample data instead.');
-        setCraftsmen(sampleProfiles);
-      } finally {
-        setLoading(false);
+        console.error("Error parsing live location data:", err);
+        localStorage.removeItem('userLiveLocation');
       }
-    };
+    } else {
+      console.log("No live location data found in localStorage");
+    }
 
-    fetchCraftsmen();
+    // Only fetch if we have a location, otherwise wait for location popup
+    if (userLocation) {
+      fetchCraftsmen(userLocation);
+    } else {
+      // Still need to set loading to false if no location yet
+      setLoading(false);
+    }
   }, []);
 
-  // Filter craftsmen based on selected category
+  // Filter craftsmen based on selected category and login status
   const filteredCraftsmen = Array.isArray(craftsmen) ? craftsmen.filter(craftsman => {
+    // For non-logged in users, only show Basic category
+    if (!isSignedIn && (selectedCategory === "Standard" || selectedCategory === "Premium" || selectedCategory === "Luxury")) {
+      return false;
+    }
+
     // Extract numeric rate value
     let rate;
     if (craftsman && craftsman.rateNumeric !== undefined) {
@@ -100,10 +246,17 @@ const Craftsmen = () => {
 
   return (
     <div className="bg-white">
+      <ToastContainer position="top-center" autoClose={3000} hideProgressBar={true} />
+      
       {/* Header Section */}
       <div className="absolute top-0 left-0 w-full bg-transparent z-50">
         <Header />
       </div>
+
+      {/* Location Popup - only show if showLocationPopup is true */}
+      {showLocationPopup && (
+        <LocationPopup onLocationSelect={handleLocationSelect} />
+      )}
 
       {/* Hero Section */}
       <motion.section
@@ -124,10 +277,66 @@ const Craftsmen = () => {
         </motion.h2>
       </motion.section>
 
+      {/* Location Display */}
+      {userLocation && (
+        <div className="flex justify-center items-center mt-4 px-4">
+          <div className="bg-gray-100 py-2 px-4 rounded-full flex items-center text-sm">
+            <FontAwesomeIcon icon={faLocationDot} className="text-[#006452] mr-2" />
+            <span className="mr-2">Location: <strong>{userLocation}</strong></span>
+            <button 
+              onClick={handleChangeLocation}
+              className="text-[#006452] hover:text-[#004d3d] font-medium ml-2"
+            >
+              Change
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Focus Links (Pass the setSelectedCategory function) */}
       <div className="m-12 px-4">
-        <TrueFocus sentence="Basic Standard Premium Luxury" onCategorySelect={setSelectedCategory} />
+        <TrueFocus 
+          sentence="Basic Standard Premium Luxury" 
+          onCategorySelect={handleCategorySelect}
+        />
       </div>
+
+      {/* Non-logged in message for Standard/Premium/Luxury */}
+      {!isSignedIn && (selectedCategory === "Standard" || selectedCategory === "Premium" || selectedCategory === "Luxury") && (
+        <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center max-w-2xl mx-auto">
+          <div className="flex flex-col items-center">
+            <div className="bg-white p-3 sm:p-4 rounded-full mb-4">
+              <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
+            </div>
+            <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+              Premium Content
+            </h3>
+            <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
+              {selectedCategory} category craftsmen are only available to logged in users. Create a free account to unlock all craftsmen in this category.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button 
+                onClick={() => navigate('/login')}
+                className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => navigate('/signup')}
+                className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+              >
+                Sign Up
+              </button>
+              <button 
+                onClick={() => setSelectedCategory("Basic")}
+                className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+              >
+                View Basic
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {loading && (
@@ -152,7 +361,7 @@ const Craftsmen = () => {
 
       {/* Carousel & Filtered Craftsman Cards */}
       <div className="flex flex-col space-y-16 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto mb-16">
-        {!loading && filteredCraftsmen.length > 0 && filteredCraftsmen.map(craftsman => (
+        {!loading && filteredCraftsmen.length > 0 && (isSignedIn ? filteredCraftsmen : filteredCraftsmen.slice(0, 3)).map(craftsman => (
           <div
             key={craftsman._id || craftsman.id}
             className="w-full flex flex-col md:flex-row shadow-lg rounded-lg overflow-hidden"
@@ -190,12 +399,51 @@ const Craftsmen = () => {
             </div>
           </div>
         ))}
+        
+        {/* Login card for non-logged-in users if more craftsmen exist */}
+        {!isSignedIn && filteredCraftsmen.length > 3 && (
+          <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-3 sm:p-4 rounded-full mb-4">
+                <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
+              </div>
+              <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+                {filteredCraftsmen.length - 3 >= 10 ? "10+" : filteredCraftsmen.length - 3} More Craftsmen Available
+              </h3>
+              <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
+                Create a free account to unlock all craftsmen matching your search criteria and access advanced features.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Logo Grid Section */}
       {/* <div>
         <CardCrousel images={customImages} showOnlyImages={true} largeImage={true} />
       </div> */}
+      
+      {/* Explore Companies Section */}
+      <div className="mt-12 mb-6 text-center">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+          Explore Companies
+        </h2>
+        <div className="w-24 h-1 bg-[#006452] mx-auto mt-4"></div>
+      </div>
       <DesignersWrapper hideHeadings={true} />
 
       {/* Footer Section */}

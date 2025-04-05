@@ -13,6 +13,8 @@ const AdminDesignersList = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // For tracking loading states (delete, list, unlist)
   const [successMessage, setSuccessMessage] = useState('');
+  const [pendingDesigners, setPendingDesigners] = useState([]);
+  const [listedDesigners, setListedDesigners] = useState([]);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -32,16 +34,30 @@ const AdminDesignersList = () => {
       const response = await axios.get(`${API_URL}?showAll=true`);
       console.log("Fetched designers response:", response.data);
       
+      let allDesigners = [];
       if (response.data && Array.isArray(response.data)) {
-        // Sort designers by order to ensure correct display
-        const sortedDesigners = response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setDesigners(sortedDesigners);
+        allDesigners = response.data;
       } else if (response.data && Array.isArray(response.data.data)) {
-        const sortedDesigners = response.data.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setDesigners(sortedDesigners);
+        allDesigners = response.data.data;
       } else {
         throw new Error('Unexpected data format');
       }
+      
+      // Sort designers by order to ensure correct display
+      const sortedDesigners = allDesigners.sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      // Split into pending and listed designers
+      const pending = sortedDesigners.filter(designer => 
+        designer.isListed === false || designer.show === false
+      );
+      
+      const listed = sortedDesigners.filter(designer => 
+        designer.isListed !== false && designer.show !== false
+      );
+      
+      setDesigners(sortedDesigners);
+      setPendingDesigners(pending);
+      setListedDesigners(listed);
     } catch (err) {
       console.error('Error fetching designers:', err);
       setError('Failed to load designers. Please try again later.');
@@ -98,7 +114,8 @@ const AdminDesignersList = () => {
       // Use the standard update endpoint instead of toggle-status
       await axios.put(`${API_URL}/${id}`, 
         { 
-          show: !currentStatus // Toggle the current status
+          show: !currentStatus, // Toggle the current status
+          isListed: !currentStatus // Also update the isListed field
         },
         {
           headers: {
@@ -164,6 +181,115 @@ const AdminDesignersList = () => {
     }
   };
 
+  const renderDesignerTable = (designersList, isPending = false) => {
+    return (
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className={`${isPending ? 'bg-amber-50' : 'bg-gray-50'}`}>
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Order
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Name
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Location
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rate
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rating
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Portfolio
+            </th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className={`${isPending ? 'bg-amber-50/30' : 'bg-white'} divide-y divide-gray-200`}>
+          {designersList.map((designer, index) => (
+            <tr key={designer._id} className={`${isPending ? 'hover:bg-amber-50/50' : 'hover:bg-gray-50'} ${isPending && 'animate-pulse-slow'}`}>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <span className="text-gray-900 mr-3">{designer.order || '0'}</span>
+                  <div className="flex flex-col">
+                    <button 
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0 || isPending}
+                      className={`text-gray-500 ${index === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <FaArrowUp />
+                    </button>
+                    <button 
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === designersList.length - 1 || isPending}
+                      className={`text-gray-500 ${index === designersList.length - 1 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <FaArrowDown />
+                    </button>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{designer.name}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{designer.location}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{designer.rate}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">{designer.rating} ★</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${
+                  isPending ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {isPending ? 'Pending Approval' : 'Listed'}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-500">
+                  {Array.isArray(designer.portfolio) ? `${designer.portfolio.length} images` : '0 images'}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  onClick={() => handleEdit(designer._id)}
+                  className="text-indigo-600 hover:text-indigo-900 mr-4"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleListingToggle(designer._id, designer.name, !isPending)}
+                  className={`mr-4 ${isPending ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'}`}
+                  disabled={actionLoading === `status-${designer._id}`}
+                >
+                  {actionLoading === `status-${designer._id}` ? 'Processing...' : 
+                    (isPending ? 'Approve & List' : 'Unlist')}
+                </button>
+                <button
+                  onClick={() => handleDelete(designer._id, designer.name)}
+                  className="text-red-600 hover:text-red-900"
+                  disabled={actionLoading === `delete-${designer._id}`}
+                >
+                  {actionLoading === `delete-${designer._id}` ? 'Deleting...' : 'Delete'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative top-0 left-0 w-full bg-transparent z-50">
@@ -205,111 +331,30 @@ const AdminDesignersList = () => {
             <p className="text-gray-600">No designers found. Click "Add New Designer" to create one.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rate
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rating
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Portfolio
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {designers.map((designer, index) => (
-                  <tr key={designer._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-gray-900 mr-3">{designer.order || '0'}</span>
-                        <div className="flex flex-col">
-                          <button 
-                            onClick={() => handleMoveUp(index)}
-                            disabled={index === 0}
-                            className={`text-gray-500 ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
-                          >
-                            <FaArrowUp />
-                          </button>
-                          <button 
-                            onClick={() => handleMoveDown(index)}
-                            disabled={index === designers.length - 1}
-                            className={`text-gray-500 ${index === designers.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700'}`}
-                          >
-                            <FaArrowDown />
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{designer.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{designer.location}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{designer.rate}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{designer.rating} ★</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${
-                        designer.show !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {designer.show !== false ? 'Listed' : 'Unlisted'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {Array.isArray(designer.portfolio) ? `${designer.portfolio.length} images` : '0 images'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(designer._id)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleListingToggle(designer._id, designer.name, designer.show !== false)}
-                        className={`mr-4 ${designer.show !== false ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'}`}
-                        disabled={actionLoading === `status-${designer._id}`}
-                      >
-                        {actionLoading === `status-${designer._id}` ? 'Processing...' : 
-                          (designer.show !== false ? 'Unlist' : 'List')}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(designer._id, designer.name)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={actionLoading === `delete-${designer._id}`}
-                      >
-                        {actionLoading === `delete-${designer._id}` ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-8">
+            {/* Pending Designers */}
+            {pendingDesigners.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-amber-700 mb-4 flex items-center">
+                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                  Pending Approval ({pendingDesigners.length})
+                </h2>
+                <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-amber-500">
+                  {renderDesignerTable(pendingDesigners, true)}
+                </div>
+              </div>
+            )}
+
+            {/* Listed Designers */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                Listed Designers ({listedDesigners.length})
+              </h2>
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                {renderDesignerTable(listedDesigners, false)}
+              </div>
+            </div>
           </div>
         )}
 

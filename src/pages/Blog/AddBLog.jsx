@@ -8,7 +8,7 @@ import backgroundImage from "../../assets/background.png";
 import axios from 'axios'; 
 
 // Set the base URL for API requests
-const API_URL = "https://inty-backend.onrender.com"; // Update this with your actual server URL
+const API_URL = "http://localhost:3000"; // Update this with your actual server URL
 
 export default function AddBlogPage() {
   const navigate = useNavigate();

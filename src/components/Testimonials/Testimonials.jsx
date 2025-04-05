@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaQuoteLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export default function TestimonialSlider() {
   const [testimonials, setTestimonials] = useState([]);

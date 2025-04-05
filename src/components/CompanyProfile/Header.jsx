@@ -177,8 +177,8 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
 
       // Get the base URL based on environment
       const baseURL = process.env.NODE_ENV === 'production'
-        ? 'https://inty-backend.onrender.com'
-        : 'https://inty-backend.onrender.com';
+        ? 'http://localhost:3000'
+        : 'http://localhost:3000';
 
       const response = await axios.post(`${baseURL}/api/contact/enquiry`, enquiryData);
 
@@ -416,7 +416,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
               <div className="w-full mt-4">
                 <div className="h-px w-full bg-gray-200 mb-3"></div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Current Offers</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-2">
                   {companyData.discountsOfferTimeline.split(',').map((offer, index) => (
                     <div key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium">
                       {offer.trim()}
@@ -431,7 +431,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
               <div className="w-full mt-4">
                 <div className="h-px w-full bg-gray-200 mb-3"></div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Awards</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-2">
                   {companyData.anyAwardWon.split(',').map((award, index) => (
                     <div key={index} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
                       {award.trim()}
@@ -446,7 +446,7 @@ const Hero = ({ company = {}, isEnquiryOpen, setIsEnquiryOpen }) => {
               <div className="w-full mt-4">
                 <div className="h-px w-full bg-gray-200 mb-3"></div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Unique Selling Points</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-2">
                   {companyData.usp.split(',').map((usp, index) => (
                     <div key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">
                       {usp.trim()}

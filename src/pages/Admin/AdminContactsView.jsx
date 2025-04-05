@@ -22,7 +22,7 @@ const AdminContactsView = () => {
         }
 
         setLoading(true);
-        const response = await axios.get('https://inty-backend.onrender.com/api/contact', {
+        const response = await axios.get('http://localhost:3000/api/contact', {
           headers: {
             Authorization: `Bearer ${token}`
           }

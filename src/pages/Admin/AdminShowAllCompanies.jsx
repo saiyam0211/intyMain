@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import ResponsiveAdminContainer from '../../components/Admin/ResponsiveAdminContainer';
 import ResponsiveAdminTable from '../../components/Admin/ResponsiveAdminTable';
 
-const API_URL = "https://inty-backend.onrender.com/api/companies";
+const API_URL = "http://localhost:3000/api/companies";
 
 const AdminShowAllCompanies = () => {
     const navigate = useNavigate();
@@ -82,11 +82,16 @@ const AdminShowAllCompanies = () => {
                 return orderA - orderB;
             });
 
-            setCompanies(sortedCompanies);
+            // Count the number of unlisted companies (pending review)
+            const pendingCompanies = sortedCompanies.filter(company => company.show === false);
+            const listedCompanies = sortedCompanies.filter(company => company.show === true);
 
             // Count how many companies are marked as top rated
-            const topRated = sortedCompanies.filter(company => company.topRated).length;
+            const topRated = listedCompanies.filter(company => company.topRated).length;
             setTopRatedCount(topRated);
+
+            // Set companies in state
+            setCompanies(sortedCompanies);
         } catch (err) {
             console.error('Error fetching companies:', err);
             setError(
@@ -611,9 +616,79 @@ const AdminShowAllCompanies = () => {
                 </div>
             )}
             
+            {pendingCompanies.length > 0 && (
+                <div className="mb-8">
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-medium text-yellow-800">
+                                    {pendingCompanies.length} New Companies Pending Review
+                                </h3>
+                                <p className="text-yellow-700 text-sm">
+                                    These companies are unlisted and waiting for your review before going live.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <ResponsiveAdminTable>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Location</th>
+                                <th>Category</th>
+                                <th>Added On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pendingCompanies.map((company) => (
+                                <tr key={`pending-${company._id}`} className="bg-yellow-50">
+                                    <td className="font-medium">{company.name}</td>
+                                    <td>{company.availableCities?.join(', ') || '-'}</td>
+                                    <td>{company.type?.join(', ') || '-'}</td>
+                                    <td>{new Date(company.createdAt).toLocaleDateString()}</td>
+                                    <td className="space-x-2">
+                                        <button
+                                            onClick={() => handleEdit(company._id)}
+                                            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                            title="Edit"
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            onClick={() => handleListingToggle(company._id, company.name, company.show)}
+                                            disabled={actionLoading === `status-${company._id}`}
+                                            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                            title={company.show ? "Unlist" : "List"}
+                                        >
+                                            {actionLoading === `status-${company._id}` ? '...' : company.show ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(company._id, company.name)}
+                                            disabled={actionLoading === `delete-${company._id}`}
+                                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                            title="Delete"
+                                        >
+                                            {actionLoading === `delete-${company._id}` ? '...' : <FaTrash />}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </ResponsiveAdminTable>
+                </div>
+            )}
+            
+            <h2 className="text-xl font-semibold mb-4">Listed Companies</h2>
             <ResponsiveAdminTable
                 columns={columns}
-                data={companies}
+                data={listedCompanies}
                 renderCell={renderCell}
                 renderMobileRow={renderMobileRow}
                 loading={loading}

@@ -187,50 +187,28 @@ const AdminDashboard = () => {
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem('companyFormData');
+    
     return savedData ? JSON.parse(savedData) : {
-      // Original fields
-      name: "",
-      projects: "",
-      experience: "",
-      calculatedExperience: "",
-      yearError: "",
-      branches: "",
+      name: '',
       logo: null,
-      // New fields from screenshots
-      registeredCompanyName: "",
-      nameDisplay: "",
-      description: "",
+      description: '',
+      descriptionHTML: '',
       availableCities: [],
-      officialWebsite: "",
-      fullName: "",
-      designation: "",
-      phoneNumber: "",
-      minMaxBudget: "",
+      branches: '',
+      experience: '',
+      projects: '',
       type: [],
-      bannerImages: [], // Empty array, not Array(10).fill(null)
-      discountsOfferTimeline: "",
-      numberOfProjectsCompleted: "",
-      digitalBrochure: null,
-      usp: "",
-      contactEmail: "",
-      googleRating: "",
-      googleReviews: "",
-      googleReviewCount: "", // Add this new field
-      anyAwardWon: "",
-      categoryType: "",
-      paymentType: [],
-      assured: "",
-      latitude: "",
-      longitude: "",
-      // workInTeams: "",
-      deliveryTimeline: "",
-      basicPriceRange: "",
-      premiumPriceRange: "",
-      luxuryPriceRange: "",
-      serviceCategories: [],
-      projectType: "", // Changed from "residential" to empty string
-      propertySizeRange: "", // Changed from "small" to empty string
-      priceRange: "", // Changed from "budget" to empty string
+      offers: [],
+      usps: [],
+      awards: [],
+      latitude: '',
+      longitude: '',
+      bannerImages: [],
+      priceRange: "",
+      basicPriceRange: '',
+      premiumPriceRange: '',
+      luxuryPriceRange: '',
+      deliveryTimeline: ''
     };
   });
   const navigate = useNavigate();
@@ -304,10 +282,10 @@ const AdminDashboard = () => {
   // Rating Options
   const ratingOptions = ["", "0.0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5", "4.0", "4.5", "5.0"];
   // Project Type options (for search)
-  const projectTypeOptions = ["Studio", "1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK", "Duplex", "Penthouse", "Villa", "Commercial", "Kitchen", "Bedroom", "Bathroom"];
+  // const projectTypeOptions = ["Studio", "1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK", "Duplex", "Penthouse", "Villa", "Commercial", "Kitchen", "Bedroom", "Bathroom"];
   // Property Size options (for search)
-  const propertySizeRangeOptions = ["400 to 600", "600 - 800", "800 - 1000", "1000 - 1200", "1200 - 1400", "1400 - 1600", "1600 - 1800",
-    "1800 - 2000", "2000 - 2400", "2400 - 2800", "2800 - 3200", "3200 - 4000", "4000 - 5000", "5000+"];
+  // const propertySizeRangeOptions = ["400 to 600", "600 - 800", "800 - 1000", "1000 - 1200", "1200 - 1400", "1400 - 1600", "1600 - 1800",
+  //   "1800 - 2000", "2000 - 2400", "2400 - 2800", "2800 - 3200", "3200 - 4000", "4000 - 5000", "5000+"];
   // Price Range options (for search)
   const priceRangeOptions = ["1Lakh to 3Lakh", "3Lakh to 6Lakh", "6Lakh to 10Lakh", "10Lakh to 15Lakh", "15Lakh to 20Lakh",
     "20Lakh to 25Lakh", "25Lakh to 30Lakh", "30Lakh to 40Lakh", "40Lakh+"];
@@ -321,7 +299,7 @@ const AdminDashboard = () => {
   ];
 
   // Set API_URL
-  const API_URL = "https://inty-backend.onrender.com/api";
+  const API_URL = "http://localhost:3000/api";
 
   // Helper function to convert file to Base64
   const fileToBase64 = (file) => {
@@ -815,9 +793,6 @@ const AdminDashboard = () => {
       premiumPriceRange: 'Premium Price Range',
       luxuryPriceRange: 'Luxury Price Range',
       deliveryTimeline: 'Delivery Timeline',
-      projectType: 'Project Type',
-      propertySizeRange: 'Property Size Range',
-      priceRange: 'Price Range',
       type: 'Type' // Add type to required fields
     };
 
@@ -864,20 +839,6 @@ const AdminDashboard = () => {
       // Ensure all enum fields have valid values
       if (!formData.deliveryTimeline) {
         setError('Delivery Timeline is required');
-        setLoading(false);
-        window.scrollTo(0, 0);
-        return;
-      }
-
-      if (!formData.projectType) {
-        setError('Project Type is required');
-        setLoading(false);
-        window.scrollTo(0, 0);
-        return;
-      }
-
-      if (!formData.propertySizeRange) {
-        setError('Property Size Range is required');
         setLoading(false);
         window.scrollTo(0, 0);
         return;
@@ -967,8 +928,6 @@ const AdminDashboard = () => {
         logo: formData.logo ? "File present" : "No logo file",
         name: formData.name,
         deliveryTimeline: formData.deliveryTimeline,
-        projectType: formData.projectType,
-        propertySizeRange: formData.propertySizeRange,
         priceRange: formData.priceRange,
         type: formData.type,
         bannerImages: formData.bannerImages.length > 0 ? `${formData.bannerImages.length} images` : "No images",
@@ -2026,54 +1985,6 @@ const AdminDashboard = () => {
                   </select>
                   {!formData.deliveryTimeline && (
                     <p className="text-xs text-red-500 mt-1">Delivery Timeline is required</p>
-                  )}
-                </div>
-
-                {/* Project Type */}
-                <div className="col-span-1">
-                  <label className="block text-gray-700 mb-2">
-                    Project Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="projectType"
-                    className="w-full p-2 border rounded"
-                    value={formData.projectType}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Project Type</option>
-                    {projectTypeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {!formData.projectType && (
-                    <p className="text-xs text-red-500 mt-1">Project Type is required</p>
-                  )}
-                </div>
-
-                {/* Property Size Range */}
-                <div className="col-span-1">
-                  <label className="block text-gray-700 mb-2">
-                    Property Size Range <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="propertySizeRange"
-                    className="w-full p-2 border rounded"
-                    value={formData.propertySizeRange}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Property Size Range</option>
-                    {propertySizeRangeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {!formData.propertySizeRange && (
-                    <p className="text-xs text-red-500 mt-1">Property Size Range is required</p>
                   )}
                 </div>
 

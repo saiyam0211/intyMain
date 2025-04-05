@@ -840,7 +840,7 @@ export default function ResidentialSpace() {
                           <img src={lock} alt="Lock" className="w-8 sm:w-10 h-8 sm:h-10" />
                         </div>
                         <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
-                          {companies.length - 3} More Companies Available
+                          {companies.length - 3 >= 10 ? "10+" : companies.length - 3} More Companies Available
                         </h3>
                         <p className="text-white/90 mb-4 sm:mb-6 max-w-lg text-sm sm:text-base">
                           Create a free account to unlock all companies matching your search criteria and access advanced comparison features.

@@ -284,13 +284,8 @@ const Compare = () => {
       label: "Price Range per 1000 sq ft",
       valueKey: "minMaxBudget",
       defaultValue: "N/A",
-      getValue: (company) => {
-        console.log('Company price data:', {
-          name: company.name,
-          basicPriceRange: company.basicPriceRange,
-          luxuryPriceRange: company.luxuryPriceRange,
-          minMaxBudget: company.minMaxBudget
-        });
+      render: (_, company) => {
+        let priceRangeText = "N/A";
         
         // Check if company has both basicPriceRange and luxuryPriceRange
         if (company.basicPriceRange !== undefined && company.luxuryPriceRange !== undefined) {
@@ -307,19 +302,38 @@ const Compare = () => {
               return price.toLocaleString('en-IN');
             };
             
-            console.log('Calculated price range:', `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`);
-            return `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`;
+            priceRangeText = `₹${formatPrice(basicPricePerK)} - ₹${formatPrice(luxuryPricePerK)}`;
           }
         }
         
         // Fall back to the minMaxBudget if it exists
-        if (company.minMaxBudget) {
-          console.log('Using minMaxBudget fallback:', company.minMaxBudget);
-          return company.minMaxBudget;
+        if (priceRangeText === "N/A" && company.minMaxBudget) {
+          priceRangeText = company.minMaxBudget;
         }
         
-        console.log('No price data found, returning N/A');
-        return "N/A";
+        return (
+          <div className="flex flex-col gap-2">
+            <div className="text-xs sm:text-base md:text-lg font-semibold break-words">
+              {priceRangeText}
+            </div>
+            <Button
+              onClick={() => navigate('/cost-estimator', {
+                state: {
+                  companyId: company._id,
+                  companyName: company.name,
+                  priceData: {
+                    basicPriceRange: company.basicPriceRange,
+                    premiumPriceRange: company.premiumPriceRange,
+                    luxuryPriceRange: company.luxuryPriceRange
+                  }
+                }
+              })}
+              className="bg-[#006452] hover:bg-[#005443] text-white px-3 py-1 text-sm rounded-md w-full mt-1"
+            >
+              Calculate Cost
+            </Button>
+          </div>
+        );
       }
     },
     {

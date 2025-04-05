@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   FaBuilding, 
   FaPaintBrush, 
@@ -13,11 +14,74 @@ import {
   FaFileImport, 
   FaSignOutAlt,
   FaCreditCard,
-  FaCoins
+  FaCoins,
+  FaCheckCircle,
+  FaExclamationCircle
 } from 'react-icons/fa';
 
 const AdminHomePage = () => {
     const navigate = useNavigate();
+    const [pendingReviews, setPendingReviews] = useState({
+        designers: 0,
+        craftsmen: 0,
+        loading: true,
+        error: null
+    });
+
+    // Fetch pending reviews count on component mount
+    useEffect(() => {
+        const fetchPendingReviews = async () => {
+            try {
+                const token = localStorage.getItem("adminToken");
+                if (!token) {
+                    navigate("/admin/login");
+                    return;
+                }
+
+                // Fetch designers that need approval (isListed = false)
+                const designersResponse = await axios.get('http://localhost:3000/api/designers?showAll=true', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                // Fetch craftsmen that need approval (isListed = false)
+                const craftsmenResponse = await axios.get('http://localhost:3000/api/craftsmen?showAll=true', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Count unlisted items
+                let designerCount = 0;
+                let craftsmenCount = 0;
+                
+                if (Array.isArray(designersResponse.data)) {
+                    designerCount = designersResponse.data.filter(d => d.show === false || d.isListed === false).length;
+                } else if (designersResponse.data && Array.isArray(designersResponse.data.data)) {
+                    designerCount = designersResponse.data.data.filter(d => d.show === false || d.isListed === false).length;
+                }
+                
+                if (Array.isArray(craftsmenResponse.data)) {
+                    craftsmenCount = craftsmenResponse.data.filter(c => c.show === false || c.isListed === false).length;
+                } else if (craftsmenResponse.data && Array.isArray(craftsmenResponse.data.data)) {
+                    craftsmenCount = craftsmenResponse.data.data.filter(c => c.show === false || c.isListed === false).length;
+                }
+
+                setPendingReviews({
+                    designers: designerCount,
+                    craftsmen: craftsmenCount,
+                    loading: false,
+                    error: null
+                });
+            } catch (error) {
+                console.error("Error fetching pending reviews:", error);
+                setPendingReviews(prev => ({
+                    ...prev,
+                    loading: false,
+                    error: "Failed to load pending reviews"
+                }));
+            }
+        };
+
+        fetchPendingReviews();
+    }, [navigate]);
 
     // Admin menu items with icons and descriptions
     const menuItems = [
@@ -113,6 +177,68 @@ const AdminHomePage = () => {
                     <p className="text-gray-600 max-w-2xl mx-auto">
                         Welcome to the inty admin panel. Manage your website content, view customer inquiries, and more.
                     </p>
+                </div>
+
+                {/* Pending Reviews Section */}
+                <div className="max-w-6xl mx-auto mb-10">
+                    <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
+                            <FaExclamationCircle className="text-amber-500 mr-2" />
+                            Pending Reviews
+                        </h2>
+                        
+                        {pendingReviews.loading ? (
+                            <div className="flex justify-center p-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
+                            </div>
+                        ) : pendingReviews.error ? (
+                            <div className="bg-red-50 p-4 rounded-lg text-red-700 text-sm">
+                                {pendingReviews.error}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div 
+                                    className={`bg-gradient-to-br from-[#006452] to-[#004d3b] text-white rounded-lg p-5 shadow-sm cursor-pointer hover:shadow-md transition-all ${pendingReviews.designers > 0 ? 'animate-pulse' : ''}`}
+                                    onClick={() => navigate('/admin/designers')}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-medium text-white/90">Interior Designers</h3>
+                                            <p className="text-2xl font-bold mt-1">
+                                                {pendingReviews.designers} pending
+                                            </p>
+                                        </div>
+                                        <FaPaintBrush className="text-3xl text-white/70" />
+                                    </div>
+                                    {pendingReviews.designers > 0 && (
+                                        <div className="mt-3 text-sm text-white/80">
+                                            Click to review and approve
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div 
+                                    className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-5 shadow-sm cursor-pointer hover:shadow-md transition-all ${pendingReviews.craftsmen > 0 ? 'animate-pulse' : ''}`}
+                                    onClick={() => navigate('/admin/craftsmen')}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-medium text-white/90">Craftsmen</h3>
+                                            <p className="text-2xl font-bold mt-1">
+                                                {pendingReviews.craftsmen} pending
+                                            </p>
+                                        </div>
+                                        <FaTools className="text-3xl text-white/70" />
+                                    </div>
+                                    {pendingReviews.craftsmen > 0 && (
+                                        <div className="mt-3 text-sm text-white/80">
+                                            Click to review and approve
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Admin menu grid */}
