@@ -9,6 +9,13 @@ const roomTypes = [
   { name: 'Dining', defaultCount: 1 }
 ];
 
+// Default room counts for special home types
+const specialHomeTypeCounts = {
+  'Villa': { 'Bedroom': 4, 'Bathroom': 4 },
+  'Duplex': { 'Bedroom': 4, 'Bathroom': 3 },
+  'Penthouse': { 'Bedroom': 3, 'Bathroom': 3 }
+};
+
 const RoomSelection = ({ formData, setFormData }) => {
   const [roomCounts, setRoomCounts] = useState({
     'Living Room': 1,
@@ -20,6 +27,15 @@ const RoomSelection = ({ formData, setFormData }) => {
 
   // Maximum limits for bedroom and bathroom based on home type
   const getMaxRoomLimits = () => {
+    // Check if it's a special home type first
+    if (specialHomeTypeCounts[formData.homeType]) {
+      return {
+        'Bedroom': specialHomeTypeCounts[formData.homeType]['Bedroom'],
+        'Bathroom': specialHomeTypeCounts[formData.homeType]['Bathroom']
+      };
+    }
+    
+    // Otherwise process as regular BHK
     const homeType = formData.homeType?.split(' ')[0]; // Extract the number from home type (e.g., "3" from "3 BHK")
     const bhkNumber = parseInt(homeType) || 1;
     
@@ -32,16 +48,27 @@ const RoomSelection = ({ formData, setFormData }) => {
   useEffect(() => {
     // When component mounts or formData.homeType changes, initialize room counts
     if (formData.homeType) {
-      // Extract number of bedrooms and bathrooms from home type
-      const homeType = formData.homeType?.split(' ')[0]; // Extract the number from home type (e.g., "3" from "3 BHK")
-      const bhkNumber = parseInt(homeType) || 1;
+      let initialCounts = { ...roomCounts };
       
-      // Set default counts based on home type
-      const initialCounts = { 
-        ...roomCounts,
-        'Bedroom': bhkNumber, // Set bedrooms to match BHK number
-        'Bathroom': bhkNumber // Set bathrooms to match BHK number
-      };
+      // Check if it's a special home type
+      if (specialHomeTypeCounts[formData.homeType]) {
+        initialCounts = {
+          ...initialCounts,
+          'Bedroom': specialHomeTypeCounts[formData.homeType]['Bedroom'],
+          'Bathroom': specialHomeTypeCounts[formData.homeType]['Bathroom']
+        };
+      } else {
+        // Extract number of bedrooms and bathrooms from home type
+        const homeType = formData.homeType?.split(' ')[0]; // Extract the number from home type (e.g., "3" from "3 BHK")
+        const bhkNumber = parseInt(homeType) || 1;
+        
+        // Set default counts based on home type
+        initialCounts = { 
+          ...initialCounts,
+          'Bedroom': bhkNumber, // Set bedrooms to match BHK number
+          'Bathroom': bhkNumber // Set bathrooms to match BHK number
+        };
+      }
       
       setRoomCounts(initialCounts);
       

@@ -607,11 +607,11 @@ const LocationPopup = ({ onLocationSelect }) => {
                   </button>
                 </div>
                 
-                <div className="text-center">
+                {/* <div className="text-center">
                   <span className="text-gray-500">OR</span>
-                </div>
+                </div> */}
                 
-                <div>
+                {/* <div>
                   <p className="text-center font-medium text-gray-800 mb-2">
                     Search for a specific area
                   </p>
@@ -638,7 +638,6 @@ const LocationPopup = ({ onLocationSelect }) => {
                     </button>
                   </div>
                   
-                  {/* Area search results */}
                   {showCityResults && citySearchResults.length > 0 && (
                     <div className="mt-2 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
                       {citySearchResults.map((result, index) => (
@@ -653,15 +652,14 @@ const LocationPopup = ({ onLocationSelect }) => {
                     </div>
                   )}
                   
-                  {/* No results message */}
                   {showCityResults && citySearchResults.length === 0 && !isSearchingCity && (
                     <p className="text-center text-gray-500 mt-2">
                       No places found. Try a different search term.
                     </p>
                   )}
-                </div>
+                </div> */}
                 
-                {isLoaded && (
+                {/* {isLoaded && (
                   <div className="mt-4">
                     <p className="text-center font-medium text-gray-800 mb-2">
                       Or select on map
@@ -696,7 +694,7 @@ const LocationPopup = ({ onLocationSelect }) => {
                       </GoogleMap>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
               
               <div className="mt-4">
