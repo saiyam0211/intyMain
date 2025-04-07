@@ -556,6 +556,27 @@ const AdminDashboard = () => {
     setFormData({ ...formData, discountsOfferTimeline: newTags.join(',') });
   };
 
+  // Handle USP tags
+  const handleUspInputChange = (e) => {
+    setUspInput(e.target.value);
+  };
+
+  const handleUspKeyDown = (e) => {
+    if (e.key === 'Enter' && uspInput.trim()) {
+      e.preventDefault();
+      const newTags = [...uspTags, uspInput.trim()];
+      setUspTags(newTags);
+      setFormData({ ...formData, usp: newTags.join(',') });
+      setUspInput('');
+    }
+  };
+
+  const removeUspTag = (indexToRemove) => {
+    const newTags = uspTags.filter((_, index) => index !== indexToRemove);
+    setUspTags(newTags);
+    setFormData({ ...formData, usp: newTags.join(',') });
+  };
+
   // Handle award tags
   const handleAwardInputChange = (e) => {
     setAwardInput(e.target.value);
@@ -875,6 +896,15 @@ const AdminDashboard = () => {
             // If it's a single value, append as is
             data.append('type', formData[key]);
           }
+        } else if (key === 'usp' || key === 'discountsOfferTimeline' || key === 'anyAwardWon') {
+          // Handle USP, offers, and awards fields
+          if (Array.isArray(formData[key]) && formData[key].length > 0) {
+            // Join array values into a comma-separated string
+            data.append(key, formData[key].join(','));
+          } else if (formData[key]) {
+            // If it's a single value, append as is
+            data.append(key, formData[key]);
+          }
         } else if (key === 'projectType' || key === 'propertySizeRange') {
           // Handle enum fields
           if (formData[key]) {
@@ -1056,27 +1086,6 @@ const AdminDashboard = () => {
   // Function to toggle auto-save
   const toggleAutoSave = () => {
     setAutoSaveEnabled(prev => !prev);
-  };
-
-  // Handle USP tags
-  const handleUspInputChange = (e) => {
-    setUspInput(e.target.value);
-  };
-
-  const handleUspKeyDown = (e) => {
-    if (e.key === 'Enter' && uspInput.trim()) {
-      e.preventDefault();
-      const newTags = [...uspTags, uspInput.trim()];
-      setUspTags(newTags);
-      setFormData({ ...formData, usp: newTags.join(',') });
-      setUspInput('');
-    }
-  };
-
-  const removeUspTag = (indexToRemove) => {
-    const newTags = uspTags.filter((_, index) => index !== indexToRemove);
-    setUspTags(newTags);
-    setFormData({ ...formData, usp: newTags.join(',') });
   };
 
   // Add this function near your other handlers

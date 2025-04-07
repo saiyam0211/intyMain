@@ -95,6 +95,38 @@ const calculateDistanceFromUser = (company) => {
   }
 };
 
+// Add this component for lazy loading images with a loading state
+const LazyImage = ({ src, alt, className }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  return (
+    <div className={`relative ${className}`}>
+      {!loaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="animate-pulse w-full h-full bg-gray-200"></div>
+        </div>
+      )}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <span className="text-sm text-gray-500">Image not available</span>
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          setLoaded(true);
+        }}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 const Compare = () => {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
@@ -136,10 +168,57 @@ const Compare = () => {
 
       // Get the company IDs
       const companyIds = compareList.map((company) => company._id);
+      
+      // Check localStorage cache first for company data
+      const cachedData = localStorage.getItem(`compare_cache_${user.id}`);
+      const cacheTimestamp = localStorage.getItem(`compare_cache_timestamp_${user.id}`);
+      const now = new Date().getTime();
+      
+      // Use cache if it exists and is less than 1 hour old
+      if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp) < 3600000)) {
+        try {
+          const parsedCache = JSON.parse(cachedData);
+          // Verify the cache has all the companies we need
+          const hasAllCompanies = companyIds.every(id => 
+            parsedCache.some(company => company._id === id)
+          );
+          
+          if (hasAllCompanies) {
+            console.log("Using cached company data");
+            // Filter to only include companies that are in the compare list
+            const filteredCache = parsedCache.filter(company => 
+              companyIds.includes(company._id)
+            );
+            setCompanies(filteredCache);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("Error parsing cache:", err);
+          // Continue with API fetch if cache parsing fails
+        }
+      }
 
-      // Try to fetch from the database using the correct endpoint (companies, not company)
+      // Batch fetch approach: one API call with all IDs
       try {
-        // Attempt to call the API with the correct plural endpoint
+        // Using query parameter to send all IDs at once
+        const idsParam = companyIds.join(',');
+        const response = await axios.get(
+          `https://inty-3.onrender.com/api/companies/batch?ids=${idsParam}`
+        );
+        
+        if (response.data && Array.isArray(response.data.companies) && response.data.companies.length > 0) {
+          console.log("Successfully fetched companies in batch:", response.data.companies.length);
+          setCompanies(response.data.companies);
+          
+          // Cache the results in localStorage
+          localStorage.setItem(`compare_cache_${user.id}`, JSON.stringify(response.data.companies));
+          localStorage.setItem(`compare_cache_timestamp_${user.id}`, now.toString());
+          return;
+        }
+        
+        // Fallback to individual requests if batch endpoint fails or isn't available
+        console.log("Batch endpoint failed, falling back to individual requests");
         const requests = companyIds.map((id) =>
           axios.get(
             `https://inty-3.onrender.com/api/companies/getCompany/${id}`
@@ -148,15 +227,18 @@ const Compare = () => {
 
         const responses = await Promise.all(requests);
         
-        // Extract company details and log them for debugging
+        // Extract company details
         const fetchedCompanies = responses.map(response => {
           const companyDetails = response.data.companyDetails;
-          console.log(`Company ${companyDetails.name} data:`, companyDetails);
           return companyDetails;
         });
 
         if (fetchedCompanies.length > 0) {
           setCompanies(fetchedCompanies);
+          
+          // Cache the results in localStorage
+          localStorage.setItem(`compare_cache_${user.id}`, JSON.stringify(fetchedCompanies));
+          localStorage.setItem(`compare_cache_timestamp_${user.id}`, now.toString());
         } else {
           // If API call was successful but returned empty data
           console.warn(
@@ -436,9 +518,18 @@ const Compare = () => {
       <div className="min-h-screen bg-white">
         <Header isResidentialPage={true} />
         <div className="container mx-auto px-4 py-20 flex justify-center items-center">
-          <div className="text-center">
+          <div className="text-center w-full max-w-md">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#006452] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading comparison data...</p>
+            <p className="text-gray-600 mb-4">Loading comparison data...</p>
+            
+            {/* Progress indicators */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+              <div className="bg-[#006452] h-2.5 rounded-full w-3/4 animate-pulse"></div>
+            </div>
+            
+            <p className="text-xs text-gray-500">
+              This may take a moment. We're loading detailed information about the companies you're comparing.
+            </p>
           </div>
         </div>
         <Footer />
@@ -539,7 +630,7 @@ const Compare = () => {
                               <X className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                             </button>
                             {company.logo ? (
-                              <img
+                              <LazyImage
                                 src={company.logo}
                                 alt="Company Logo"
                                 className="h-12 sm:h-16 w-auto"
@@ -603,7 +694,11 @@ const Compare = () => {
                             >
                               {row.isImage ? (
                                 <div className="w-full h-[200px] sm:h-[280px] md:h-[320px]">
-                                  <CompanyImagesCarousel company={company} />
+                                  <LazyImage
+                                    src={company.bannerImages[0] || company.logo}
+                                    alt="Company Banner Image"
+                                    className="w-full h-full"
+                                  />
                                 </div>
                               ) : (
                                 <div className="text-xs sm:text-base md:text-lg font-semibold break-words">
@@ -659,7 +754,7 @@ const Compare = () => {
                               </svg>
                             </button>
                             {company.logo ? (
-                              <img
+                              <LazyImage
                                 src={company.logo}
                                 alt="Company Logo"
                                 className="h-12 sm:h-16 w-auto"
@@ -723,7 +818,11 @@ const Compare = () => {
                             >
                               {row.isImage ? (
                                 <div className="w-full h-[200px] sm:h-[280px] md:h-[320px]">
-                                  <CompanyImagesCarousel company={company} />
+                                  <LazyImage
+                                    src={company.bannerImages[0] || company.logo}
+                                    alt="Company Banner Image"
+                                    className="w-full h-full"
+                                  />
                                 </div>
                               ) : (
                                 <div className="text-xs sm:text-base md:text-lg font-semibold break-words">
