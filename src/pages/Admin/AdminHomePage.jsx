@@ -49,19 +49,16 @@ const AdminHomePage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                // Fetch companies that need approval (isListed = false)
-                const companiesResponse = await axios.get('https://inty-backend.onrender.com/api/companies?isAdmin=true', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const pendingDesigners = designersResponse.data.designers.filter(d => !d.isListed).length;
-                const pendingCraftsmen = craftsmenResponse.data.craftsmen.filter(c => !c.isListed).length;
-                const pendingCompanies = companiesResponse.data.companies?.filter(c => !c.isListed).length || 0;
+                const pendingDesigners = designersResponse.data && designersResponse.data.designers ? 
+                    designersResponse.data.designers.filter(d => !d.isListed).length : 0;
+                
+                const pendingCraftsmen = craftsmenResponse.data && craftsmenResponse.data.craftsmen ? 
+                    craftsmenResponse.data.craftsmen.filter(c => !c.isListed).length : 0;
 
                 setPendingReviews({
                     designers: pendingDesigners,
                     craftsmen: pendingCraftsmen,
-                    companies: pendingCompanies,
+                    companies: 0,
                     loading: false
                 });
             } catch (error) {
@@ -190,7 +187,7 @@ const AdminHomePage = () => {
                                 {pendingReviews.error}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center">
@@ -212,19 +209,6 @@ const AdminHomePage = () => {
                                         </div>
                                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
                                             {pendingReviews.craftsmen}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mt-1">Awaiting approval</p>
-                                </div>
-
-                                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center">
-                                            <FaBuilding className="text-yellow-500 text-xl mr-2" />
-                                            <span className="font-medium">Companies</span>
-                                        </div>
-                                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
-                                            {pendingReviews.companies}
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-600 mt-1">Awaiting approval</p>

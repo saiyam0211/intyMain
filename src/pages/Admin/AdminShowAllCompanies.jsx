@@ -11,7 +11,6 @@ const API_URL = "https://inty-backend.onrender.com/api/companies";
 const AdminShowAllCompanies = () => {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
-    const [pendingCompanies, setPendingCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMessage, setLoadingMessage] = useState('Loading companies...');
     const [error, setError] = useState(null);
@@ -46,12 +45,10 @@ const AdminShowAllCompanies = () => {
             
             const totalPages = initialResponse.data.totalPages;
             let allCompanies = [];
-            let pendingCompaniesList = [];
             
             // If there's only one page, use the companies we already fetched
             if (totalPages === 1) {
                 allCompanies = initialResponse.data.companies;
-                pendingCompaniesList = allCompanies.filter(company => !company.isListed);
             } else {
                 // Update loading message for pagination
                 setLoadingMessage(`Fetching all companies (1/${totalPages} pages)...`);
@@ -69,7 +66,6 @@ const AdminShowAllCompanies = () => {
                 const responses = await Promise.all(promises);
                 // Combine all companies from all pages
                 allCompanies = responses.flatMap(response => response.data.companies || []);
-                pendingCompaniesList = allCompanies.filter(company => !company.isListed);
             }
             
             console.log("All companies fetched:", allCompanies.length);
@@ -86,17 +82,12 @@ const AdminShowAllCompanies = () => {
                 return orderA - orderB;
             });
 
-            // Count the number of unlisted companies (pending review)
-            const pendingCompanies = sortedCompanies.filter(company => company.show === false);
-            const listedCompanies = sortedCompanies.filter(company => company.show === true);
-
             // Count how many companies are marked as top rated
-            const topRated = listedCompanies.filter(company => company.topRated).length;
+            const topRated = sortedCompanies.filter(company => company.topRated).length;
             setTopRatedCount(topRated);
 
             // Set companies in state
             setCompanies(sortedCompanies);
-            setPendingCompanies(pendingCompaniesList);
         } catch (err) {
             console.error('Error fetching companies:', err);
             setError(
@@ -105,7 +96,6 @@ const AdminShowAllCompanies = () => {
                 'Failed to load companies. Please try again later.'
             );
             setCompanies([]);
-            setPendingCompanies([]);
         } finally {
             setLoading(false);
         }
@@ -622,100 +612,10 @@ const AdminShowAllCompanies = () => {
                 </div>
             )}
             
-            {pendingCompanies.length > 0 && (
-                <div className="mb-8">
-                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-lg font-medium text-yellow-800">
-                                    {pendingCompanies.length} New Companies Pending Review
-                                </h3>
-                                <p className="text-yellow-700 text-sm">
-                                    These companies are unlisted and waiting for your review before going live.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {pendingCompanies.map((company) => (
-                            <div key={`pending-${company._id}`} className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                                <div className="flex items-start space-x-4">
-                                    <div className="flex-shrink-0">
-                                        <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                                            {company.logo ? (
-                                                <img
-                                                    src={company.logo}
-                                                    alt={`${company.name} logo`}
-                                                    className="h-full w-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.onerror = null;
-                                                        e.target.src = '/images/company-placeholder.png';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="text-lg text-gray-500 font-bold">
-                                                    {company.name.slice(0, 2).toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-lg font-medium text-gray-900 truncate">{company.name}</h4>
-                                        <p className="text-sm text-gray-500 mt-1">
-                                            {company.availableCities?.join(', ') || 'No location specified'}
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                            {company.type?.join(', ') || 'No category specified'}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            Added on {new Date(company.createdAt).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="mt-4 flex justify-end space-x-2">
-                                    <button
-                                        onClick={() => handleEdit(company._id)}
-                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                                        title="Edit"
-                                    >
-                                        <FaEdit className="inline-block mr-1" /> Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleListingToggle(company._id, company.name, company.show)}
-                                        disabled={actionLoading === `status-${company._id}`}
-                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                                        title={company.show ? "Unlist" : "List"}
-                                    >
-                                        {actionLoading === `status-${company._id}` ? '...' : 
-                                            company.show ? <FaEyeSlash className="inline-block mr-1" /> : <FaEye className="inline-block mr-1" />
-                                        }
-                                        {company.show ? 'Unlist' : 'List'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(company._id, company.name)}
-                                        disabled={actionLoading === `delete-${company._id}`}
-                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                                        title="Delete"
-                                    >
-                                        {actionLoading === `delete-${company._id}` ? '...' : <FaTrash className="inline-block mr-1" />} Delete
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-            
             <h2 className="text-xl font-semibold mb-4">Listed Companies</h2>
             <ResponsiveAdminTable
                 columns={columns}
-                data={companies.filter(company => company.show !== false)}
+                data={companies}
                 renderCell={renderCell}
                 renderMobileRow={renderMobileRow}
                 loading={loading}
