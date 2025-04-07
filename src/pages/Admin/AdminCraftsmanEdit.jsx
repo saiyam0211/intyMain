@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
+import ResponsiveAdminContainer from '../../components/Admin/ResponsiveAdminContainer';
 import 'leaflet/dist/leaflet.css';
 
 const API_URL = "https://inty-backend.onrender.com/api";
@@ -109,23 +110,39 @@ const AdminCraftsmanEdit = () => {
   const [mapLoading, setMapLoading] = useState(true);
   const [searchAddress, setSearchAddress] = useState("");
 
+  // Cities options based on the screenshots
+  const citiesOptions = [
+    "Agra", "Ahmedabad", "Ajmer", "Akola", "Aligarh", "Allahabad", "Amravati", "Amritsar",
+    "Aurangabad", "Bengaluru", "Bareilly", "Belgaum", "Bhavnagar", "Bhilai", "Bhiwandi",
+    "Bhopal", "Bhubaneswar", "Bikaner", "Bilaspur", "Bokaro", "Chandigarh", "Chennai",
+    "Coimbatore", "Cuttack", "Dehradun", "Delhi", "Dhanbad", "Durgapur", "Faridabad",
+    "Firozabad", "Ghaziabad", "Gorakhpur", "Gulbarga", "Guntur", "Gurgaon", "Guwahati",
+    "Gwalior", "Hubli", "Hyderabad", "Indore", "Jabalpur", "Jaipur", "Jalandhar", "Jammu",
+    "Jamnagar", "Jamshedpur", "Jhansi", "Jodhpur", "Kanpur", "Kochi", "Kolhapur", "Kolkata",
+    "Kota", "Kozhikode", "Kurnool", "Lucknow", "Ludhiana", "Madurai", "Mangalore", "Meerut",
+    "Mumbai", "Mysore", "Nagpur", "Nashik", "Navi Mumbai", "Noida", "Patna", "Pondicherry",
+    "Pune", "Raipur", "Rajkot", "Ranchi", "Rourkela", "Salem", "Sangli", "Siliguri", "Solapur",
+    "Srinagar", "Surat", "Thiruvananthapuram", "Thrissur", "Tiruchirappalli", "Tirunelveli",
+    "Tiruppur", "Ujjain", "Vadodara", "Varanasi", "Vijayawada", "Visakhapatnam", "Warangal",
+    "Agartala", "Aizawl", "Aligarh", "Alwar", "Ambala", "Ambarnath", "Ambikapur", "Anand", "Anantapur"
+  ];
+
   const [formData, setFormData] = useState({
     name: '',
     rate: '',
-    location: '',
+    location: '', // Keep for backward compatibility
+    availableCities: [],
     category: 'Basic',
     experience: '',
     projectsCompleted: '',
-    specialty: '',
-    description: '',
     phoneNumber: '',
     email: '',
     portfolio: [],
     googleReviews: '',
     rating: '5', // Default value
     show: true, // Default to listed
-    latitude: '',
-    longitude: '',
+    latitude: '', // Keep for backward compatibility
+    longitude: '', // Keep for backward compatibility
   });
 
   useEffect(() => {
@@ -213,15 +230,18 @@ const AdminCraftsmanEdit = () => {
       const response = await axios.get(`${API_URL}/craftsmen/${id}`);
       const craftsmanData = response.data;
       
+      // Handle existing data and ensure backward compatibility
+      const availableCities = craftsmanData.availableCities || [];
+      const location = craftsmanData.location || (availableCities.length > 0 ? availableCities[0] : '');
+      
       setFormData({
         name: craftsmanData.name || '',
         rate: craftsmanData.rate || '',
-        location: craftsmanData.location || '',
+        location: location, // Set location field for backward compatibility
+        availableCities: availableCities,
         category: craftsmanData.category || 'Basic',
         experience: craftsmanData.experience || '',
         projectsCompleted: craftsmanData.projectsCompleted || '',
-        specialty: craftsmanData.specialty || '',
-        description: craftsmanData.description || '',
         phoneNumber: craftsmanData.phoneNumber || '',
         email: craftsmanData.email || '',
         portfolio: craftsmanData.portfolio || [],
@@ -372,165 +392,181 @@ const AdminCraftsmanEdit = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Special handling for rate to ensure proper format
-    if (name === 'rate') {
-      // Strip non-numeric characters except for the first occurrence of '₹'
-      const numericValue = value.replace(/[^0-9]/g, '');
-      setFormData({ ...formData, [name]: `₹ ${numericValue}/hr` });
-    } else {
-      setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+
+  // Function to add a city to availableCities and update location
+  const handleAddCity = (city) => {
+    if (!formData.availableCities.includes(city)) {
+      const newAvailableCities = [...formData.availableCities, city];
+      setFormData(prev => ({
+        ...prev,
+        availableCities: newAvailableCities,
+        // Only set location if it's not already set
+        location: prev.location || city,
+      }));
     }
   };
 
-  // Handle checkbox toggling for show status
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData({ ...formData, [name]: checked });
+  // Function to remove a city from availableCities and update location
+  const handleRemoveCity = (indexToRemove) => {
+    const newAvailableCities = formData.availableCities.filter((_, i) => i !== indexToRemove);
+    setFormData(prev => ({
+      ...prev,
+      availableCities: newAvailableCities,
+      // Update location field if the removed city was the primary location
+      location: prev.location === prev.availableCities[indexToRemove] 
+        ? (newAvailableCities.length > 0 ? newAvailableCities[0] : '') 
+        : prev.location,
+    }));
   };
 
-  // Handle file uploads
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-
-    setUploadingImages(true);
-    setError(null);
     
     try {
-      if (files.length === 1) {
-        // Single file upload
-        const uploadData = new FormData();
-        uploadData.append('file', files[0]);
-        uploadData.append('fileCategory', 'craftsman-portfolios');
-        
-        const response = await axios.post(`${API_URL}/upload`, uploadData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        
-        // Add the new image URL to the portfolio array
-        setFormData(prevData => ({
-          ...prevData,
-          portfolio: [...prevData.portfolio, response.data.secure_url]
-        }));
-      } else {
-        // Multiple file upload
-        const uploadData = new FormData();
-        files.forEach(file => {
-          uploadData.append('files', file);
-        });
-        uploadData.append('fileCategory', 'craftsman-portfolios');
-        
-        const response = await axios.post(`${API_URL}/upload/multiple`, uploadData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        
-        // Add all new image URLs to the portfolio array
-        const uploadedUrls = response.data.map(item => item.secure_url);
-        setFormData(prevData => ({
-          ...prevData,
-          portfolio: [...prevData.portfolio, ...uploadedUrls]
-        }));
+      setUploadingImages(true);
+      
+      // Check filesize restrictions
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          setError("One or more files exceed the 10MB limit. Please compress your images.");
+          setUploadingImages(false);
+          return;
+        }
       }
       
-      setSuccessMessage('Images uploaded successfully!');
+      const uploadPromises = files.map(async file => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/upload`,
+          formData
+        );
+        
+        return response.data.secure_url;
+      });
+      
+      const imageUrls = await Promise.all(uploadPromises);
+      
+      setFormData(prevData => ({
+        ...prevData,
+        portfolio: [...prevData.portfolio, ...imageUrls]
+      }));
+      
+      setSuccessMessage("Images uploaded successfully!");
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.message || 'Failed to upload images. Please try again.');
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      setError("Failed to upload images. Please try again.");
     } finally {
       setUploadingImages(false);
     }
   };
 
-  // Remove an uploaded image
   const removeImage = (indexToRemove) => {
-    setFormData({
-      ...formData,
-      portfolio: formData.portfolio.filter((_, index) => index !== indexToRemove)
-    });
+    setFormData(prevData => ({
+      ...prevData,
+      portfolio: prevData.portfolio.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+    
+    // Validate the form
+    if (!formData.name || !formData.rate || formData.availableCities.length === 0 || !formData.experience || !formData.projectsCompleted || !formData.phoneNumber || !formData.email) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+    
     try {
-      const token = localStorage.getItem("adminToken");
-      const headers = {
-        Authorization: token ? `Bearer ${token}` : '',
-      };
+      setLoading(true);
+      setError(null);
       
-      let response;
-      
-      if (isAddMode) {
-        // Create new craftsman
-        response = await axios.post(`${API_URL}/craftsmen`, formData, { headers });
-        setSuccessMessage('Craftsman created successfully!');
-      } else {
-        // Update existing craftsman
-        response = await axios.put(`${API_URL}/craftsmen/${id}`, formData, { headers });
-        setSuccessMessage('Craftsman updated successfully!');
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        navigate('/admin/login');
+        return;
       }
       
-      // Show success message briefly then redirect
+      // Preserve the existing location field if it exists
+      const dataToSubmit = {
+        ...formData,
+        // Only set location to first city if it's empty but we have cities
+        location: formData.location || (formData.availableCities.length > 0 ? formData.availableCities[0] : ''),
+      };
+      
+      const method = isAddMode ? 'post' : 'put';
+      const url = isAddMode ? `${API_URL}/craftsmen` : `${API_URL}/craftsmen/${id}`;
+      
+      await axios({
+        method,
+        url,
+        data: dataToSubmit,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      setSuccessMessage(isAddMode ? 'Craftsman created successfully!' : 'Craftsman updated successfully!');
+      
+      // Navigate back to the craftsmen list after a short delay
       setTimeout(() => {
         navigate('/admin/craftsmen');
-      }, 2000);
+      }, 1000);
     } catch (err) {
       console.error('Error saving craftsman:', err);
-      setError(err.response?.data?.message || 'Failed to save craftsman information. Please try again.');
+      setError(err.response?.data?.message || 'Failed to save craftsman. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#006452]"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="relative top-0 left-0 w-full bg-transparent z-50">
-        <Navbar isResidentialPage={false} />
-      </div>
-
-      <div className="container mx-auto pt-24 px-4 pb-12">
-        <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-[#006452] mb-6">
-            {isAddMode ? 'Add New Craftsman' : 'Edit Craftsman'}
-          </h1>
-
-          {/* Success message */}
-          {successMessage && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-              {successMessage}
-            </div>
-          )}
-
-          {/* Error message */}
+    <ResponsiveAdminContainer 
+      title={isAddMode ? "Add Craftsman" : "Edit Craftsman"} 
+      showBackButton 
+      backTo="/admin/craftsmen"
+    >
+      {fetchLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#006452]"></div>
+        </div>
+      ) : (
+        <div className="bg-white shadow-md rounded-lg p-6">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
               {error}
             </div>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Information */}
+          
+          {successMessage && (
+            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+              {successMessage}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Craftsman Name *
+                <label className="block text-gray-700 font-medium mb-2">
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -539,13 +575,12 @@ const AdminCraftsmanEdit = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="Full Name"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rate (₹/hr) *
+                <label className="block text-gray-700 font-medium mb-2">
+                  Rate (per hour) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -554,74 +589,107 @@ const AdminCraftsmanEdit = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="₹ 250/hr"
                 />
               </div>
-              
-              {/* <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location *
-                </label>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Available Cities/Locations <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
                 <input
                   type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="Area/Neighborhood/City"
+                  placeholder="Search cities..."
+                  className="w-full p-2 border rounded"
+                  onFocus={(e) => {
+                    const cityDropdown = document.getElementById('cityDropdown');
+                    if (cityDropdown) {
+                      cityDropdown.classList.remove('hidden');
+                    }
+                  }}
+                  onChange={(e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const cityDropdown = document.getElementById('cityDropdown');
+                    
+                    if (searchTerm.length > 0) {
+                      cityDropdown.classList.remove('hidden');
+                    } else {
+                      cityDropdown.classList.add('hidden');
+                    }
+
+                    // Filter cities based on search
+                    const cityItems = cityDropdown.getElementsByTagName('div');
+                    let visibleCount = 0;
+                    for (let i = 0; i < cityItems.length; i++) {
+                      const cityText = cityItems[i].textContent.toLowerCase();
+                      if (cityText.includes(searchTerm)) {
+                        cityItems[i].classList.remove('hidden');
+                        visibleCount++;
+                        // Limit visible items to improve performance
+                        if (visibleCount > 50) {
+                          cityItems[i].classList.add('hidden');
+                        }
+                      } else {
+                        cityItems[i].classList.add('hidden');
+                      }
+                    }
+                  }}
                 />
-                <p className="text-xs text-gray-500 mt-1">This field is automatically filled when selecting a location on the map, but can be edited manually if needed.</p>
-              </div> */}
-
-              {/* Location Selection with Map */}
-              <div className="col-span-1 md:col-span-2 mt-4">
-                <h3 className="text-lg font-medium mb-4">Craftsman Location</h3>
-                <p className="text-sm text-gray-600 mb-2">Search for a location or click on the map to select the craftsman's location.</p>
-
-                {/* Search Box */}
-                <SearchBox onPlaceSelected={handlePlaceSelected} />
-
-                <div style={{ position: 'relative', height: '400px', width: '100%', marginTop: '12px' }}>
-                  {/* Leaflet Map */}
-                  <div
-                    ref={mapContainerRef}
-                    style={{ height: '100%', width: '100%' }}
-                    className="rounded border border-gray-300"
-                  ></div>
-
-                  {mapLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#006452]"></div>
-                        <p className="mt-2 text-[#006452]">Loading map...</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Display selected address if available */}
-                {searchAddress && (
-                  <div className="mt-2 p-2 bg-gray-100 rounded flex justify-between items-center">
-                    <p className="text-sm"><strong>Selected Address:</strong> {searchAddress}</p>
-                    <button
-                      type="button"
-                      onClick={clearLocationSelection}
-                      className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                    >
-                      Clear
-                    </button>
-                  </div>
+                {formData.availableCities.length === 0 && (
+                  <p className="text-red-500 text-sm mt-1">Please select at least one city</p>
                 )}
-
-                {/* Hidden coordinates fields */}
-                <input type="hidden" name="latitude" value={formData.latitude} />
-                <input type="hidden" name="longitude" value={formData.longitude} />
+                <div
+                  id="cityDropdown"
+                  className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto hidden"
+                >
+                  {citiesOptions.map((city, index) => (
+                    <div
+                      key={index}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        // Use custom handler to maintain location field
+                        handleAddCity(city);
+                        // Hide dropdown
+                        const dropdown = document.getElementById('cityDropdown');
+                        if (dropdown) {
+                          dropdown.classList.add('hidden');
+                        }
+                        // Clear the search input
+                        const searchInput = document.querySelector('input[placeholder="Search cities..."]');
+                        if (searchInput) {
+                          searchInput.value = '';
+                        }
+                      }}
+                    >
+                      {city}
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              {/* Display selected cities as tags */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.availableCities.map((city, index) => (
+                  <div key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
+                    {city}
+                    <button
+                      type="button"
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      onClick={() => handleRemoveCity(index)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">All selected cities will be used for filtering. Users will be able to find this craftsman when searching in any of these locations.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category *
+                <label className="block text-gray-700 font-medium mb-2">
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="category"
@@ -631,243 +699,186 @@ const AdminCraftsmanEdit = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
                 >
                   <option value="Basic">Basic</option>
-                  <option value="Standard">Standard</option>
                   <option value="Premium">Premium</option>
                   <option value="Luxury">Luxury</option>
                 </select>
               </div>
               
+              
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Google Reviews Count *
+                <label className="block text-gray-700 font-medium mb-2">
+                  Experience (years) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
-                  name="googleReviews"
-                  value={formData.googleReviews}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="Number of Google reviews"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rating (out of 5) *
-                </label>
-                <select
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                >
-                  <option value="5">5 Stars</option>
-                  <option value="4.5">4.5 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="3.5">3.5 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="2.5">2.5 Stars</option>
-                  <option value="2">2 Stars</option>
-                  <option value="1.5">1.5 Stars</option>
-                  <option value="1">1 Star</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Experience (years) *
-                </label>
-                <input
-                  type="text"
                   name="experience"
                   value={formData.experience}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="e.g. 5+"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Projects Completed *
+                <label className="block text-gray-700 font-medium mb-2">
+                  Projects Completed <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   name="projectsCompleted"
                   value={formData.projectsCompleted}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="e.g. 100+"
                 />
               </div>
-              
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
+                <label className="block text-gray-700 font-medium mb-2">
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="10-digit number"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                <label className="block text-gray-700 font-medium mb-2">
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="email@example.com"
                 />
               </div>
-
-              {/* Listing Status */}
-              <div className="col-span-1 md:col-span-2">
-                <div className="flex items-center">
-                  <input
-                    id="show"
-                    name="show"
-                    type="checkbox"
-                    checked={formData.show}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-[#006452] focus:ring-[#006452] border-gray-300 rounded"
-                  />
-                  <label htmlFor="show" className="ml-2 block text-sm text-gray-700">
-                    Listed (visible to users)
-                  </label>
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Uncheck to hide this craftsman from public view
-                </p>
-              </div>
             </div>
-
-            {/* Craftsman Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+            
+           
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Google Reviews
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
+              <input
+                type="number"
+                name="googleReviews"
+                value={formData.googleReviews}
                 onChange={handleChange}
-                rows="4"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                placeholder="Brief description of the craftsman's expertise and skills..."
-              ></textarea>
+              />
             </div>
             
-            {/* Portfolio Images */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Portfolio Images
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Rating
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600 justify-center">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-[#006452] hover:text-[#004d3b] focus-within:outline-none"
-                    >
-                      <span>Upload files</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={handleFileUpload}
-                        disabled={uploadingImages}
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
-                  
-                  {/* Upload Progress */}
-                  {uploadingImages && (
-                    <div className="mt-2 flex items-center justify-center">
-                      <div className="w-4 h-4 rounded-full bg-[#006452] animate-pulse mr-2"></div>
-                      <span className="text-sm text-[#006452]">Uploading images...</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Display uploaded images */}
-              {formData.portfolio.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {formData.portfolio.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img 
-                        src={image} 
-                        alt={`Portfolio ${index + 1}`} 
-                        className="h-24 w-full object-cover rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
-                      >
-                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <select
+                name="rating"
+                value={formData.rating}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+              >
+                <option value="1">1 Star</option>
+                <option value="2">2 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="5">5 Stars</option>
+              </select>
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex justify-between pt-4">
+            <div className="mb-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="show"
+                  checked={formData.show}
+                  onChange={handleCheckboxChange}
+                  className="mr-2"
+                />
+                <span className="text-gray-700">Listed (visible to users)</span>
+              </label>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Portfolio Images <span className="text-red-500">*</span>
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-md p-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="portfolio-upload"
+                  disabled={uploadingImages}
+                />
+                <label
+                  htmlFor="portfolio-upload"
+                  className="cursor-pointer block text-center py-2 px-4 bg-[#006452] text-white rounded-md hover:bg-[#00543f] transition duration-300"
+                >
+                  {uploadingImages ? "Uploading..." : "Upload Images"}
+                </label>
+                <p className="text-gray-500 text-sm mt-2">Upload craftsman's portfolio images (max 10MB per image)</p>
+                
+                {formData.portfolio.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-gray-700 mb-2">Uploaded Images:</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {formData.portfolio.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img src={image} alt={`Portfolio ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/admin/craftsmen')}
-                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md mr-4 hover:bg-gray-400 transition-colors"
               >
                 Cancel
               </button>
-              
               <button
                 type="submit"
-                disabled={loading || uploadingImages}
-                className="px-6 py-3 bg-[#006452] text-white rounded-md hover:bg-[#004d3b] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#006452] text-white rounded-md hover:bg-[#00543f] transition-colors"
+                disabled={loading}
               >
-                {loading ? (isAddMode ? 'Creating...' : 'Updating...') : (isAddMode ? 'Create Craftsman' : 'Update Craftsman')}
+                {loading ? "Saving..." : "Save Craftsman"}
               </button>
             </div>
           </form>
         </div>
-      </div>
-    </div>
+      )}
+    </ResponsiveAdminContainer>
   );
 };
 

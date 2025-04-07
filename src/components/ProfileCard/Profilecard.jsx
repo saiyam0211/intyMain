@@ -13,6 +13,7 @@ const ProfileCard = ({
   name,
   rate,
   location,
+  availableCities = [],
   experience,
   projectsCompleted,
   phoneNumber = '8165XXXXXX',
@@ -224,6 +225,12 @@ const ProfileCard = ({
               <div className="flex flex-wrap gap-1 md:gap-3">
                 <p className="font-normal text-xs md:text-base text-white">{rate}</p>
                 <p className="font-normal text-xs md:text-base text-white">{location}</p>
+                {availableCities && availableCities.length > 0 && (
+                  <div className="mt-1">
+                    <span className="font-semibold">Available in: </span>
+                    <span>{availableCities.join(', ')}</span>
+                  </div>
+                )}
               </div>
               
               {/* Star rating */}

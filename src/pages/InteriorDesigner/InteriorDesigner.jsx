@@ -101,6 +101,7 @@ const InteriorDesigner = () => {
     if (location) {
       setUserLocation(location);
       localStorage.setItem('userLocation', location);
+      localStorage.setItem('userFilterLocation', location); // Store separately for filtering
 
       // Store exact coordinates if available
       if (coordinates) {
@@ -151,6 +152,7 @@ const InteriorDesigner = () => {
       // If no location is selected, clear the location data
       localStorage.removeItem('userLocation');
       localStorage.removeItem('userLiveLocation');
+      localStorage.removeItem('userFilterLocation');
 
       // Show location popup
       setShowLocationPopup(true);
@@ -255,9 +257,12 @@ const InteriorDesigner = () => {
       console.log("No live location data found in localStorage");
     }
 
+    // Get the filter location (might be different from userLocation)
+    const filterLocation = localStorage.getItem('userFilterLocation') || userLocation;
+
     // Only fetch if we have a location, otherwise wait for location popup
-    if (userLocation) {
-      fetchDesigners(userLocation);
+    if (filterLocation) {
+      fetchDesigners(filterLocation);
     } else {
       // Still need to set loading to false if no location yet
       setLoading(false);
@@ -431,6 +436,7 @@ const InteriorDesigner = () => {
                 name={designer.name}
                 rate={designer.rate}
                 location={<><FontAwesomeIcon icon={faLocationDot} /> {designer.location}</>}
+                availableCities={designer.availableCities}
                 reviewImage={designer.reviewImage || review}
                 experience={designer.experience}
                 projectsCompleted={designer.projectsCompleted}

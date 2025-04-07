@@ -73,56 +73,15 @@ const Craftsmen = () => {
     if (location) {
       setUserLocation(location);
       localStorage.setItem('userLocation', location);
-
-      // Store exact coordinates if available
-      if (coordinates) {
-        const liveLocationData = {
-          latitude: coordinates.latitude || coordinates.lat,
-          longitude: coordinates.longitude || coordinates.lng,
-          address: address || location,
-          timestamp: new Date().toISOString()
-        };
-        localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
-      } else {
-        // If no coordinates but we have a location name, try to get default coordinates for that city
-        const cityCoordinates = {
-          'Bengaluru': { lat: 12.9716, lng: 77.5946 },
-          'Indore': { lat: 22.7196, lng: 75.8577 },
-          'Nagpur': { lat: 21.1458, lng: 79.0882 },
-          'Mumbai': { lat: 19.0760, lng: 72.8777 },
-          'Delhi': { lat: 28.6139, lng: 77.2090 },
-          'Chennai': { lat: 13.0827, lng: 80.2707 },
-          'Kolkata': { lat: 22.5726, lng: 88.3639 },
-          'Hyderabad': { lat: 17.3850, lng: 78.4867 },
-          'Pune': { lat: 18.5204, lng: 73.8567 },
-          'Ahmedabad': { lat: 23.0225, lng: 72.5714 },
-          'Jaipur': { lat: 26.9124, lng: 75.7873 }
-        };
-
-        if (cityCoordinates[location]) {
-          const liveLocationData = {
-            latitude: cityCoordinates[location].lat,
-            longitude: cityCoordinates[location].lng,
-            timestamp: new Date().toISOString()
-          };
-          localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
-        } else {
-          // Use center of India as fallback
-          const liveLocationData = {
-            latitude: 20.5937,
-            longitude: 78.9629,
-            timestamp: new Date().toISOString()
-          };
-          localStorage.setItem('userLiveLocation', JSON.stringify(liveLocationData));
-        }
-      }
-
+      localStorage.setItem('userFilterLocation', location); // Store separately for filtering
+      
       // Fetch craftsmen with the selected location
       fetchCraftsmenWithLocation(location);
     } else {
       // If no location is selected, clear the location data
       localStorage.removeItem('userLocation');
       localStorage.removeItem('userLiveLocation');
+      localStorage.removeItem('userFilterLocation');
 
       // Show location popup
       setShowLocationPopup(true);
@@ -210,9 +169,12 @@ const Craftsmen = () => {
       console.log("No live location data found in localStorage");
     }
 
+    // Get the filter location (might be different from userLocation)
+    const filterLocation = localStorage.getItem('userFilterLocation') || userLocation;
+
     // Only fetch if we have a location, otherwise wait for location popup
-    if (userLocation) {
-      fetchCraftsmen(userLocation);
+    if (filterLocation) {
+      fetchCraftsmen(filterLocation);
     } else {
       // Still need to set loading to false if no location yet
       setLoading(false);
@@ -386,6 +348,7 @@ const Craftsmen = () => {
                 name={craftsman.name}
                 rate={craftsman.rate}
                 location={<><FontAwesomeIcon icon={faLocationDot} /> {craftsman.location}</>}
+                availableCities={craftsman.availableCities}
                 reviewImage={craftsman.reviewImage}
                 experience={craftsman.experience}
                 projectsCompleted={craftsman.projectsCompleted}

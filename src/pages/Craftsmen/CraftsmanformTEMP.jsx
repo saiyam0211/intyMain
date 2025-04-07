@@ -28,6 +28,7 @@ const CraftsmanForm = () => {
         name: '',
         rate: '',
         location: '',
+        availableCities: [],
         latitude: '',
         longitude: '',
         category: 'Basic',
@@ -39,9 +40,27 @@ const CraftsmanForm = () => {
         email: '',
         portfolio: [],
         googleReviews: '',
-        rating: '5', // Default value
-        isListed: false, // By default, set to unlisted
+        rating: '5',
+        show: true,
+        isListed: false,
     });
+
+    // Cities options based on the screenshots
+    const citiesOptions = [
+        "Agra", "Ahmedabad", "Ajmer", "Akola", "Aligarh", "Allahabad", "Amravati", "Amritsar",
+        "Aurangabad", "Bengaluru", "Bareilly", "Belgaum", "Bhavnagar", "Bhilai", "Bhiwandi",
+        "Bhopal", "Bhubaneswar", "Bikaner", "Bilaspur", "Bokaro", "Chandigarh", "Chennai",
+        "Coimbatore", "Cuttack", "Dehradun", "Delhi", "Dhanbad", "Durgapur", "Faridabad",
+        "Firozabad", "Ghaziabad", "Gorakhpur", "Gulbarga", "Guntur", "Gurgaon", "Guwahati",
+        "Gwalior", "Hubli", "Hyderabad", "Indore", "Jabalpur", "Jaipur", "Jalandhar", "Jammu",
+        "Jamnagar", "Jamshedpur", "Jhansi", "Jodhpur", "Kanpur", "Kochi", "Kolhapur", "Kolkata",
+        "Kota", "Kozhikode", "Kurnool", "Lucknow", "Ludhiana", "Madurai", "Mangalore", "Meerut",
+        "Mumbai", "Mysore", "Nagpur", "Nashik", "Navi Mumbai", "Noida", "Patna", "Pondicherry",
+        "Pune", "Raipur", "Rajkot", "Ranchi", "Rourkela", "Salem", "Sangli", "Siliguri", "Solapur",
+        "Srinagar", "Surat", "Thiruvananthapuram", "Thrissur", "Tiruchirappalli", "Tirunelveli",
+        "Tiruppur", "Ujjain", "Vadodara", "Varanasi", "Vijayawada", "Visakhapatnam", "Warangal",
+        "Agartala", "Aizawl", "Aligarh", "Alwar", "Ambala", "Ambarnath", "Ambikapur", "Anand", "Anantapur"
+    ];
 
     // Initialize AOS for animations
     useEffect(() => {
@@ -116,6 +135,47 @@ const CraftsmanForm = () => {
         };
     }, [mapContainerRef.current, formData.latitude, formData.longitude]);
 
+    // Function to add a city to availableCities and update location
+    const handleAddCity = (city) => {
+        if (!formData.availableCities.includes(city)) {
+            const newAvailableCities = [...formData.availableCities, city];
+            setFormData(prev => ({
+                ...prev,
+                availableCities: newAvailableCities,
+                // Only set location field if it's currently empty (for backward compatibility)
+                location: prev.location || city,
+            }));
+        }
+    };
+
+    // Function to remove a city from availableCities and update location
+    const handleRemoveCity = (indexToRemove) => {
+        const cityToRemove = formData.availableCities[indexToRemove];
+        const newAvailableCities = formData.availableCities.filter((_, i) => i !== indexToRemove);
+        
+        // Update form data with new availableCities
+        setFormData(prev => {
+            // If we still have cities after removal, ensure location is set to one of them
+            // This maintains backward compatibility
+            let updatedLocation = prev.location;
+            
+            // If we removed the city that was in the location field and we have other cities,
+            // update location to any remaining city for backward compatibility
+            if (prev.location === cityToRemove && newAvailableCities.length > 0) {
+                updatedLocation = newAvailableCities[0];
+            } else if (newAvailableCities.length === 0) {
+                // If no cities are left, clear the location field
+                updatedLocation = '';
+            }
+            
+            return {
+                ...prev,
+                availableCities: newAvailableCities,
+                location: updatedLocation
+            };
+        });
+    };
+
     // Handle map click
     const handleMapClick = (e) => {
         const { lat, lng } = e.latlng;
@@ -167,6 +227,17 @@ const CraftsmanForm = () => {
                         ...prev,
                         location: locationName
                     }));
+                    
+                    // Also add to available cities if not already there
+                    if (!formData.availableCities.includes(locationName)) {
+                        // Check if this city name is in our list of citiesOptions
+                        const matchedCity = citiesOptions.find(
+                            city => city.toLowerCase() === locationName.toLowerCase()
+                        );
+                        
+                        // Add either the matched city name (maintaining case) or the original location
+                        handleAddCity(matchedCity || locationName);
+                    }
                 } else {
                     // If we can't extract a specific part, use the first part of the display name
                     const shortLocation = address.display_name.split(',')[0];
@@ -175,6 +246,17 @@ const CraftsmanForm = () => {
                             ...prev,
                             location: shortLocation
                         }));
+                        
+                        // Also add to available cities if not already there
+                        if (!formData.availableCities.includes(shortLocation)) {
+                            // Check if this short location is in our list of citiesOptions
+                            const matchedCity = citiesOptions.find(
+                                city => city.toLowerCase() === shortLocation.toLowerCase()
+                            );
+                            
+                            // Add either the matched city name (maintaining case) or the original short location
+                            handleAddCity(matchedCity || shortLocation);
+                        }
                     }
                 }
             } else {
@@ -234,13 +316,28 @@ const CraftsmanForm = () => {
                 if (response.data && response.data.length > 0) {
                     const result = response.data[0];
                     
-                    // Update form data directly
+                    // Extract the city or location name from the result
+                    const addressParts = result.display_name.split(',');
+                    const cityOrLocation = addressParts[0].trim();
+                    
+                    // Update form data directly with map coordinates
                     setFormData(prev => ({
                         ...prev,
                         latitude: parseFloat(result.lat).toFixed(6),
                         longitude: parseFloat(result.lon).toFixed(6),
-                        location: result.display_name.split(',')[0] // Use first part of address
+                        location: cityOrLocation // Use first part of address
                     }));
+                    
+                    // Also add to available cities if not already there
+                    if (cityOrLocation && !formData.availableCities.includes(cityOrLocation)) {
+                        // Check if this city name is in our list of citiesOptions
+                        const matchedCity = citiesOptions.find(
+                            city => city.toLowerCase() === cityOrLocation.toLowerCase()
+                        );
+                        
+                        // Add either the matched city name (maintaining case) or the original city
+                        handleAddCity(matchedCity || cityOrLocation);
+                    }
                     
                     setSearchAddress(result.display_name);
                     
@@ -326,20 +423,18 @@ const CraftsmanForm = () => {
                 setFormData({
                     name: craftsman.name || '',
                     rate: craftsman.rate || '',
-                    location: craftsman.location || '',
-                    latitude: craftsman.latitude || '',
-                    longitude: craftsman.longitude || '',
+                    availableCities: craftsman.availableCities || [],
                     category: craftsman.category || 'Basic',
                     experience: craftsman.experience || '',
                     projectsCompleted: craftsman.projectsCompleted || '',
-                    specialty: craftsman.specialty || '',
-                    description: craftsman.description || '',
                     phoneNumber: craftsman.phoneNumber || '',
                     email: craftsman.email || '',
                     portfolio: craftsman.portfolio || [],
                     googleReviews: craftsman.googleReviews || '',
                     rating: craftsman.rating || '5',
                     isListed: craftsman.isListed || false,
+                    latitude: craftsman.latitude || '',
+                    longitude: craftsman.longitude || '',
                 });
             } catch (err) {
                 console.error('Error fetching craftsman:', err);
@@ -464,25 +559,35 @@ const CraftsmanForm = () => {
     // Validate form fields
     const validateForm = () => {
         const requiredFields = [
-            { field: 'name', label: 'Craftsman Name' },
-            { field: 'rate', label: 'Rate' },
-            { field: 'location', label: 'Location' },
-            { field: 'category', label: 'Category' },
-            { field: 'experience', label: 'Experience' },
-            { field: 'projectsCompleted', label: 'Projects Completed' },
-            { field: 'specialty', label: 'Specialty' },
-            { field: 'description', label: 'Description' },
-            { field: 'phoneNumber', label: 'Phone Number' },
-            { field: 'email', label: 'Email Address' },
-            { field: 'googleReviews', label: 'Google Reviews Count' }
+            { field: 'name', label: 'Craftsman Name', type: 'string' },
+            { field: 'rate', label: 'Rate', type: 'string' },
+            { field: 'category', label: 'Category', type: 'string' },
+            { field: 'experience', label: 'Experience', type: 'string' },
+            { field: 'projectsCompleted', label: 'Projects Completed', type: 'string' },
+            { field: 'phoneNumber', label: 'Phone Number', type: 'string' },
+            { field: 'email', label: 'Email Address', type: 'string' },
+            { field: 'googleReviews', label: 'Google Reviews Count', type: 'number' }
         ];
 
-        // Check each required field
-        for (const { field, label } of requiredFields) {
-            if (!formData[field] || formData[field].trim() === '') {
+        // Check each required field based on its type
+        for (const { field, label, type } of requiredFields) {
+            if (type === 'string') {
+                if (!formData[field] || typeof formData[field] !== 'string' || formData[field].trim() === '') {
                 toast.error(`${label} is required.`);
                 return false;
             }
+            } else if (type === 'number') {
+                if (!formData[field] && formData[field] !== 0) {
+                    toast.error(`${label} is required.`);
+                    return false;
+                }
+            }
+        }
+        
+        // Check availableCities separately since it's an array
+        if (!formData.availableCities || !Array.isArray(formData.availableCities) || formData.availableCities.length === 0) {
+            toast.error('At least one city is required.');
+            return false;
         }
 
         // Check email format
@@ -500,14 +605,8 @@ const CraftsmanForm = () => {
         }
 
         // Check portfolio images (minimum 5 required)
-        if (formData.portfolio.length < 5) {
+        if (!Array.isArray(formData.portfolio) || formData.portfolio.length < 5) {
             toast.error('At least 5 portfolio images are required.');
-            return false;
-        }
-
-        // Add location validation - if location is provided, make sure coordinates are too
-        if (formData.location && (!formData.latitude || !formData.longitude)) {
-            toast.error('Please select a location on the map or use the search function.');
             return false;
         }
 
@@ -529,12 +628,21 @@ const CraftsmanForm = () => {
         try {
             let response;
 
+            // Ensure availableCities contains at least the location if it's empty
+            const availableCities = formData.availableCities.length > 0 
+                ? formData.availableCities 
+                : formData.location ? [formData.location] : [];
+
             // Prepare form data for submission
             const submissionData = {
                 ...formData,
                 // Ensure rateNumeric is calculated for backend filtering
                 rateNumeric: parseInt(formData.rate.replace(/[^\d]/g, ''), 10),
-                isListed: formData.isListed // Include the listing status
+                isListed: formData.isListed, // Include the listing status
+                // Use all cities for filtering, not just the first one
+                availableCities: availableCities,
+                // Set location to first available city for backward compatibility
+                location: availableCities.length > 0 ? availableCities[0] : formData.location,
             };
 
             if (isEditMode) {
@@ -632,17 +740,95 @@ const CraftsmanForm = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Location *
+                                    Available Cities/Locations *
                                 </label>
+                                <div className="relative">
                                 <input
                                     type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                                    placeholder="Area/Neighborhood/City"
-                                />
+                                        placeholder="Search cities..."
+                                        className="w-full p-2 border rounded"
+                                        onFocus={(e) => {
+                                            const cityDropdown = document.getElementById('cityDropdown');
+                                            if (cityDropdown) {
+                                                cityDropdown.classList.remove('hidden');
+                                            }
+                                        }}
+                                        onChange={(e) => {
+                                            const searchTerm = e.target.value.toLowerCase();
+                                            const cityDropdown = document.getElementById('cityDropdown');
+                                            
+                                            if (searchTerm.length > 0) {
+                                                cityDropdown.classList.remove('hidden');
+                                            } else {
+                                                cityDropdown.classList.add('hidden');
+                                            }
+
+                                            // Filter cities based on search
+                                            const cityItems = cityDropdown.getElementsByTagName('div');
+                                            let visibleCount = 0;
+                                            for (let i = 0; i < cityItems.length; i++) {
+                                                const cityText = cityItems[i].textContent.toLowerCase();
+                                                if (cityText.includes(searchTerm)) {
+                                                    cityItems[i].classList.remove('hidden');
+                                                    visibleCount++;
+                                                    // Limit visible items to improve performance
+                                                    if (visibleCount > 50) {
+                                                        cityItems[i].classList.add('hidden');
+                                                    }
+                                                } else {
+                                                    cityItems[i].classList.add('hidden');
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    {formData.availableCities.length === 0 && (
+                                        <p className="text-red-500 text-sm mt-1">Please select at least one city</p>
+                                    )}
+                                    <div
+                                        id="cityDropdown"
+                                        className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto hidden"
+                                    >
+                                        {citiesOptions.map((city, index) => (
+                                            <div
+                                                key={index}
+                                                className="p-2 hover:bg-gray-100 cursor-pointer"
+                                                onClick={() => {
+                                                    // Use custom handler to maintain location field
+                                                    handleAddCity(city);
+                                                    // Hide dropdown
+                                                    const dropdown = document.getElementById('cityDropdown');
+                                                    if (dropdown) {
+                                                        dropdown.classList.add('hidden');
+                                                    }
+                                                    // Clear the search input
+                                                    const searchInput = document.querySelector('input[placeholder="Search cities..."]');
+                                                    if (searchInput) {
+                                                        searchInput.value = '';
+                                                    }
+                                                }}
+                                            >
+                                                {city}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Display selected cities as tags */}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {formData.availableCities.map((city, index) => (
+                                        <div key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
+                                            {city}
+                                            <button
+                                                type="button"
+                                                className="ml-2 text-blue-600 hover:text-blue-800"
+                                                onClick={() => handleRemoveCity(index)}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">All selected cities will be used for filtering. Users will be able to find this craftsman when searching in any of these locations.</p>
                             </div>
 
                             <div>
@@ -663,20 +849,7 @@ const CraftsmanForm = () => {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Specialty *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="specialty"
-                                    value={formData.specialty}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                                    placeholder="e.g. Woodworking, Plumbing, etc."
-                                />
-                            </div>
+                           
 
                             {/* Google Reviews Count */}
                             <div>
@@ -779,21 +952,7 @@ const CraftsmanForm = () => {
                             </div>
                         </div>
 
-                        {/* Craftsman Description */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Description *
-                            </label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                required
-                                rows="4"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                                placeholder="Brief description of the craftsman's expertise and skills..."
-                            ></textarea>
-                        </div>
+                        
 
                         {/* Portfolio Images Upload - requiring at least 5 images */}
                         <div>
@@ -887,7 +1046,7 @@ const CraftsmanForm = () => {
                             
                             <div className="form-group">
                                 <label className="block text-gray-700 font-medium mb-2">
-                                    Location <span className="text-red-500">*</span>
+                                    Legacy Location Field <span className="text-xs text-gray-500">(for backward compatibility)</span>
                                 </label>
                                 <input
                                     type="text"
@@ -896,54 +1055,10 @@ const CraftsmanForm = () => {
                                     onChange={handleChange}
                                     placeholder="Area/Neighborhood/City"
                                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    required
                                 />
-                                <p className="text-xs text-gray-500 mt-1">This field is automatically filled when selecting a location on the map, but can be edited manually if needed.</p>
+                                <p className="text-xs text-gray-500 mt-1">This field is kept for backward compatibility with older systems. All cities above will be used for filtering.</p>
                             </div>
                             
-                            {/* Map Search */}
-                            <div className="form-group">
-                                <label className="block text-gray-700 font-medium mb-2">
-                                    Search Location or Click on Map
-                                </label>
-                                <SearchBox />
-                            </div>
-                            
-                            {/* Map Container */}
-                            <div style={{ position: 'relative', height: '400px', width: '100%', marginTop: '12px' }}>
-                                <div
-                                    ref={mapContainerRef}
-                                    style={{ height: '100%', width: '100%' }}
-                                    className="rounded border border-gray-300"
-                                ></div>
-                                
-                                {mapLoading && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
-                                        <div className="flex flex-col items-center">
-                                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-                                            <p className="mt-2 text-green-500">Loading map...</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            {/* Display selected address if available */}
-                            {searchAddress && (
-                                <div className="mt-2 p-2 bg-gray-100 rounded flex justify-between items-center">
-                                    <p className="text-sm"><strong>Selected Address:</strong> {searchAddress}</p>
-                                    <button
-                                        type="button"
-                                        onClick={clearLocationSelection}
-                                        className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                                    >
-                                        Clear
-                                    </button>
-                                </div>
-                            )}
-                            
-                            {/* Hidden coordinates fields */}
-                            <input type="hidden" name="latitude" value={formData.latitude} />
-                            <input type="hidden" name="longitude" value={formData.longitude} />
                         </div>
 
                         {/* Action Buttons */}

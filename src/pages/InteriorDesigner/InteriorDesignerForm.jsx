@@ -6,19 +6,12 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import 'leaflet/dist/leaflet.css';
+import citiesOptions from "../../data/cities";
 
 const DesignerForm = () => {
   const navigate = useNavigate();
   const { id } = useParams(); // Get ID from URL if in edit mode
   const isEditMode = !!id;
-  
-  // Map related states
-  const mapContainerRef = useRef(null);
-  const [map, setMap] = useState(null);
-  const [marker, setMarker] = useState(null);
-  const [mapLoading, setMapLoading] = useState(true);
-  const [searchAddress, setSearchAddress] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -27,9 +20,9 @@ const DesignerForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     rate: '',
+    projectType: '',
     location: '',
-    latitude: '',
-    longitude: '',
+    availableCities: [],
     experience: '',
     projectsCompleted: '',
     phoneNumber: '',
@@ -40,6 +33,7 @@ const DesignerForm = () => {
     description: '', // Added description field
     isListed: false, // By default, set to unlisted
   });
+  const [errors, setErrors] = useState({});
 
   // Initialize AOS for animations
   useEffect(() => {
@@ -48,267 +42,6 @@ const DesignerForm = () => {
       once: true
     });
   }, []);
-
-  // Initialize Leaflet map
-  useEffect(() => {
-    // Skip if no container or if map is already initialized
-    if (!mapContainerRef.current || map) return;
-
-    // Import Leaflet dynamically to avoid SSR issues
-    import('leaflet').then(L => {
-      // Fix for default marker icon
-      delete L.Icon.Default.prototype._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-      });
-
-      // Clean up any existing map instance first
-      if (map) {
-        map.remove();
-        setMap(null);
-        setMarker(null);
-      }
-
-      // Create map centered on India
-      const newMap = L.map(mapContainerRef.current).setView([20.5937, 78.9629], 5);
-
-      // Use CartoDB Voyager tiles for better India coverage
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(newMap);
-
-      // Add scale control for better distance reference
-      L.control.scale().addTo(newMap);
-
-      // Add click handler
-      newMap.on('click', handleMapClick);
-
-      // Save map reference
-      setMap(newMap);
-      setMapLoading(false);
-
-      // If we have coordinates already, add a marker
-      if (formData.latitude && formData.longitude) {
-        const lat = parseFloat(formData.latitude);
-        const lng = parseFloat(formData.longitude);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const newMarker = L.marker([lat, lng]).addTo(newMap);
-          setMarker(newMarker);
-          newMap.setView([lat, lng], 13);
-          fetchAddressFromCoordinates(lat, lng);
-        }
-      }
-    });
-
-    // Cleanup on unmount
-    return () => {
-      if (map) {
-        map.remove();
-        setMap(null);
-        setMarker(null);
-      }
-    };
-  }, [mapContainerRef.current, formData.latitude, formData.longitude]);
-
-  // Handle map click
-  const handleMapClick = (e) => {
-    const { lat, lng } = e.latlng;
-
-    // Update form data
-    setFormData({
-      ...formData,
-      latitude: lat.toFixed(6),
-      longitude: lng.toFixed(6)
-    });
-
-    // Update marker
-    if (marker) {
-      marker.setLatLng([lat, lng]);
-    } else if (map) {
-      const newMarker = L.marker([lat, lng]).addTo(map);
-      setMarker(newMarker);
-    }
-
-    // Get address from coordinates
-    fetchAddressFromCoordinates(lat, lng);
-  };
-
-  // Fetch address from coordinates
-  const fetchAddressFromCoordinates = async (lat, lng) => {
-    try {
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&countrycodes=in`,
-        {
-          headers: {
-            'Accept-Language': 'en-US,en;q=0.9'
-          }
-        }
-      );
-
-      if (response.data && response.data.display_name) {
-        setSearchAddress(response.data.display_name);
-        // Extract the city or neighborhood from the address
-        const address = response.data;
-        let locationName = address.address?.city || 
-                          address.address?.town || 
-                          address.address?.village || 
-                          address.address?.suburb ||
-                          address.address?.neighbourhood ||
-                          address.address?.county;
-        
-        if (locationName) {
-          setFormData(prev => ({
-            ...prev,
-            location: locationName
-          }));
-        } else {
-          // If we can't extract a specific part, use the first part of the display name
-          const shortLocation = address.display_name.split(',')[0];
-          if (shortLocation) {
-            setFormData(prev => ({
-              ...prev,
-              location: shortLocation
-            }));
-          }
-        }
-      } else {
-        setSearchAddress("");
-      }
-    } catch (error) {
-      console.error("Error getting address from coordinates:", error);
-      setSearchAddress("");
-    }
-  };
-
-  // Function to clear location selection
-  const clearLocationSelection = () => {
-    setSearchAddress("");
-
-    // Remove marker
-    if (marker && map) {
-      map.removeLayer(marker);
-      setMarker(null);
-    }
-
-    // Reset map view
-    if (map) {
-      map.setView([20.5937, 78.9629], 5);
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      latitude: "",
-      longitude: "",
-      location: ""
-    }));
-  };
-
-  // Search component using Nominatim
-  const SearchBox = ({ onPlaceSelected }) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
-
-    // Function to handle the search using Nominatim
-    const handleSearch = async () => {
-      if (!searchQuery.trim()) return;
-
-      try {
-        setIsSearching(true);
-
-        // Regular search using Nominatim
-        const response = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}${searchQuery.toLowerCase().includes('india') ? '' : ', india'}&limit=5&countrycodes=in`,
-          {
-            headers: {
-              'Accept-Language': 'en-US,en;q=0.9'
-            }
-          }
-        );
-
-        if (response.data && response.data.length > 0) {
-          const result = response.data[0];
-          
-          // Update form data directly
-          setFormData(prev => ({
-            ...prev,
-            latitude: parseFloat(result.lat).toFixed(6),
-            longitude: parseFloat(result.lon).toFixed(6),
-            location: result.display_name.split(',')[0] // Use first part of address
-          }));
-          
-          setSearchAddress(result.display_name);
-          
-          // Update map and marker
-          if (map) {
-            map.setView([parseFloat(result.lat), parseFloat(result.lon)], 13);
-            
-            if (marker) {
-              marker.setLatLng([parseFloat(result.lat), parseFloat(result.lon)]);
-            } else {
-              const newMarker = L.marker([parseFloat(result.lat), parseFloat(result.lon)]).addTo(map);
-              setMarker(newMarker);
-            }
-          }
-          
-          setSearchQuery(''); // Clear the search input after successful search
-        } else {
-          toast.error('Location not found in India. Please try a more specific search term.');
-        }
-      } catch (error) {
-        console.error('Error searching for location:', error);
-        toast.error('Error searching for location. Please try again.');
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    // Handle Enter key press
-    const handleKeyDown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSearch();
-      }
-    };
-
-    return (
-      <div>
-        <div className="bg-white p-2 rounded shadow-md">
-          <div className="flex">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search for a location in India"
-              className="p-2 border rounded-l w-full"
-              disabled={isSearching}
-            />
-            <button
-              type="button"
-              onClick={handleSearch}
-              className={`${isSearching ? 'bg-green-600/60' : 'bg-green-600 hover:bg-green-700'} text-white px-4 py-2 rounded-r flex items-center justify-center min-w-[100px]`}
-              disabled={isSearching}
-            >
-              {isSearching ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Searching...
-                </>
-              ) : 'Search'}
-            </button>
-          </div>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">For better results, include city/state name (e.g., "Koramangala, Bangalore")</p>
-      </div>
-    );
-  };
 
   // Fetch designer data if in edit mode
   useEffect(() => {
@@ -324,9 +57,9 @@ const DesignerForm = () => {
         setFormData({
           name: designer.name || '',
           rate: designer.rate || '',
+          projectType: designer.projectType || '',
           location: designer.location || '',
-          latitude: designer.latitude || '',
-          longitude: designer.longitude || '',
+          availableCities: designer.availableCities || [],
           experience: designer.experience || '',
           projectsCompleted: designer.projectsCompleted || '',
           phoneNumber: designer.phoneNumber || '',
@@ -444,108 +177,140 @@ const DesignerForm = () => {
 
   // Validate the form
   const validateForm = () => {
-    const requiredFields = [
-      { field: 'name', label: 'Designer Name' },
-      { field: 'rate', label: 'Rate' },
-      { field: 'location', label: 'Location' },
-      { field: 'experience', label: 'Experience' },
-      { field: 'projectsCompleted', label: 'Projects Completed' },
-      { field: 'phoneNumber', label: 'Phone Number' },
-      { field: 'email', label: 'Email Address' },
-      { field: 'googleReviews', label: 'Google Reviews Count' },
-      { field: 'description', label: 'Professional Description' }
-    ];
+    const validationErrors = {};
 
-    // Check each required field
-    for (const { field, label } of requiredFields) {
-      if (!formData[field] || formData[field].trim() === '') {
-        toast.error(`${label} is required.`);
-        return false;
+    // Required string fields validation
+    const requiredFields = {
+      name: "Designer Name",
+      rate: "Rate",
+      experience: "Experience",
+      projectsCompleted: "Projects Completed",
+      phoneNumber: "Phone Number",
+      email: "Email",
+    };
+
+    // Check required string fields
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!formData[field] || formData[field].trim() === "") {
+        validationErrors[field] = `${label} is required`;
       }
+    });
+
+    // Check availableCities
+    if (!formData.availableCities || formData.availableCities.length === 0) {
+      validationErrors.availableCities = "At least one city is required";
     }
 
-    // Check email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error('Please enter a valid email address.');
-      return false;
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      validationErrors.email = "Invalid email format";
     }
 
-    // Check phone number format (10 digits)
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(formData.phoneNumber.replace(/\D/g, ''))) {
-      toast.error('Please enter a valid 10-digit phone number.');
-      return false;
+    // Phone number validation
+    if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ""))) {
+      validationErrors.phoneNumber = "Phone number must be 10 digits";
     }
 
-    // Check portfolio images
+    // Check if at least 5 portfolio images are provided
     if (formData.portfolio.length < 5) {
-      toast.error('At least 5 portfolio images are required.');
-      return false;
+      validationErrors.portfolio = "Please upload at least 5 portfolio images";
     }
 
-    // Add location validation - if location is provided, make sure coordinates are too
-    if (formData.location && (!formData.latitude || !formData.longitude)) {
-      toast.error('Please select a location on the map or use the search function.');
+    setErrors(validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      const errorMessages = Object.values(validationErrors).join('\n');
+      setMessage({ type: 'error', text: errorMessages });
       return false;
     }
-
-    return true; // All validations passed
+    return true;
   };
 
   // Handle form submission with image validation
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate all fields
     if (!validateForm()) {
+      toast.error("Please fill all required fields correctly");
       return;
     }
-    
-    setLoading(true);
-    setMessage({ type: 'info', text: `${isEditMode ? 'Updating' : 'Creating'} designer profile...` });
+
+    // Ensure location is set for backward compatibility
+    let submissionData = { ...formData };
+    if (!submissionData.location && submissionData.availableCities.length > 0) {
+      submissionData.location = submissionData.availableCities[0];
+    }
+
+    // Calculate rateNumeric for backend filtering
+    const rateNumeric = parseInt(submissionData.rate.replace(/\D/g, ""));
+    submissionData.rateNumeric = isNaN(rateNumeric) ? 0 : rateNumeric;
 
     try {
+      setLoading(true);
       let response;
-      
-      // Prepare form data for submission
-      const submissionData = {
-        ...formData,
-        // Ensure rateNumeric is calculated for backend filtering
-        rateNumeric: parseInt(formData.rate.replace(/[^\d]/g, ''), 10),
-        isListed: formData.isListed // Include the listing status
-      };
-      
-      if (isEditMode) {
-        // Update existing designer
-        response = await axios.put(`https://inty-backend.onrender.com/api/designers/${id}`, submissionData);
+
+      if (isEditMode && id) {
+        response = await axios.put(
+          `https://inty-backend.onrender.com/api/designers/${id}`,
+          submissionData
+        );
+        toast.success("Designer updated successfully!");
       } else {
-        // Create new designer
-        response = await axios.post('https://inty-backend.onrender.com/api/designers', submissionData);
+        response = await axios.post(
+          'https://inty-backend.onrender.com/api/designers',
+          submissionData
+        );
+        toast.success("Designer created successfully!");
       }
-      
-      setMessage({ 
-        type: 'success', 
-        text: `Designer profile ${isEditMode ? 'updated' : 'created'} successfully! ${!isEditMode ? 'Your profile will be reviewed by an admin before being listed.' : ''}` 
-      });
-      
-      toast.success(`Designer profile ${isEditMode ? 'updated' : 'created'} successfully! ${!isEditMode ? 'Your profile will be reviewed by an admin before being listed.' : ''}`);
-      
-      // Redirect to designers list after successful submission
+
+      // Redirect to designers list
       setTimeout(() => {
         navigate('/interiordesigner');
       }, 3000);
-      
     } catch (error) {
-      console.error('Submission error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'save'} profile. Please try again.` 
-      });
-      toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'save'} profile. Please try again.`);
+      console.error("Error:", error);
+      toast.error(
+        error.response?.data?.message || "An error occurred. Please try again."
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to add a city to availableCities and update location
+  const handleAddCity = (city) => {
+    if (!formData.availableCities.includes(city)) {
+      // Add city to availableCities if not already present
+      setFormData((prevData) => ({
+        ...prevData,
+        availableCities: [...prevData.availableCities, city],
+        // Set location to the first city for backward compatibility if it's empty
+        location: prevData.location === "" ? city : prevData.location,
+      }));
+    }
+  };
+
+  // Function to remove a city from availableCities and update location
+  const handleRemoveCity = (index) => {
+    setFormData((prevData) => {
+      const updatedCities = [...prevData.availableCities];
+      updatedCities.splice(index, 1);
+      
+      // Update location field for backward compatibility
+      let updatedLocation = prevData.location;
+      // If the removed city was the location, and there are other cities, set location to the first available city
+      if (prevData.location === prevData.availableCities[index] && updatedCities.length > 0) {
+        updatedLocation = updatedCities[0];
+      } else if (updatedCities.length === 0) {
+        // If no cities remain, clear the location
+        updatedLocation = "";
+      }
+      
+      return {
+        ...prevData,
+        availableCities: updatedCities,
+        location: updatedLocation,
+      };
+    });
   };
 
   // Show loading state while fetching data in edit mode
@@ -590,9 +355,10 @@ const DesignerForm = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                  className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]`}
                   placeholder="Full Name"
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               
               <div>
@@ -610,72 +376,104 @@ const DesignerForm = () => {
                 />
               </div>
               
-              {/* Location field with map */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-700">Location Information</h3>
+              {/* Location Information */}
+              <div className="md:col-span-2">
                 
-               
-                
-                {/* Map Search */}
-                <div className="form-group">
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Search Location or Click on Map
+                <div className="relative mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Available Cities/Locations *
                   </label>
-                  <SearchBox />
-                </div>
-                
-                {/* Map Container */}
-                <div style={{ position: 'relative', height: '400px', width: '100%', marginTop: '12px' }}>
-                  <div
-                    ref={mapContainerRef}
-                    style={{ height: '100%', width: '100%' }}
-                    className="rounded border border-gray-300"
-                  ></div>
-                  
-                  {mapLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-                        <p className="mt-2 text-green-500">Loading map...</p>
-                      </div>
-                    </div>
+                  <input
+                    type="text"
+                    placeholder="Search cities..."
+                    className="w-full p-2 border rounded"
+                    onFocus={(e) => {
+                      const cityDropdown = document.getElementById('cityDropdown');
+                      if (cityDropdown) {
+                        cityDropdown.classList.remove('hidden');
+                      }
+                    }}
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      const cityDropdown = document.getElementById('cityDropdown');
+                      
+                      if (searchTerm.length > 0) {
+                        cityDropdown.classList.remove('hidden');
+                      } else {
+                        cityDropdown.classList.add('hidden');
+                      }
+
+                      // Filter cities based on search
+                      const cityItems = cityDropdown.getElementsByTagName('div');
+                      let visibleCount = 0;
+                      for (let i = 0; i < cityItems.length; i++) {
+                        const cityText = cityItems[i].textContent.toLowerCase();
+                        if (cityText.includes(searchTerm)) {
+                          cityItems[i].classList.remove('hidden');
+                          visibleCount++;
+                          // Limit visible items to improve performance
+                          if (visibleCount > 50) {
+                            cityItems[i].classList.add('hidden');
+                          }
+                        } else {
+                          cityItems[i].classList.add('hidden');
+                        }
+                      }
+                    }}
+                  />
+                  {formData.availableCities.length === 0 && (
+                    <p className="text-red-500 text-sm mt-1">Please select at least one city</p>
                   )}
-                </div>
-                
-                {/* Display selected address if available */}
-                {searchAddress && (
-                  <div className="mt-2 p-2 bg-gray-100 rounded flex justify-between items-center">
-                    <p className="text-sm"><strong>Selected Address:</strong> {searchAddress}</p>
-                    <button
-                      type="button"
-                      onClick={clearLocationSelection}
-                      className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                    >
-                      Clear
-                    </button>
+                  <div
+                    id="cityDropdown"
+                    className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto hidden"
+                  >
+                    {citiesOptions.map((city, index) => (
+                      <div
+                        key={index}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          // Use custom handler to maintain location field
+                          handleAddCity(city);
+                          // Hide dropdown
+                          const dropdown = document.getElementById('cityDropdown');
+                          if (dropdown) {
+                            dropdown.classList.add('hidden');
+                          }
+                          // Clear the search input
+                          const searchInput = document.querySelector('input[placeholder="Search cities..."]');
+                          if (searchInput) {
+                            searchInput.value = '';
+                          }
+                        }}
+                      >
+                        {city}
+                      </div>
+                    ))}
                   </div>
-                )}
-                
-                {/* Hidden coordinates fields */}
-                <input type="hidden" name="latitude" value={formData.latitude} />
-                <input type="hidden" name="longitude" value={formData.longitude} />
+                </div>
+
+                {/* Display selected cities as tags */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {formData.availableCities.map((city, index) => (
+                    <div key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
+                      {city}
+                      <button
+                        type="button"
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                        onClick={() => handleRemoveCity(index)}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1 mb-4">All selected cities will be used for filtering. Users will be able to find you when searching in any of these locations.</p>
               </div>
               
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Professional Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-                  placeholder="Tell us about your design expertise and style..."
-                />
-              </div>
+              
+              
+              
               
               {/* Google Reviews Count */}
               <div>

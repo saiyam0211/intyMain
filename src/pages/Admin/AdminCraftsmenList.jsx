@@ -240,7 +240,11 @@ const AdminCraftsmenList = () => {
                 <div className="text-sm text-gray-900">{craftsman.name}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">{craftsman.location}</div>
+                <div className="text-sm text-gray-500">
+                  {craftsman.availableCities && craftsman.availableCities.length > 0 
+                    ? craftsman.availableCities.join(', ')
+                    : craftsman.location}
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">{craftsman.category}</div>
