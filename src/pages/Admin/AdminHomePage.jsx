@@ -24,6 +24,7 @@ const AdminHomePage = () => {
     const [pendingReviews, setPendingReviews] = useState({
         designers: 0,
         craftsmen: 0,
+        companies: 0,
         loading: true,
         error: null
     });
@@ -48,34 +49,27 @@ const AdminHomePage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                // Count unlisted items
-                let designerCount = 0;
-                let craftsmenCount = 0;
-                
-                if (Array.isArray(designersResponse.data)) {
-                    designerCount = designersResponse.data.filter(d => d.show === false || d.isListed === false).length;
-                } else if (designersResponse.data && Array.isArray(designersResponse.data.data)) {
-                    designerCount = designersResponse.data.data.filter(d => d.show === false || d.isListed === false).length;
-                }
-                
-                if (Array.isArray(craftsmenResponse.data)) {
-                    craftsmenCount = craftsmenResponse.data.filter(c => c.show === false || c.isListed === false).length;
-                } else if (craftsmenResponse.data && Array.isArray(craftsmenResponse.data.data)) {
-                    craftsmenCount = craftsmenResponse.data.data.filter(c => c.show === false || c.isListed === false).length;
-                }
+                // Fetch companies that need approval (isListed = false)
+                const companiesResponse = await axios.get('https://inty-backend.onrender.com/api/companies?isAdmin=true', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const pendingDesigners = designersResponse.data.designers.filter(d => !d.isListed).length;
+                const pendingCraftsmen = craftsmenResponse.data.craftsmen.filter(c => !c.isListed).length;
+                const pendingCompanies = companiesResponse.data.companies?.filter(c => !c.isListed).length || 0;
 
                 setPendingReviews({
-                    designers: designerCount,
-                    craftsmen: craftsmenCount,
-                    loading: false,
-                    error: null
+                    designers: pendingDesigners,
+                    craftsmen: pendingCraftsmen,
+                    companies: pendingCompanies,
+                    loading: false
                 });
             } catch (error) {
-                console.error("Error fetching pending reviews:", error);
+                console.error('Error fetching pending reviews:', error);
                 setPendingReviews(prev => ({
                     ...prev,
                     loading: false,
-                    error: "Failed to load pending reviews"
+                    error: 'Failed to fetch pending reviews'
                 }));
             }
         };
@@ -196,45 +190,44 @@ const AdminHomePage = () => {
                                 {pendingReviews.error}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div 
-                                    className={`bg-gradient-to-br from-[#006452] to-[#004d3b] text-white rounded-lg p-5 shadow-sm cursor-pointer hover:shadow-md transition-all ${pendingReviews.designers > 0 ? 'animate-pulse' : ''}`}
-                                    onClick={() => navigate('/admin/designers')}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-medium text-white/90">Interior Designers</h3>
-                                            <p className="text-2xl font-bold mt-1">
-                                                {pendingReviews.designers} pending
-                                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <FaPaintBrush className="text-yellow-500 text-xl mr-2" />
+                                            <span className="font-medium">Designers</span>
                                         </div>
-                                        <FaPaintBrush className="text-3xl text-white/70" />
+                                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
+                                            {pendingReviews.designers}
+                                        </span>
                                     </div>
-                                    {pendingReviews.designers > 0 && (
-                                        <div className="mt-3 text-sm text-white/80">
-                                            Click to review and approve
-                                        </div>
-                                    )}
+                                    <p className="text-sm text-gray-600 mt-1">Awaiting approval</p>
                                 </div>
                                 
-                                <div 
-                                    className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-5 shadow-sm cursor-pointer hover:shadow-md transition-all ${pendingReviews.craftsmen > 0 ? 'animate-pulse' : ''}`}
-                                    onClick={() => navigate('/admin/craftsmen')}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-medium text-white/90">Craftsmen</h3>
-                                            <p className="text-2xl font-bold mt-1">
-                                                {pendingReviews.craftsmen} pending
-                                            </p>
+                                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <FaTools className="text-yellow-500 text-xl mr-2" />
+                                            <span className="font-medium">Craftsmen</span>
                                         </div>
-                                        <FaTools className="text-3xl text-white/70" />
+                                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
+                                            {pendingReviews.craftsmen}
+                                        </span>
                                     </div>
-                                    {pendingReviews.craftsmen > 0 && (
-                                        <div className="mt-3 text-sm text-white/80">
-                                            Click to review and approve
+                                    <p className="text-sm text-gray-600 mt-1">Awaiting approval</p>
+                                </div>
+
+                                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <FaBuilding className="text-yellow-500 text-xl mr-2" />
+                                            <span className="font-medium">Companies</span>
                                         </div>
-                                    )}
+                                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
+                                            {pendingReviews.companies}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">Awaiting approval</p>
                                 </div>
                             </div>
                         )}

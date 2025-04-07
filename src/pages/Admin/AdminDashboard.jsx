@@ -793,7 +793,6 @@ const AdminDashboard = () => {
       premiumPriceRange: 'Premium Price Range',
       luxuryPriceRange: 'Luxury Price Range',
       deliveryTimeline: 'Delivery Timeline',
-      type: 'Type' // Add type to required fields
     };
 
     const missingFields = [];
@@ -851,6 +850,15 @@ const AdminDashboard = () => {
         return;
       }
 
+      // if (!formData.propertySizeRange) {
+      //   setError('Property Size Range is required');
+      //   setLoading(false);
+      //   window.scrollTo(0, 0);
+      //   return;
+      // }
+
+      
+
       // Add all form fields to FormData - be careful with array fields
       Object.keys(formData).forEach(key => {
         // Skip deliveryTimeline in this loop - we'll handle it separately
@@ -866,6 +874,11 @@ const AdminDashboard = () => {
           } else if (formData[key]) {
             // If it's a single value, append as is
             data.append('type', formData[key]);
+          }
+        } else if (key === 'projectType' || key === 'propertySizeRange') {
+          // Handle enum fields
+          if (formData[key]) {
+            data.append(key, formData[key]);
           }
         } else if (key === 'bannerImages') {
           if (Array.isArray(formData.bannerImages) && formData.bannerImages.length > 0) {
