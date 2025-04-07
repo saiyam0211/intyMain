@@ -42,6 +42,7 @@ import AdminContactsView from "./pages/Admin/AdminContactsView.jsx";
 import ImportDataPage from "./pages/Admin/ImportDataPage.jsx";
 import AdminSubscriptionPage from "./pages/Admin/AdminSubscriptionPage";
 import AdminUserCreditsPage from "./pages/Admin/AdminUserCreditsPage";
+import FloatingAdminButton from "./components/Admin/FloatingAdminButton";
 
 // Helper component to redirect to last visited admin page
 const AdminRedirect = () => {
@@ -219,6 +220,7 @@ const App = () => {
           </ProtectedRoute>
         } />
       </Routes>
+      <FloatingAdminButton />
     </TopRatedContext>
   );
 };
