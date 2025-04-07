@@ -821,7 +821,7 @@ export default function ResidentialSpace() {
             <div className="flex flex-col items-center w-full">
               {companies.length > 0 ? (
                 <div className="w-full">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-4 px-4 sm:px-0 relative">
                     {/* For non-logged-in users, only take first 3 companies from all pages */}
                     {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
                       <CompanyCard

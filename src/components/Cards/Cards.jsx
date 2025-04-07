@@ -465,10 +465,10 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
   }
 
   return (
-    <div className="w-full sm:w-[294px] mt-10 h-auto bg-white shadow-2xl rounded-[16px] relative hover:shadow-emerald-950 mx-auto">
+    <div className="w-[85%] sm:w-[294px] mt-10 h-auto bg-white shadow-2xl rounded-[16px] relative hover:shadow-emerald-950 mx-auto">
       {/* Show distance if available, otherwise show top rated badge */}
       {showDistance() && (
-        <div className="absolute bg-[#006452] top-[-35px] left-[-5px] sm:left-[-12px] rounded-r-lg flex items-center gap-2 mt-4 ml-2 p-2 text-xs sm:text-sm">
+        <div className="absolute bg-[#006452] top-[-25px] sm:top-[-35px] left-[-5px] sm:left-[-12px] rounded-r-lg flex items-center gap-2 mt-4 ml-2 p-2 text-xs sm:text-sm">
           <svg 
             className="w-3 h-3 sm:w-4 sm:h-4 text-white" 
             fill="none" 
@@ -609,7 +609,7 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
       </div>
 
       {/* Image Section - Now using background-removed logo */}
-      <div className="flex justify-center items-center w-full h-36 overflow-hidden bg-white">
+      <div className="flex justify-center items-center w-full h-28 sm:h-36 overflow-hidden bg-white">
         <img
           className="max-w-full max-h-full object-contain"
           src={getCompanyLogo()}
@@ -623,7 +623,7 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
       </div>
 
       {/* Company Details */}
-      <div className="bg-[rgba(0,100,82,0.4)] text-white w-full p-5 rounded-[16px] hover:bg-[#006452] transition duration-300 flex flex-col gap-4">
+      <div className="bg-[rgba(0,100,82,0.4)] text-white w-full p-4 sm:p-5 rounded-[16px] hover:bg-[#006452] transition duration-300 flex flex-col gap-3 sm:gap-4">
         <div className="flex justify-between">
           <div className="flex flex-col">
             <p
