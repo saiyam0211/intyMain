@@ -34,7 +34,7 @@ import AdminBlogList from "./pages/Admin/AdminBlogList";
 import AdminBlogEdit from "./pages/Admin/AdminBlogEdit";
 // Import testimonial management components
 import AdminTestimonialsList from "./pages/Admin/AdminTestimonialsList";
-import AdminTestimonialForm from "./pages/Admin/AdminTestimonialsForm";
+import AdminTestimonialForm from "./pages/Admin/AdminTestimonialForm";
 import AdminEnquiriesPage from "./pages/Admin/AdminEnquiriesPage.jsx";
 import ExportDataPage from "./pages/Admin/ExportDataPage.jsx";
 import BlogDetail from "./pages/Blog/BlogDetail.jsx";
