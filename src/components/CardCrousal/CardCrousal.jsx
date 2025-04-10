@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import googlereview from "/images/google-icon.png";
-import axios from "axios"
+import { apiClient } from "../../services/apiService"; // Import our apiClient
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 
@@ -148,7 +148,7 @@ const CarouselCard = ({ data, position, image, showOnlyImages, largeImage }) => 
 
 const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
 
-  const API_URL = "/api/companies";
+  // Remove direct API_URL and use apiClient instead which handles CORS
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -185,11 +185,11 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
       setError(null);
 
       console.log(
-        "Fetching from:",
-        `${API_URL}?page=${page}&limit=${10}&search=${search}`
-      ); // Debug log
+        "Fetching companies with page:", page, "and search:", search
+      );
 
-      const response = await axios.get(API_URL, {
+      // Use apiClient with the correct endpoint path
+      const response = await apiClient.get('companies', {
         params: {
           page,
           limit: 10,

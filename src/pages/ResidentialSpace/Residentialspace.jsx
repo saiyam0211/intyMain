@@ -3,7 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from "react-toastify"; // Import Toast
 import "react-toastify/dist/ReactToastify.css"; // Import Toast CSS
-import axios from "axios";
+import { apiClient } from "../../services/apiService"; // Import apiClient instead of axios
 import { Button } from "../../components/ui/Button";
 import backgroundImage from "../../assets/background.png";
 import lock from "../../assets/lock.png";
@@ -18,7 +18,8 @@ import { searchAlgorithm } from "../../services/SearchAlgorithm";
 // Import the search prompt popup
 import SearchPromptPopup from "../../components/SearchPromptPopup/SearchPromptPopup";
 
-const API_URL = "/api/companies";
+// Updated to just use the endpoint without the domain
+const API_ENDPOINT = "companies";
 const ITEMS_PER_PAGE = 6;
 
 export default function ResidentialSpace() {
@@ -536,19 +537,19 @@ export default function ResidentialSpace() {
       // Use a larger limit for non-logged in users to ensure we get enough matches
       const limit = isSignedIn ? ITEMS_PER_PAGE : 30; // Increased limit to get more companies for filtering
 
-      // Construct the API URL with query parameters
-      let apiUrl = `${API_URL}?page=${page}&limit=${limit}`;
+      console.log(`Fetching companies with type: ${currentSpaceType}`);
 
-      // Add filters to the URL if they exist
-      if (filters.search) apiUrl += `&search=${encodeURIComponent(filters.search)}`;
-      if (filters.location) apiUrl += `&location=${encodeURIComponent(filters.location)}`;
+      // Use apiClient instead of direct axios call with properly structured params
+      const response = await apiClient.get(API_ENDPOINT, {
+        params: {
+          page,
+          limit,
+          search: filters.search,
+          location: filters.location,
+          type: currentSpaceType
+        }
+      });
 
-      // Add space type filter - match the format expected by the backend
-      apiUrl += `&type=${encodeURIComponent(currentSpaceType)}`;
-
-      console.log(`Fetching companies with type: ${currentSpaceType} from: ${apiUrl}`);
-
-      const response = await axios.get(apiUrl);
       console.log("API Response:", response.data);
 
       if (response.data && Array.isArray(response.data.companies)) {
