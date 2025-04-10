@@ -122,7 +122,7 @@ const InteriorPlatform = () => {
 
       <div className="relative z-10 mt-0 flex flex-col items-center w-full max-w-4xl mx-auto px-4 py-8 md:py-16">
         <motion.h1
-          className="text-[2rem] md:text-[3rem] font-bold text-center text-emerald-800 mb-6 mt-0 md:mt-0"
+          className="text-[2rem] md:text-[2.5rem] font-bold text-center text-emerald-800 mb-6 mt-0 md:mt-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
