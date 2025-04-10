@@ -281,7 +281,7 @@ const EditCompany = () => {
     const budgetOptions = ["Any budget", "Under ₹5 Lakh", "₹5-10 Lakh", "₹10-20 Lakh", "₹20-50 Lakh", "Above ₹50 Lakh"];
 
     // Type options
-    const typeOptions = ["Residential", "Commercial", "Institutional", "Other"];
+    const typeOptions = ["Residential", "Commercial"];
 
     // Category type options
     const categoryOptions = ["Interior Designer", "Architect", "Contractor", "Home Decor"];
