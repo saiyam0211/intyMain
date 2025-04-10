@@ -1,18 +1,7 @@
 import axios from 'axios';
 
 // Use environment variable if available, otherwise use the production API URL
-const BASE_API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
-
-// Determine if we need CORS workaround
-const needsCorsWorkaround = () => {
-  return window.location.hostname === 'www.inty.in' || window.location.hostname === 'inty.in';
-};
-
-// The actual API URL to use - if we need CORS workaround, use a public CORS proxy
-// NOTE: These public proxies have limitations and should be replaced with your own solution
-const API_URL = needsCorsWorkaround() 
-  ? `https://api.allorigins.win/raw?url=${encodeURIComponent(BASE_API_URL)}`
-  : BASE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
 
 // Create a reusable axios instance with default configuration
 const apiClient = axios.create({
@@ -23,77 +12,32 @@ const apiClient = axios.create({
   timeout: 120000, // 2 minute timeout
 });
 
-// Modify the request URL for allorigins proxy
+// Add a request interceptor to include auth token when available
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token when available
     const token = localStorage.getItem('adminToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // If using CORS proxy
-    if (needsCorsWorkaround()) {
-      // For allorigins we need to modify the URL structure
-      // Instead of baseURL + url, we need to encode the full URL in the url parameter
-      const fullUrl = config.url.startsWith('http') 
-        ? config.url 
-        : `${BASE_API_URL}${config.url.startsWith('/') ? '' : '/'}${config.url}`;
-        
-      // Replace the baseURL (which already has the proxy) with empty string
-      config.baseURL = '';
-      
-      // And set the URL to include the target URL as a parameter
-      config.url = `https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`;
-      
-      // Add params as query string to the target URL if we have any
-      if (config.params) {
-        const searchParams = new URLSearchParams();
-        for (const key in config.params) {
-          searchParams.append(key, config.params[key]);
-        }
-        const queryString = searchParams.toString();
-        if (queryString) {
-          config.url = `https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl + (fullUrl.includes('?') ? '&' : '?') + queryString)}`;
-        }
-        // Remove the params since we've added them to the URL
-        config.params = {};
-      }
-    }
-    
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Special handling for upload client to work with CORS workaround
-// Note: File uploads through CORS proxies are complex and may not work correctly
+// Create a separate instance for form data uploads
 const uploadClient = axios.create({
-  baseURL: needsCorsWorkaround() ? '' : BASE_API_URL,
+  baseURL: API_URL,
+  // Don't set Content-Type for form-data uploads - let the browser set it with proper boundary
   timeout: 180000, // 3 minute timeout for uploads
 });
 
-// For upload client
+// Add a request interceptor for upload client
 uploadClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('adminToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Warning for uploads with CORS proxy
-    if (needsCorsWorkaround()) {
-      console.warn('Upload with CORS proxy may not work correctly. File uploads require direct access to the API server.');
-      
-      // For form-data uploads through CORS proxy - this is a best effort approach
-      // but may not work for all cases, especially file uploads
-      const fullUrl = config.url.startsWith('http') 
-        ? config.url 
-        : `${BASE_API_URL}${config.url.startsWith('/') ? '' : '/'}${config.url}`;
-        
-      config.url = `https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`;
-    }
-    
     return config;
   },
   (error) => Promise.reject(error)
