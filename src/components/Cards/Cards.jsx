@@ -665,7 +665,16 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
               letterSpacing: "0%",
             }}
           >
-            {localCompany?.yearsOfExperience || localCompany?.experience || '0'}+
+            {(() => {
+              // Calculate years of experience based on establishment year if available
+              if (localCompany?.establishmentYear) {
+                const currentYear = new Date().getFullYear();
+                const yearsOfExperience = currentYear - parseInt(localCompany.establishmentYear);
+                return `${yearsOfExperience}`;
+              }
+              // Fall back to existing values if available
+              return localCompany?.yearsOfExperience || localCompany?.experience || '0';
+            })()}+
           </p>
           <p
             style={{

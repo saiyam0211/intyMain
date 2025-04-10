@@ -405,8 +405,12 @@ const EditCompany = () => {
             e.preventDefault();
             const newTags = [...offerTags, offerInput.trim()];
             setOfferTags(newTags);
+            // Explicitly set as a string, not an array
             setFormData({ ...formData, discountsOfferTimeline: newTags.join(',') });
             setOfferInput('');
+            
+            console.log("Updated offers:", newTags);
+            console.log("Set discountsOfferTimeline to:", newTags.join(','));
         }
     };
     
@@ -426,8 +430,12 @@ const EditCompany = () => {
             e.preventDefault();
             const newTags = [...awardTags, awardInput.trim()];
             setAwardTags(newTags);
+            // Explicitly set as a string, not an array
             setFormData({ ...formData, anyAwardWon: newTags.join(',') });
             setAwardInput('');
+            
+            console.log("Updated awards:", newTags);
+            console.log("Set anyAwardWon to:", newTags.join(','));
         }
     };
     
@@ -447,8 +455,12 @@ const EditCompany = () => {
             e.preventDefault();
             const newTags = [...uspTags, uspInput.trim()];
             setUspTags(newTags);
+            // Explicitly set as a string, not an array
             setFormData({ ...formData, usp: newTags.join(',') });
             setUspInput('');
+            
+            console.log("Updated USPs:", newTags);
+            console.log("Set usp to:", newTags.join(','));
         }
     };
 
@@ -527,229 +539,303 @@ const EditCompany = () => {
         setLoading(true);
         setError(null);
 
-        const data = new FormData();
-
-        // Required fields validation
-        if (!formData.name || !formData.projects || !formData.experience || !formData.branches || !formData.latitude || !formData.longitude) {
-            setError("Please fill all required fields");
-            setLoading(false);
-            return;
-        }
-        
-        // Type validation - ensure at least one type is selected
-        if (!formData.type || formData.type.length === 0) {
-            setError("Please select at least one company type (Residential, Commercial, etc.)");
-            setLoading(false);
-            return;
-        }
-
-        // Check for year validation error
-        if (formData.yearError) {
-            setError(`Invalid year of establishment: ${formData.yearError}`);
-            setLoading(false);
-            return;
-        }
-
-        // Check if years of experience was calculated
-        if (!formData.calculatedExperience) {
-            setError("Please enter a valid year of establishment to calculate years of experience");
-            setLoading(false);
-            return;
-        }
-
-        // Create a sanitized version of formData
-        const sanitizedFormData = { ...formData };
-        
-        // Remove potentially problematic fields
-        delete sanitizedFormData.testimonials;
-        
-        // Ensure availableCities is an array
-        if (sanitizedFormData.availableCities && !Array.isArray(sanitizedFormData.availableCities)) {
-            if (typeof sanitizedFormData.availableCities === 'string') {
-                sanitizedFormData.availableCities = sanitizedFormData.availableCities.split(',');
-            } else {
-                sanitizedFormData.availableCities = [];
-            }
-        }
-        
-        // Ensure numeric fields are numbers
-        ['projects', 'branches', 'latitude', 'longitude'].forEach(field => {
-            if (sanitizedFormData[field] && typeof sanitizedFormData[field] === 'string') {
-                sanitizedFormData[field] = parseFloat(sanitizedFormData[field]);
-            }
-        });
-
-        // For the experience field, use the calculated experience value instead of the establishment year
-        if (sanitizedFormData.calculatedExperience) {
-            // Use the calculated experience value for the experience field
-            sanitizedFormData.experience = parseInt(sanitizedFormData.calculatedExperience);
+        try {
+            // Pre-process the data to ensure proper string format for tag fields
+            const tagsData = {
+                discountsOfferTimeline: offerTags.join(','),
+                anyAwardWon: awardTags.join(','),
+                usp: uspTags.join(',')
+            };
             
-            // Add the establishment year as a separate field
-            sanitizedFormData.establishmentYear = formData.experience;
-            
-            console.log("Setting experience:", sanitizedFormData.experience, "and establishmentYear:", sanitizedFormData.establishmentYear);
-        }
-        
-        // Remove internal fields that shouldn't be sent to the API
-        delete sanitizedFormData.calculatedExperience;
-        delete sanitizedFormData.yearError;
+            console.log("Using direct tag values from state arrays:");
+            console.log("discountsOfferTimeline:", tagsData.discountsOfferTimeline);
+            console.log("anyAwardWon:", tagsData.anyAwardWon);
+            console.log("usp:", tagsData.usp);
 
-        // Detailed logging of form data for debugging
-        console.log("Sanitized form data being submitted:", sanitizedFormData);
-        
-        Object.keys(sanitizedFormData).forEach((key) => {
-            if (key === 'bannerImages') {
-                // Instead of using dynamic indices which might exceed what the backend expects
-                // Append each banner image with the standardized field names expected by the backend
-                sanitizedFormData.bannerImages.forEach((file) => {
-                    if (file) {
-                        // Use bannerImages[] format which works better with backend Multer configuration
-                        console.log(`Appending bannerImage: ${file.name}`);
-                        data.append(`bannerImages`, file);
+            // Pre-process the tags data to ensure they are strings before creating FormData
+            // This fixes the "Cast to string failed" error
+            const processedFormData = { 
+                ...formData,
+                // Force tag fields to be strings by using our direct values
+                discountsOfferTimeline: tagsData.discountsOfferTimeline,
+                anyAwardWon: tagsData.anyAwardWon,
+                usp: tagsData.usp
+            };
+
+            const data = new FormData();
+
+            // Required fields validation
+            if (!processedFormData.name || !processedFormData.projects || !processedFormData.experience || !processedFormData.branches || !processedFormData.latitude || !processedFormData.longitude) {
+                setError("Please fill all required fields");
+                setLoading(false);
+                return;
+            }
+            
+            // Type validation - ensure at least one type is selected
+            if (!processedFormData.type || processedFormData.type.length === 0) {
+                setError("Please select at least one company type (Residential, Commercial, etc.)");
+                setLoading(false);
+                return;
+            }
+
+            // Check for year validation error
+            if (processedFormData.yearError) {
+                setError(`Invalid year of establishment: ${processedFormData.yearError}`);
+                setLoading(false);
+                return;
+            }
+
+            // Check if years of experience was calculated
+            if (!processedFormData.calculatedExperience) {
+                setError("Please enter a valid year of establishment to calculate years of experience");
+                setLoading(false);
+                return;
+            }
+
+            // Create a sanitized version of formData
+            const sanitizedFormData = { ...processedFormData };
+            
+            // Remove potentially problematic fields
+            delete sanitizedFormData.testimonials;
+            
+            // Ensure availableCities is an array
+            if (sanitizedFormData.availableCities && !Array.isArray(sanitizedFormData.availableCities)) {
+                if (typeof sanitizedFormData.availableCities === 'string') {
+                    sanitizedFormData.availableCities = sanitizedFormData.availableCities.split(',');
+                } else {
+                    sanitizedFormData.availableCities = [];
+                }
+            }
+            
+            // Ensure numeric fields are numbers
+            ['projects', 'branches', 'latitude', 'longitude'].forEach(field => {
+                if (sanitizedFormData[field] && typeof sanitizedFormData[field] === 'string') {
+                    sanitizedFormData[field] = parseFloat(sanitizedFormData[field]);
+                }
+            });
+
+            // For the experience field, use the calculated experience value instead of the establishment year
+            if (sanitizedFormData.calculatedExperience) {
+                // Use the calculated experience value for the experience field
+                sanitizedFormData.experience = parseInt(sanitizedFormData.calculatedExperience);
+                
+                // Add the establishment year as a separate field
+                sanitizedFormData.establishmentYear = formData.experience;
+                
+                console.log("Setting experience:", sanitizedFormData.experience, "and establishmentYear:", sanitizedFormData.establishmentYear);
+            }
+            
+            // Remove internal fields that shouldn't be sent to the API
+            delete sanitizedFormData.calculatedExperience;
+            delete sanitizedFormData.yearError;
+
+            // Detailed logging of form data for debugging
+            console.log("Sanitized form data being submitted:", sanitizedFormData);
+            
+            Object.keys(sanitizedFormData).forEach((key) => {
+                if (key === 'bannerImages') {
+                    // Instead of using dynamic indices which might exceed what the backend expects
+                    // Append each banner image with the standardized field names expected by the backend
+                    sanitizedFormData.bannerImages.forEach((file) => {
+                        if (file) {
+                            // Use bannerImages[] format which works better with backend Multer configuration
+                            console.log(`Appending bannerImage: ${file.name}`);
+                            data.append(`bannerImages`, file);
+                        }
+                    });
+                    
+                    // Include existing banner images as a separate field
+                    const existingBannerImagesArray = existingBannerImages
+                        .filter(image => image && typeof image === 'string')
+                        .map(url => url);
+                    
+                    if (existingBannerImagesArray.length > 0) {
+                        // Send as a JSON string
+                        data.append('existingBannerImagesUrls', JSON.stringify(existingBannerImagesArray));
+                        console.log('Sending existing banner images:', existingBannerImagesArray);
+                    }
+                } else if (key === 'discountsOfferTimeline') {
+                    // Handle discountsOfferTimeline - hard-code it as a string using our tags state
+                    // Skip using the sanitizedFormData value completely to avoid any array issues
+                    const stringValue = offerTags.join(',');
+                    console.log("Setting discountsOfferTimeline directly from tags:", stringValue);
+                    data.append('discountsOfferTimeline', stringValue);
+                } else if (key === 'anyAwardWon') {
+                    // Handle anyAwardWon - hard-code it as a string using our tags state
+                    const stringValue = awardTags.join(',');
+                    console.log("Setting anyAwardWon directly from tags:", stringValue);
+                    data.append('anyAwardWon', stringValue);
+                } else if (key === 'usp') {
+                    // Handle usp - hard-code it as a string using our tags state
+                    const stringValue = uspTags.join(',');
+                    console.log("Setting usp directly from tags:", stringValue);
+                    data.append('usp', stringValue);
+                } else if (key === 'availableCities') {
+                    // Handle availableCities array
+                    if (Array.isArray(sanitizedFormData.availableCities)) {
+                        sanitizedFormData.availableCities.forEach(city => {
+                            data.append('availableCities', city);
+                        });
+                    }
+                } else if (key === 'type') {
+                    // Handle type array - ensure it's formatted correctly for the backend
+                    if (Array.isArray(sanitizedFormData.type)) {
+                        // Clear any existing type values and set with the new selections
+                        // Join types with commas if the backend expects a string
+                        const typeString = sanitizedFormData.type.join(',');
+                        
+                        // Use 'type' as the key to ensure it overwrites any existing value
+                        data.append('type', typeString);
+                        
+                        console.log("Setting type field:", typeString);
+                    } else if (typeof sanitizedFormData.type === 'string') {
+                        data.append('type', sanitizedFormData.type);
+                    }
+                } else if (key === 'paymentType') {
+                    // Handle paymentType array
+                    if (Array.isArray(sanitizedFormData.paymentType)) {
+                        sanitizedFormData.paymentType.forEach(paymentType => {
+                            data.append('paymentType', paymentType);
+                        });
+                    } else if (typeof sanitizedFormData.paymentType === 'string') {
+                        data.append('paymentType', sanitizedFormData.paymentType);
+                    }
+                } else if (key === 'serviceCategories') {
+                    // Handle serviceCategories array
+                    if (Array.isArray(sanitizedFormData.serviceCategories)) {
+                        sanitizedFormData.serviceCategories.forEach(category => {
+                            data.append('serviceCategories', category);
+                        });
+                    }
+                } else if (key === 'testimonials' || key === 'yearError' || key === 'calculatedExperience') {
+                    // Skip these fields
+                    console.log(`Skipping ${key} field to avoid potential issues`);
+                } else if (sanitizedFormData[key] !== null && sanitizedFormData[key] !== '') {
+                    if (sanitizedFormData[key] instanceof File) {
+                        console.log(`${key}: File - ${sanitizedFormData[key].name} (${sanitizedFormData[key].size} bytes)`);
+                        data.append(key, sanitizedFormData[key]);
+                    } else {
+                        console.log(`${key}: ${sanitizedFormData[key]}`);
+                        data.append(key, sanitizedFormData[key]);
+                    }
+                }
+            });
+
+            try {
+                console.log("Submitting to URL:", `${API_URL}/companies/edit/${id}`);
+
+                // Debug what's being sent
+                console.log("Form data entries:");
+                for (let [key, value] of data.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+                    } else if (key.includes('Urls') && typeof value === 'string') {
+                        console.log(`${key}: JSON data (length: ${value.length})`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                        // Extra check for the problematic fields
+                        if (key === 'discountsOfferTimeline' || key === 'anyAwardWon' || key === 'usp') {
+                            console.log(`${key} type: ${typeof value}`);
+                            console.log(`${key} is array?: ${Array.isArray(value)}`);
+                            console.log(`${key} value:`, value);
+                        }
+                    }
+                }
+
+                const token = localStorage.getItem("adminToken");
+                console.log("Using token:", token ? "Token exists" : "No token");
+
+                const response = await uploadClient.put(`/companies/edit/${id}`, data, {
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : '',
+                        // Remove explicit Content-Type to let browser set it automatically with proper boundary
+                    },
+                    timeout: 120000, // 2min second timeout
+                    // Add additional debugging
+                    onUploadProgress: (progressEvent) => {
+                        console.log(`Upload Progress: ${Math.round((progressEvent.loaded / progressEvent.total) * 100)}%`);
                     }
                 });
-                
-                // Include existing banner images as a separate field
-                const existingBannerImagesArray = existingBannerImages
-                    .filter(image => image && typeof image === 'string')
-                    .map(url => url);
-                
-                if (existingBannerImagesArray.length > 0) {
-                    // Send as a JSON string
-                    data.append('existingBannerImagesUrls', JSON.stringify(existingBannerImagesArray));
-                    console.log('Sending existing banner images:', existingBannerImagesArray);
+
+                console.log("Response received:", response);
+
+                // Reset form after successful submission
+                setFormData({
+                    name: "",
+                    projects: "",
+                    experience: "",
+                    calculatedExperience: "",
+                    yearError: "",
+                    branches: "",
+                    logo: null,
+                    registeredCompanyName: "",
+                    nameDisplay: "",
+                    description: "",
+                    ageOfCompany: "",
+                    availableCities: [],
+                    officialWebsite: "",
+                    fullName: "",
+                    designation: "",
+                    phoneNumber: "",
+                    minMaxBudget: "",
+                    type: [],
+                    bannerImages: [],
+                    discountsOfferTimeline: "",
+                    numberOfProjectsCompleted: "",
+                    digitalBrochure: null,
+                    usp: "",
+                    contactEmail: "",
+                    googleRating: "",
+                    googleReviews: "",
+                    anyAwardWon: "",
+                    categoryType: "",
+                    paymentType: [],
+                    assured: "",
+                    latitude: "",
+                    longitude: "",
+                    workInTeams: "",
+                    deliveryTimeline: "",
+                    basicPriceRange: "",
+                    premiumPriceRange: "",
+                    luxuryPriceRange: "",
+                    serviceCategories: [],
+                    payedStatus: "", // Reset payment status
+                });
+
+                setSuccess(true);
+                setTimeout(() => setSuccess(false), 5000);
+                window.scrollTo(0, 0);
+                console.log("Company edited successfully:", response.data);
+                navigate(`/admin/showCompanies`);
+            } catch (error) {
+                console.error("Error editing company:", error);
+                console.error("Error details:", error.response?.data);
+                // Log more detailed error information
+                console.error("Error response:", {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    message: error.message
+                });
+
+                // Use the detailed error from the server if available
+                let errorMessage = "Failed to edit company";
+                if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                    // If there are validation errors, list them
+                    if (error.response.data.validation) {
+                        const validationErrors = error.response.data.validation
+                            .map(err => `${err.field}: ${err.message}`)
+                            .join(', ');
+                        errorMessage += ` - ${validationErrors}`;
+                    }
                 }
-            } else if (key === 'availableCities') {
-                // Handle availableCities array
-                if (Array.isArray(sanitizedFormData.availableCities)) {
-                    sanitizedFormData.availableCities.forEach(city => {
-                        data.append('availableCities', city);
-                    });
-                }
-            } else if (key === 'type') {
-                // Handle type array - ensure it's formatted correctly for the backend
-                if (Array.isArray(sanitizedFormData.type)) {
-                    // Clear any existing type values and set with the new selections
-                    // Join types with commas if the backend expects a string
-                    const typeString = sanitizedFormData.type.join(',');
-                    
-                    // Use 'type' as the key to ensure it overwrites any existing value
-                    data.append('type', typeString);
-                    
-                    console.log("Setting type field:", typeString);
-                } else if (typeof sanitizedFormData.type === 'string') {
-                    data.append('type', sanitizedFormData.type);
-                }
-            } else if (key === 'paymentType') {
-                // Handle paymentType array
-                if (Array.isArray(sanitizedFormData.paymentType)) {
-                    sanitizedFormData.paymentType.forEach(paymentType => {
-                        data.append('paymentType', paymentType);
-                    });
-                } else if (typeof sanitizedFormData.paymentType === 'string') {
-                    data.append('paymentType', sanitizedFormData.paymentType);
-                }
-            } else if (key === 'serviceCategories') {
-                // Handle serviceCategories array
-                if (Array.isArray(sanitizedFormData.serviceCategories)) {
-                    sanitizedFormData.serviceCategories.forEach(category => {
-                        data.append('serviceCategories', category);
-                    });
-                }
-            } else if (key === 'testimonials' || key === 'yearError' || key === 'calculatedExperience') {
-                // Skip these fields
-                console.log(`Skipping ${key} field to avoid potential issues`);
-            } else if (sanitizedFormData[key] !== null && sanitizedFormData[key] !== '') {
-                if (sanitizedFormData[key] instanceof File) {
-                    console.log(`${key}: File - ${sanitizedFormData[key].name} (${sanitizedFormData[key].size} bytes)`);
-                    data.append(key, sanitizedFormData[key]);
-                } else {
-                    console.log(`${key}: ${sanitizedFormData[key]}`);
-                    data.append(key, sanitizedFormData[key]);
-                }
+
+                setError(errorMessage);
+                window.scrollTo(0, 0);
+            } finally {
+                setLoading(false);
             }
-        });
-
-        try {
-            console.log("Submitting to URL:", `${API_URL}/companies/edit/${id}`);
-
-            // Debug what's being sent
-            console.log("Form data entries:");
-            for (let [key, value] of data.entries()) {
-                if (value instanceof File) {
-                    console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-                } else if (key.includes('Urls') && typeof value === 'string') {
-                    console.log(`${key}: JSON data (length: ${value.length})`);
-                } else {
-                    console.log(`${key}: ${value}`);
-                }
-            }
-
-            const token = localStorage.getItem("adminToken");
-            console.log("Using token:", token ? "Token exists" : "No token");
-
-            const response = await uploadClient.put(`/companies/edit/${id}`, data, {
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : '',
-                    // Remove explicit Content-Type to let browser set it automatically with proper boundary
-                },
-                timeout: 120000, // 2min second timeout
-                // Add additional debugging
-                onUploadProgress: (progressEvent) => {
-                    console.log(`Upload Progress: ${Math.round((progressEvent.loaded / progressEvent.total) * 100)}%`);
-                }
-            });
-
-            console.log("Response received:", response);
-
-            // Reset form after successful submission
-            setFormData({
-                name: "",
-                projects: "",
-                experience: "",
-                calculatedExperience: "",
-                yearError: "",
-                branches: "",
-                logo: null,
-                registeredCompanyName: "",
-                nameDisplay: "",
-                description: "",
-                ageOfCompany: "",
-                availableCities: [],
-                officialWebsite: "",
-                fullName: "",
-                designation: "",
-                phoneNumber: "",
-                minMaxBudget: "",
-                type: [],
-                bannerImages: [],
-                discountsOfferTimeline: "",
-                numberOfProjectsCompleted: "",
-                digitalBrochure: null,
-                usp: "",
-                contactEmail: "",
-                googleRating: "",
-                googleReviews: "",
-                anyAwardWon: "",
-                categoryType: "",
-                paymentType: [],
-                assured: "",
-                latitude: "",
-                longitude: "",
-                workInTeams: "",
-                deliveryTimeline: "",
-                basicPriceRange: "",
-                premiumPriceRange: "",
-                luxuryPriceRange: "",
-                serviceCategories: [],
-                payedStatus: "", // Reset payment status
-            });
-
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 5000);
-            window.scrollTo(0, 0);
-            console.log("Company edited successfully:", response.data);
-            navigate(`/admin/showCompanies`);
         } catch (error) {
             console.error("Error editing company:", error);
             console.error("Error details:", error.response?.data);
@@ -776,8 +862,6 @@ const EditCompany = () => {
 
             setError(errorMessage);
             window.scrollTo(0, 0);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -1303,7 +1387,9 @@ const EditCompany = () => {
                                     <input 
                                         type="hidden" 
                                         name="discountsOfferTimeline" 
-                                        value={formData.discountsOfferTimeline} 
+                                        value={typeof formData.discountsOfferTimeline === 'string' 
+                                            ? formData.discountsOfferTimeline 
+                                            : offerTags.join(',')} 
                                     />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">Press Enter to add each offer</p>
@@ -1356,7 +1442,9 @@ const EditCompany = () => {
                                     <input
                                         type="hidden"
                                         name="usp"
-                                        value={formData.usp}
+                                        value={typeof formData.usp === 'string' 
+                                            ? formData.usp 
+                                            : uspTags.join(',')}
                                     />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">Press Enter to add each USP</p>
@@ -1429,14 +1517,14 @@ const EditCompany = () => {
                                 <p className="text-xs text-gray-500">Decimal format (e.g., 72.5714)</p>
                             </div>
                             <div className="col-span-1">
-                                <label className="block text-gray-700 mb-2">Any Award Won</label>
+                                <label className="block text-gray-700 mb-2">Awards Won</label>
                                 <div className="w-full p-2 border rounded bg-white min-h-[100px]">
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {awardTags.map((tag, index) => (
                                             <div key={index} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
                                                 {tag}
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     onClick={() => removeAwardTag(index)}
                                                     className="ml-2 text-yellow-600 hover:text-yellow-800"
                                                 >
@@ -1453,10 +1541,12 @@ const EditCompany = () => {
                                         placeholder="Type award and press Enter"
                                         className="w-full p-1 border-b border-gray-300 focus:outline-none focus:border-[#006452]"
                                     />
-                                    <input 
-                                        type="hidden" 
-                                        name="anyAwardWon" 
-                                        value={formData.anyAwardWon} 
+                                    <input
+                                        type="hidden"
+                                        name="anyAwardWon"
+                                        value={typeof formData.anyAwardWon === 'string' 
+                                            ? formData.anyAwardWon 
+                                            : awardTags.join(',')}
                                     />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">Press Enter to add each award</p>

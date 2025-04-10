@@ -105,7 +105,18 @@ const CarouselCard = ({ data, position, image, showOnlyImages, largeImage }) => 
               </div>
 
               <div className="mb-4">
-                <div className="text-2xl font-bold text-white">{data.experience}+</div>
+                <div className="text-2xl font-bold text-white">
+                  {(() => {
+                    // Calculate years of experience based on establishment year if available
+                    if (data.establishmentYear) {
+                      const currentYear = new Date().getFullYear();
+                      const yearsOfExperience = currentYear - parseInt(data.establishmentYear);
+                      return `${yearsOfExperience}`;
+                    }
+                    // Fall back to existing values if available
+                    return data.yearsOfExperience || data.experience || '0';
+                  })()}+
+                </div>
                 <span className="text-sm text-white">Years of Experience</span>
               </div>
 
@@ -386,7 +397,18 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
                           </div>
 
                           <div className="mb-4">
-                            <div className="text-2xl font-bold text-white">{card.experience}+</div>
+                            <div className="text-2xl font-bold text-white">
+                              {(() => {
+                                // Calculate years of experience based on establishment year if available
+                                if (card.establishmentYear) {
+                                  const currentYear = new Date().getFullYear();
+                                  const yearsOfExperience = currentYear - parseInt(card.establishmentYear);
+                                  return `${yearsOfExperience}`;
+                                }
+                                // Fall back to existing values if available
+                                return card.yearsOfExperience || card.experience || '0';
+                              })()}+
+                            </div>
                             <span className="text-sm text-white">Years of Experience</span>
                           </div>
 

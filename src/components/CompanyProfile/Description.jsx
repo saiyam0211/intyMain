@@ -69,7 +69,12 @@ const Description = ({ company }) => {
   const statsData = [
     { value: company?.branches, label: 'Branches' },
     { value: company?.projects, label: 'No. of Projects' },
-    { value: company?.experience, label: 'Years of Experience' },
+    { 
+      value: company?.establishmentYear 
+        ? new Date().getFullYear() - parseInt(company.establishmentYear) 
+        : company?.experience, 
+      label: 'Years of Experience' 
+    },
     { value: company?.numberOfProjectsCompleted || 2023, label: 'Years of Awards' }
   ];
 
