@@ -58,19 +58,19 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-center justify-center sm:justify-start gap-3">
                 <FaPhone className="text-[#006452] text-lg" />
-                <a href="tel:+919876543210" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  +91 98765 43210
+                <a href="tel:+918792484298" className="text-gray-400 hover:text-white transition-colors duration-200">
+                  +91 87924 84298
                 </a>
               </li>
               <li className="flex items-center justify-center sm:justify-start gap-3">
                 <FaEnvelope className="text-[#006452] text-lg" />
-                <a href="mailto:info@inty.in" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  info@inty.in
+                <a href="mailto:inty.operations@gmail.com" className="text-gray-400 hover:text-white transition-colors duration-200">
+                inty.operations@gmail.com
                 </a>
               </li>
               <li className="flex items-center justify-center sm:justify-start gap-3">
                 <FaMapMarkerAlt className="text-[#006452] text-lg" />
-                <span className="text-gray-400">Mumbai, Maharashtra, India</span>
+                <span className="text-gray-400">Bengaluru, Karnataka, India</span>
               </li>
             </ul>
           </div>
