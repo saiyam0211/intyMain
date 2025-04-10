@@ -287,7 +287,7 @@ const AdminDashboard = () => {
   // const propertySizeRangeOptions = ["400 to 600", "600 - 800", "800 - 1000", "1000 - 1200", "1200 - 1400", "1400 - 1600", "1600 - 1800",
   //   "1800 - 2000", "2000 - 2400", "2400 - 2800", "2800 - 3200", "3200 - 4000", "4000 - 5000", "5000+"];
   // Price Range options (for search)
-  const priceRangeOptions = ["1Lakh to 3Lakh", "3Lakh to 6Lakh", "6Lakh to 10Lakh", "10Lakh to 15Lakh", "15Lakh to 20Lakh",
+  const priceRangeOptions = ["All", "1Lakh to 3Lakh", "3Lakh to 6Lakh", "6Lakh to 10Lakh", "10Lakh to 15Lakh", "15Lakh to 20Lakh",
     "20Lakh to 25Lakh", "25Lakh to 30Lakh", "30Lakh to 40Lakh", "40Lakh+"];
   // Service Categories options (for search)
   const serviceCategoriesOptions = ["Kitchen Design", "Bedroom Design", "Living Room", "Bathroom", "Full Home", "Office Space", "Commercial Space", "Outdoor Design"];
