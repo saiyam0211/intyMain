@@ -113,6 +113,14 @@ const CarouselCard = ({ data, position, image, showOnlyImages, largeImage }) => 
                       const yearsOfExperience = currentYear - parseInt(data.establishmentYear);
                       return `${yearsOfExperience}`;
                     }
+                    
+                    // If we have experience but it looks like an establishment year (greater than 1900)
+                    if (data?.experience && parseInt(data.experience) > 1900) {
+                      const currentYear = new Date().getFullYear();
+                      const yearsOfExperience = currentYear - parseInt(data.experience);
+                      return `${yearsOfExperience}`;
+                    }
+                    
                     // Fall back to existing values if available
                     return data.yearsOfExperience || data.experience || '0';
                   })()}+
@@ -405,6 +413,14 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
                                   const yearsOfExperience = currentYear - parseInt(card.establishmentYear);
                                   return `${yearsOfExperience}`;
                                 }
+                                
+                                // If we have experience but it looks like an establishment year (greater than 1900)
+                                if (card?.experience && parseInt(card.experience) > 1900) {
+                                  const currentYear = new Date().getFullYear();
+                                  const yearsOfExperience = currentYear - parseInt(card.experience);
+                                  return `${yearsOfExperience}`;
+                                }
+                                
                                 // Fall back to existing values if available
                                 return card.yearsOfExperience || card.experience || '0';
                               })()}+

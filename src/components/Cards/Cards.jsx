@@ -672,6 +672,14 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
                 const yearsOfExperience = currentYear - parseInt(localCompany.establishmentYear);
                 return `${yearsOfExperience}`;
               }
+              
+              // If we have experience but it looks like an establishment year (greater than 1900)
+              if (localCompany?.experience && parseInt(localCompany.experience) > 1900) {
+                const currentYear = new Date().getFullYear();
+                const yearsOfExperience = currentYear - parseInt(localCompany.experience);
+                return `${yearsOfExperience}`;
+              }
+              
               // Fall back to existing values if available
               return localCompany?.yearsOfExperience || localCompany?.experience || '0';
             })()}+

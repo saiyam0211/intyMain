@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use environment variable if available, otherwise use relative path for proxy
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable if available, otherwise use the production API URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://inty-backend.onrender.com/api';
 
 // Create a reusable axios instance with default configuration
 const apiClient = axios.create({

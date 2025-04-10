@@ -42,7 +42,7 @@ const Home = () => {
       <Hero />
       <Features />
       <Designers />
-      <OurPartners />
+      {/* <OurPartners /> */}
       <TestimonialCarousel />
       <Footer />
     </div>

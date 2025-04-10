@@ -311,10 +311,22 @@ const EditCompany = () => {
             
             console.log("Input establishment year:", value, "parsed:", establishmentYear);
             
+            let errorMsg = "";
+            if (value !== "") {
+                if (isNaN(establishmentYear)) {
+                    errorMsg = "Please enter a valid year";
+                } else if (establishmentYear <= 0) {
+                    errorMsg = "Year must be greater than 0";
+                } else if (establishmentYear > currentYear) {
+                    errorMsg = "Year cannot be in the future";
+                }
+            }
+            
             // Only calculate if the input is a valid year
             if (!isNaN(establishmentYear) && establishmentYear > 0 && establishmentYear <= currentYear) {
                 const yearsOfExperience = currentYear - establishmentYear;
                 console.log("Calculated years of experience:", yearsOfExperience);
+                
                 setFormData({ 
                     ...formData, 
                     [name]: value,
@@ -322,18 +334,7 @@ const EditCompany = () => {
                     yearError: "" // Clear any previous error
                 });
             } else {
-                // Just update the establishment year without calculating experience
-                let errorMsg = "";
-                if (value !== "") {
-                    if (isNaN(establishmentYear)) {
-                        errorMsg = "Please enter a valid year";
-                    } else if (establishmentYear <= 0) {
-                        errorMsg = "Year must be greater than 0";
-                    } else if (establishmentYear > currentYear) {
-                        errorMsg = "Year cannot be in the future";
-                    }
-                }
-                
+                // Just update the establishment year with error if any
                 setFormData({ 
                     ...formData, 
                     [name]: value, 

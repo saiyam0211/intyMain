@@ -72,7 +72,9 @@ const Description = ({ company }) => {
     { 
       value: company?.establishmentYear 
         ? new Date().getFullYear() - parseInt(company.establishmentYear) 
-        : company?.experience, 
+        : (company?.experience && parseInt(company.experience) > 1900)
+          ? new Date().getFullYear() - parseInt(company.experience)
+          : company?.experience, 
       label: 'Years of Experience' 
     },
     { value: company?.numberOfProjectsCompleted || 2023, label: 'Years of Awards' }
