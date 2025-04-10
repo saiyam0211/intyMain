@@ -13,6 +13,10 @@ import Footer from "../../components/Footer/Footer";
 import Search from "../../components/Search/Search";
 import Pagination from "../../components/Pagination/Pagination";
 import LocationPopup from "../../components/LocationPopup/LocationPopup";
+// Import the search algorithm
+import { searchAlgorithm } from "../../services/SearchAlgorithm";
+// Import the search prompt popup
+import SearchPromptPopup from "../../components/SearchPromptPopup/SearchPromptPopup";
 
 const API_URL = "/api/companies";
 const ITEMS_PER_PAGE = 6;
@@ -30,6 +34,8 @@ export default function ResidentialSpace() {
   const [compareCount, setCompareCount] = useState(0);
   const [userLocation, setUserLocation] = useState(localStorage.getItem('userLocation') || '');
   const [showLocationPopup, setShowLocationPopup] = useState(!localStorage.getItem('userLocation'));
+  // Add state for search prompt popup
+  const [showSearchPrompt, setShowSearchPrompt] = useState(false);
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -62,6 +68,50 @@ export default function ResidentialSpace() {
       setCompareCount(compareList.length);
     }
   }, [user]);
+
+  // Check if user has previously dismissed the search prompt
+  useEffect(() => {
+    const hasSearchInputs = searchParams.get("query") || 
+                           searchParams.get("projectType") || 
+                           searchParams.get("size") || 
+                           searchParams.get("priceRange");
+
+    const hasSeenPrompt = localStorage.getItem('hasSeenSearchPrompt');
+    
+    // Show prompt if:
+    // 1. User hasn't seen the prompt before OR
+    // 2. User is logged in and hasn't provided search inputs
+    if (!hasSeenPrompt || (isSignedIn && !hasSearchInputs)) {
+      // Small delay to show popup after page loads
+      const timer = setTimeout(() => {
+        setShowSearchPrompt(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSignedIn, searchParams]);
+
+  const handleCloseSearchPrompt = () => {
+    // Mark that user has seen the prompt
+    localStorage.setItem('hasSeenSearchPrompt', 'true');
+    setShowSearchPrompt(false);
+  };
+
+  const handleStartSearch = () => {
+    setShowSearchPrompt(false);
+    
+    // Focus on the search input
+    const searchInput = document.querySelector('input[placeholder="What you are Looking for..."]');
+    if (searchInput) {
+      searchInput.focus();
+      
+      // Scroll to search area
+      const searchContainer = document.querySelector('.search-container');
+      if (searchContainer) {
+        searchContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   // Handle location selection from popup
   const handleLocationSelect = (location, coordinates = null, address = null) => {
@@ -484,16 +534,13 @@ export default function ResidentialSpace() {
       const currentSpaceType = filters.type || spaceType;
 
       // Use a larger limit for non-logged in users to ensure we get enough matches
-      const limit = isSignedIn ? ITEMS_PER_PAGE : 15;
+      const limit = isSignedIn ? ITEMS_PER_PAGE : 30; // Increased limit to get more companies for filtering
 
       // Construct the API URL with query parameters
       let apiUrl = `${API_URL}?page=${page}&limit=${limit}`;
 
       // Add filters to the URL if they exist
       if (filters.search) apiUrl += `&search=${encodeURIComponent(filters.search)}`;
-      if (filters.projectType) apiUrl += `&projectType=${encodeURIComponent(filters.projectType)}`;
-      if (filters.size) apiUrl += `&size=${encodeURIComponent(filters.size)}`;
-      if (filters.priceRange) apiUrl += `&priceRange=${encodeURIComponent(filters.priceRange)}`;
       if (filters.location) apiUrl += `&location=${encodeURIComponent(filters.location)}`;
 
       // Add space type filter - match the format expected by the backend
@@ -541,12 +588,36 @@ export default function ResidentialSpace() {
           }
         }
 
-        // Sort companies by distance if location is a constraint
-        let sortedCompanies = [...processedCompanies];
+        // Apply the search algorithm
+        const searchFilters = {
+          search: filters.search,
+          projectType: filters.projectType !== "Project Type" ? filters.projectType : undefined,
+          size: filters.size !== "Size (sq ft)" ? filters.size : undefined,
+          priceRange: filters.priceRange !== "Price Range" ? filters.priceRange : undefined,
+          spaceType: currentSpaceType
+        };
         
-        // Check if location is a constraint (hideDistanceInCompare is NOT true)
-        if (localStorage.getItem('hideDistanceInCompare') !== 'true') {
-          console.log("Sorting companies by distance (location is a constraint)");
+        console.log("Applying search algorithm with filters:", searchFilters);
+        const algorithmResult = searchAlgorithm(processedCompanies, searchFilters);
+        
+        let sortedCompanies = algorithmResult.companies;
+        
+        // Display warning if unreasonable pricing is detected
+        if (algorithmResult.unreasonablePricing) {
+          toast.warning(
+            "Sorry, there are no companies operating in the price range; however if you are willing to increase the budget, you may consider the options below.",
+            { position: "top-center", autoClose: 7000 }
+          );
+        }
+        
+        // Display message if no companies match the search criteria
+        if (algorithmResult.noMatchingCompanies) {
+          setError("No companies found matching your search criteria. Try adjusting your filters.");
+        }
+        
+        // Sort companies by distance if location is provided
+        if (userLocation && localStorage.getItem('hideDistanceInCompare') !== 'true') {
+          console.log("Further sorting companies by distance since location is provided");
           
           // Calculate distance for each company
           const companiesWithDistance = sortedCompanies.map(company => {
@@ -557,37 +628,43 @@ export default function ResidentialSpace() {
             };
           });
           
-          // Sort by distance (companies with no distance go at the end)
-          sortedCompanies = companiesWithDistance.sort((a, b) => {
-            // If either doesn't have a distance, prioritize the one that does
+          // Sort by distance within each group (assured, paid partners, then others)
+          const assuredCompanies = companiesWithDistance.filter(c => c.assured === "true");
+          const topRatedCompanies = companiesWithDistance.filter(c => c.topRated && c.assured !== "true");
+          const otherCompanies = companiesWithDistance.filter(c => !c.topRated && c.assured !== "true");
+          
+          // Sort each group by distance
+          const sortByDistance = companies => companies.sort((a, b) => {
             if (a.calculatedDistance === null && b.calculatedDistance === null) return 0;
             if (a.calculatedDistance === null) return 1;
             if (b.calculatedDistance === null) return -1;
-            
-            // Sort by distance (ascending)
             return a.calculatedDistance - b.calculatedDistance;
           });
           
-          // Mark the first company (nearest) with a flag
-          if (sortedCompanies.length > 0 && sortedCompanies[0].calculatedDistance !== null) {
-            sortedCompanies[0] = {
-              ...sortedCompanies[0],
-              isNearest: true,
-              isFirstCard: true
-            };
-            console.log("Marked nearest company:", sortedCompanies[0].name || sortedCompanies[0].companyName);
+          const sortedAssured = sortByDistance(assuredCompanies);
+          const sortedTopRated = sortByDistance(topRatedCompanies);
+          const sortedOthers = sortByDistance(otherCompanies);
+          
+          // Combine the groups in priority order
+          sortedCompanies = [...sortedAssured, ...sortedTopRated, ...sortedOthers];
+          
+          // Mark the nearest company in each group
+          if (sortedAssured.length > 0 && sortedAssured[0].calculatedDistance !== null) {
+            sortedAssured[0].isNearest = true;
           }
           
-          console.log("Companies sorted by distance:", 
-            sortedCompanies.map(c => `${c.name || c.companyName}: ${c.calculatedDistance || 'no distance'}`));
-        } else {
-          console.log("Not sorting by distance (location is not a constraint)");
+          // Mark first company as first card
+          if (sortedCompanies.length > 0) {
+            sortedCompanies[0].isFirstCard = true;
+          }
         }
 
-        // Filter companies by space type if the backend doesn't support it
+        // Set companies in state
         setCompanies(sortedCompanies);
-        setTotalPages(response.data.totalPages || 1);
-        setCurrentPage(response.data.currentPage || 1);
+        
+        // For pagination, use the total count from the algorithm result, not the API
+        setTotalPages(Math.ceil(sortedCompanies.length / ITEMS_PER_PAGE) || 1);
+        setCurrentPage(page);
       } else {
         setCompanies([]);
         setTotalPages(1);
@@ -708,6 +785,15 @@ export default function ResidentialSpace() {
         <Header isResidentialPage={true} />
       </div>
 
+      {/* Search Prompt Popup */}
+      {showSearchPrompt && (
+        <SearchPromptPopup 
+          isLoggedIn={isSignedIn}
+          onClose={handleCloseSearchPrompt}
+          onStartSearch={handleStartSearch}
+        />
+      )}
+
       {/* Location Popup - only show if showLocationPopup is true */}
       {showLocationPopup && (
         <LocationPopup onLocationSelect={handleLocationSelect} />
@@ -804,7 +890,7 @@ export default function ResidentialSpace() {
               {error}
             </div>
           )}
-
+          
           {loading && (
             <div className="flex justify-center items-center my-12">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#006452]"></div>
@@ -831,7 +917,7 @@ export default function ResidentialSpace() {
                       />
                     ))}
                   </div>
-                  
+
                   {/* Login card for non-logged-in users if more companies exist */}
                   {!isSignedIn && companies.length > 3 && (
                     <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
@@ -846,7 +932,7 @@ export default function ResidentialSpace() {
                           Create a free account to unlock all companies matching your search criteria and access advanced comparison features.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                          <button 
+                          <button
                             onClick={() => navigate('/login')}
                             className="bg-white text-[#006452] hover:bg-gray-100 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg transition-all text-sm sm:text-base"
                           >
