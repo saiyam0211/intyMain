@@ -11,13 +11,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- AOS CSS -->
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
-    <!-- AOS JavaScript -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Load AOS just before main script -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-      AOS.init();
+      // Wait for AOS to be fully loaded
+      window.addEventListener('load', function() {
+        if (typeof AOS !== 'undefined') {
+          AOS.init();
+        } else {
+          console.warn('AOS is not loaded properly');
+        }
+      });
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>

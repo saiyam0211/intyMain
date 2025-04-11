@@ -11,6 +11,9 @@ if (!clerk_key) {
   throw new Error("Clerk Publishable Key was not found.");
 }
 
+// Determine if in development environment
+const isDevelopment = window.location.hostname === 'localhost';
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <ClerkProvider 
@@ -18,6 +21,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       routing="path"
       signInUrl="/login"
       signUpUrl="/signup"
+      // Use Clerk's default frontend API configuration without domain overrides
+      // This will use api.clerk.dev instead of clerk.inty.in
     >
       <App />
     </ClerkProvider>
