@@ -137,6 +137,16 @@ export const isPriceInRange = (companyPrices, filters) => {
     return { matches: false, tier: null };
   }
   
+  // If "All" is selected, match all companies with price data
+  if (filters.priceRange === "All") {
+    // Always match when "All" is selected, regardless of whether the company has price data
+    return { 
+      matches: true, 
+      tier: companyPrices && Object.keys(companyPrices).find(key => companyPrices[key]) || "basic",
+      overlap: true
+    };
+  }
+  
   // Extract user's price range (e.g., "2-3 Lakhs")
   let userMinPrice = 0;
   let userMaxPrice = 0;
@@ -228,7 +238,8 @@ export const searchAlgorithm = (companies, filters) => {
     (!filters.search || filters.search.trim() === "") &&
     (!filters.projectType || filters.projectType === "Project Type") &&
     (!filters.size || filters.size === "Size (sq ft)") &&
-    (!filters.priceRange || filters.priceRange === "Price Range")
+    (!filters.priceRange || filters.priceRange === "Price Range" || filters.priceRange === "All") &&
+    (!filters.spaceType || filters.spaceType === "Space Type")
   ) {
     // Skip filtering - go directly to Step 4 (sort Inty Assured and Paid partners on top)
     const sortedCompanies = sortCompaniesByAssuredAndScore(companies);
@@ -300,7 +311,7 @@ export const searchAlgorithm = (companies, filters) => {
   
   // Filter companies that match price range (if price range was provided)
   let priceFilteredCompanies = companiesWithPrice;
-  if (filters.priceRange && filters.priceRange !== "Price Range") {
+  if (filters.priceRange && filters.priceRange !== "Price Range" && filters.priceRange !== "All") {
     const exactMatches = companiesWithPrice.filter(company => 
       company.priceMatch && company.priceMatch.matches
     );
@@ -313,6 +324,9 @@ export const searchAlgorithm = (companies, filters) => {
     else if (unreasonablePricing) {
       // Keep all companies but flag the unreasonable pricing
     }
+  } else if (filters.priceRange === "All") {
+    // When "All" is selected, include all companies without price filtering
+    priceFilteredCompanies = companiesWithPrice;
   }
   
   // Apply BHK filter after price filtering if needed

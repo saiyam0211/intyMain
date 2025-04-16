@@ -462,6 +462,7 @@ const Search = ({ onSearch }) => {
                 onChange={handlePriceRangeChange}
               >
                 <option className="text-xs sm:text-sm">Price Range</option>
+                <option className="text-xs sm:text-sm">All</option>
                 <option className="text-xs sm:text-sm">1Lakh to 3Lakh</option>
                 <option className="text-xs sm:text-sm">3Lakh to 6Lakh</option>
                 <option className="text-xs sm:text-sm">6Lakh to 10Lakh</option>
