@@ -20,7 +20,7 @@ import SearchPromptPopup from "../../components/SearchPromptPopup/SearchPromptPo
 
 // Updated to just use the endpoint without the domain
 const API_ENDPOINT = "companies";
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9;
 
 export default function ResidentialSpace() {
   const navigate = useNavigate();
@@ -263,8 +263,24 @@ export default function ResidentialSpace() {
 
     // Determine which space type to use (URL > localStorage > default)
     const effectiveSpaceType = urlSpaceType || savedSpaceType || "Residential";
-
-    if (effectiveSpaceType !== spaceType) {
+    
+    // If user is not signed in and tries to access Commercial space, redirect to Residential
+    if (!isSignedIn && effectiveSpaceType === "Commercial") {
+      const newParams = new URLSearchParams(params);
+      newParams.set("spaceType", "Residential");
+      setSearchParams(newParams);
+      
+      // Show message explaining the redirect
+      setTimeout(() => {
+        toast.info("Please sign in to access Commercial space listings", {
+          position: "top-center",
+          autoClose: 5000,
+        });
+      }, 500);
+      
+      // Set space type to Residential
+      setSpaceType("Residential");
+    } else if (effectiveSpaceType !== spaceType) {
       console.log(`Initial load: setting space type to ${effectiveSpaceType}`);
       setSpaceType(effectiveSpaceType);
 
@@ -317,7 +333,7 @@ export default function ResidentialSpace() {
       // Still need to set loading to false if no location yet
       setLoading(false);
     }
-  }, []);
+  }, [isSignedIn]);
 
   // Function to ensure each company has coordinates
   const ensureCompanyCoordinates = (company) => {
@@ -534,15 +550,14 @@ export default function ResidentialSpace() {
       // Ensure we have the latest spaceType
       const currentSpaceType = filters.type || spaceType;
 
-      // Use a larger limit for non-logged in users to ensure we get enough matches
-      const limit = isSignedIn ? ITEMS_PER_PAGE : 30; // Increased limit to get more companies for filtering
+      // Use a consistent limit for all users
+      const limit = 50; // Fetch more companies in one request for client-side filtering
 
       console.log(`Fetching companies with type: ${currentSpaceType}`);
 
       // Use apiClient instead of direct axios call with properly structured params
       const response = await apiClient.get(API_ENDPOINT, {
         params: {
-          page,
           limit,
           search: filters.search,
           location: filters.location,
@@ -660,12 +675,17 @@ export default function ResidentialSpace() {
           }
         }
 
-        // Set companies in state
+        // Store all companies
         setCompanies(sortedCompanies);
         
-        // For pagination, use the total count from the algorithm result, not the API
-        setTotalPages(Math.ceil(sortedCompanies.length / ITEMS_PER_PAGE) || 1);
-        setCurrentPage(page);
+        // Calculate pagination
+        const allCompaniesCount = sortedCompanies.length;
+        const calculatedTotalPages = Math.ceil(allCompaniesCount / ITEMS_PER_PAGE) || 1;
+        
+        console.log(`Pagination: ${allCompaniesCount} companies, ${ITEMS_PER_PAGE} per page = ${calculatedTotalPages} pages`);
+        
+        setTotalPages(calculatedTotalPages);
+        setCurrentPage(page > calculatedTotalPages ? 1 : page);
       } else {
         setCompanies([]);
         setTotalPages(1);
@@ -743,6 +763,17 @@ export default function ResidentialSpace() {
 
   // Function to handle space type change
   const handleSpaceTypeChange = (newSpaceType) => {
+    // Prevent non-logged-in users from accessing Commercial space
+    if (!isSignedIn && newSpaceType === "Commercial") {
+      // Show login prompt
+      toast.error("Please sign in to access Commercial space listings", {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+      });
+      return;
+    }
+
     // Only proceed if the type is actually changing
     if (newSpaceType === spaceType) return;
 
@@ -767,6 +798,10 @@ export default function ResidentialSpace() {
 
     // Fetch companies with the new type
     if (userLocation) {
+      // Clear existing companies while fetching new ones
+      setCompanies([]);
+      setLoading(true);
+      
       fetchCompanies(1, {
         search: searchQuery || undefined,
         projectType: projectType !== "Project Type" ? projectType : undefined,
@@ -909,8 +944,11 @@ export default function ResidentialSpace() {
               {companies.length > 0 ? (
                 <div className="w-full">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-4 px-4 sm:px-0 relative">
-                    {/* For non-logged-in users, only take first 3 companies from all pages */}
-                    {(isSignedIn ? companies : companies.slice(0, 3)).map((company, index) => (
+                    {/* Show only first 3 companies for non-logged-in users, or paginate for logged-in users */}
+                    {(isSignedIn 
+                      ? companies.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) 
+                      : companies.slice(0, 3)
+                    ).map((company, index) => (
                       <CompanyCard
                         key={company._id}
                         company={company}
@@ -919,7 +957,7 @@ export default function ResidentialSpace() {
                     ))}
                   </div>
 
-                  {/* Login card for non-logged-in users if more companies exist */}
+                  {/* Login card for non-logged-in users */}
                   {!isSignedIn && companies.length > 3 && (
                     <div className="mt-12 mb-8 bg-gradient-to-r from-[#006452] to-[#00836b] rounded-lg shadow-xl p-4 sm:p-8 text-center">
                       <div className="flex flex-col items-center">
@@ -968,7 +1006,7 @@ export default function ResidentialSpace() {
               )}
 
               {/* Show pagination only for logged-in users */}
-              {companies.length > 0 && isSignedIn && (
+              {companies.length > ITEMS_PER_PAGE && isSignedIn && (
                 <div>
                   <Pagination
                     currentPage={currentPage}
@@ -977,7 +1015,7 @@ export default function ResidentialSpace() {
                     className="mt-6"
                   />
                   <div className="text-xs text-gray-500 text-center mt-2">
-                    Page {currentPage} of {totalPages} ({companies.length} companies shown)
+                    Page {currentPage} of {totalPages} ({companies.length} {spaceType} companies total)
                   </div>
                 </div>
               )}
