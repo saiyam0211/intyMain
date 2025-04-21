@@ -270,8 +270,6 @@ const AdminDashboard = () => {
   // Category type options
   const categoryOptions = ["Interior Designer", "Architect", "Contractor", "Home Decor"];
 
-  // Payment type options
-  const paymentOptions = ["Full Payment", "Installments", "Milestone-based"];
 
   // Assured options
   const assuredOptions = ["Yes", "No"];
@@ -772,7 +770,6 @@ const AdminDashboard = () => {
         googleReviewCount: "", // Add this to the reset
         anyAwardWon: "",
         categoryType: "",
-        paymentType: [],
         assured: "",
         latitude: "",
         longitude: "",
@@ -871,21 +868,28 @@ const AdminDashboard = () => {
         return;
       }
 
-      // if (!formData.propertySizeRange) {
-      //   setError('Property Size Range is required');
-      //   setLoading(false);
-      //   window.scrollTo(0, 0);
-      //   return;
-      // }
-
+      // Define a whitelist of fields to include
+      // This ensures only fields we explicitly want get sent to the backend
+      const fieldsToInclude = [
+        'name', 'logo', 'description', 'descriptionHTML', 'availableCities',
+        'branches', 'experience', 'projects', 'type', 'offers', 'usps', 
+        'awards', 'latitude', 'longitude', 'bannerImages', 'priceRange',
+        'basicPriceRange', 'premiumPriceRange', 'luxuryPriceRange', 
+        'registeredCompanyName', 'nameDisplay', 'officialWebsite',
+        'fullName', 'designation', 'phoneNumber', 'minMaxBudget',
+        'discountsOfferTimeline', 'numberOfProjectsCompleted', 'digitalBrochure',
+        'usp', 'contactEmail', 'googleRating', 'googleReviews', 'googleReviewCount',
+        'anyAwardWon', 'categoryType', 'assured', 'projectType', 'propertySizeRange',
+        'serviceCategories', 'searchKeywords', 'specificNeighborhoods', 'testimonials'
+      ];
       
-
-      // Add all form fields to FormData - be careful with array fields
-      Object.keys(formData).forEach(key => {
-        // Skip deliveryTimeline in this loop - we'll handle it separately
-        if (key === 'deliveryTimeline') {
-          return; // Skip this iteration
-        }
+      // Process only the whitelisted fields
+      fieldsToInclude.forEach(key => {
+        // Skip if the field doesn't exist in formData
+        if (!(key in formData)) return;
+        
+        // Skip deliveryTimeline - we'll handle it separately
+        if (key === 'deliveryTimeline') return;
         
         if (key === 'type') {
           // Handle the type array properly
@@ -944,7 +948,7 @@ const AdminDashboard = () => {
         data.append('testimonials', JSON.stringify(testimonials));
       }
 
-      // In your form submission, add this before sending to the backend
+      // Handle deliveryTimeline separately
       if (formData.deliveryTimeline) {
         // Extract just the number from strings like "2 months"
         const timelineValue = formData.deliveryTimeline;
@@ -963,6 +967,9 @@ const AdminDashboard = () => {
       } else {
         data.append('deliveryTimeline', '');
       }
+
+      // Explicitly set paymentType as an empty string to satisfy the backend validation
+      data.append('paymentType', '');
 
       // Add this before submitting the form - right after validateForm() check
       // This helps confirm the form data has all required values
