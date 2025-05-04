@@ -143,6 +143,11 @@ const AdminCraftsmanEdit = () => {
     show: true, // Default to listed
     latitude: '', // Keep for backward compatibility
     longitude: '', // Keep for backward compatibility
+    website: '',
+    address: '',
+    googleLocation: '',
+    pincode: '',
+    type: 'Solo', // Default value
   });
 
   useEffect(() => {
@@ -449,16 +454,23 @@ const AdminCraftsmanEdit = () => {
       }
       
       const uploadPromises = files.map(async file => {
+        // Create a FormData object to send the file
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
         
+        // Use the backend API for uploading instead of direct Cloudinary API
         const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/upload`,
-          formData
+          `${import.meta.env.VITE_API_URL}/upload/craftsman-portfolio`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            }
+          }
         );
         
-        return response.data.secure_url;
+        return response.data.url;
       });
       
       const imageUrls = await Promise.all(uploadPromises);
@@ -702,6 +714,77 @@ const AdminCraftsmanEdit = () => {
                   <option value="Premium">Premium</option>
                   <option value="Luxury">Luxury</option>
                 </select>
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Type
+                </label>
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                >
+                  <option value="Solo">Solo</option>
+                  <option value="Company">Company</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Website
+              </label>
+              <input
+                type="url"
+                name="website"
+                value={formData.website}
+                onChange={handleChange}
+                placeholder="https://example.com"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Address
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Google Location
+                </label>
+                <input
+                  type="text"
+                  name="googleLocation"
+                  value={formData.googleLocation}
+                  onChange={handleChange}
+                  placeholder="Google Maps URL or location name"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Pin Code
+                </label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={formData.pincode}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                />
               </div>
               
               
