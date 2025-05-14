@@ -869,18 +869,22 @@ const AdminCraftsmanEdit = () => {
               <label className="block text-gray-700 font-medium mb-2">
                 Rating
               </label>
-              <select
-                name="rating"
-                value={formData.rating}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
-              >
-                <option value="1">1 Star</option>
-                <option value="2">2 Stars</option>
-                <option value="3">3 Stars</option>
-                <option value="4">4 Stars</option>
-                <option value="5">5 Stars</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="rating"
+                  value={formData.rating}
+                  onChange={handleChange}
+                  min="1"
+                  max="5"
+                  step="0.5"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-yellow-500">★</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Enter a value between 1.0 and 5.0</p>
             </div>
             
             <div className="mb-6">
