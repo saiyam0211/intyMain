@@ -576,7 +576,6 @@ const AdminDesignerEdit = () => {
                   onChange={handleChange}
                   min="1"
                   max="5"
-                  step="0.5"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#006452]"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
