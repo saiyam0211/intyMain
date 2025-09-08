@@ -58,7 +58,8 @@ const Designers = () => {
           company.projects &&
           company.experience &&
           company.branches &&
-          company.logo // Make sure logo exists
+          company.logo && // Make sure logo exists
+          company.assured?.toLowerCase() === "yes" // Only show Inty Assured companies
         )
         .sort((a, b) => b.projects - a.projects)
         .map((company, index) => ({
@@ -82,6 +83,12 @@ const Designers = () => {
   const getCarouselItems = () => {
     if (companies.length === 0) return [];
     
+    // If we have fewer companies than needed to fill the viewport, just return the companies
+    const itemsNeeded = Math.ceil(window.innerWidth / itemWidth) + 2;
+    if (companies.length < itemsNeeded) {
+      return companies;
+    }
+    
     // Create enough copies to fill the viewport and allow smooth infinite scrolling
     const copies = Math.ceil(window.innerWidth / itemWidth) + 2;
     const items = [];
@@ -99,35 +106,50 @@ const Designers = () => {
     setIsAnimating(true);
 
     const totalItems = companies.length;
+    const itemsNeeded = Math.ceil(window.innerWidth / itemWidth) + 2;
+    
+    // If we have fewer companies than needed to fill viewport, disable infinite scroll
+    const shouldInfiniteScroll = totalItems >= itemsNeeded;
+    
     let newIndex;
 
     if (direction === 'next') {
-      newIndex = (currentIndex + 1) % totalItems;
+      if (shouldInfiniteScroll) {
+        newIndex = (currentIndex + 1) % totalItems;
+      } else {
+        newIndex = Math.min(currentIndex + 1, totalItems - 1);
+      }
     } else {
-      newIndex = (currentIndex - 1 + totalItems) % totalItems;
+      if (shouldInfiniteScroll) {
+        newIndex = (currentIndex - 1 + totalItems) % totalItems;
+      } else {
+        newIndex = Math.max(currentIndex - 1, 0);
+      }
     }
 
     setCurrentIndex(newIndex);
 
-    // Reset position when reaching the end of the set
-    if (newIndex === 0 && direction === 'next') {
-      setTimeout(() => {
-        carouselRef.current.style.transition = 'none';
-        setCurrentIndex(0);
-        // Force a reflow
-        carouselRef.current.offsetHeight;
-        carouselRef.current.style.transition = 'transform 0.5s ease-in-out';
-      }, 500);
-    }
+    // Only reset position for infinite scroll when we have enough companies
+    if (shouldInfiniteScroll) {
+      if (newIndex === 0 && direction === 'next') {
+        setTimeout(() => {
+          carouselRef.current.style.transition = 'none';
+          setCurrentIndex(0);
+          // Force a reflow
+          carouselRef.current.offsetHeight;
+          carouselRef.current.style.transition = 'transform 0.5s ease-in-out';
+        }, 500);
+      }
 
-    if (newIndex === totalItems - 1 && direction === 'prev') {
-      setTimeout(() => {
-        carouselRef.current.style.transition = 'none';
-        setCurrentIndex(totalItems - 1);
-        // Force a reflow
-        carouselRef.current.offsetHeight;
-        carouselRef.current.style.transition = 'transform 0.5s ease-in-out';
-      }, 500);
+      if (newIndex === totalItems - 1 && direction === 'prev') {
+        setTimeout(() => {
+          carouselRef.current.style.transition = 'none';
+          setCurrentIndex(totalItems - 1);
+          // Force a reflow
+          carouselRef.current.offsetHeight;
+          carouselRef.current.style.transition = 'transform 0.5s ease-in-out';
+        }, 500);
+      }
     }
 
     setTimeout(() => {
@@ -232,6 +254,8 @@ const Designers = () => {
           max-width: 100%;
           overflow: hidden;
           margin: 0 auto;
+          display: flex;
+          justify-content: center;
         }
 
         .carousel-track {
@@ -264,7 +288,8 @@ const Designers = () => {
                 gap: '16px',
                 padding: '0 16px',
                 width: 'fit-content',
-                willChange: 'transform'
+                willChange: 'transform',
+                justifyContent: companies.length < Math.ceil(window.innerWidth / itemWidth) + 2 ? 'center' : 'flex-start'
               }}
             >
               {getCarouselItems().map((company, index) => (
@@ -322,45 +347,51 @@ const Designers = () => {
               ))}
             </div>
 
-            <button
-              onClick={() => moveCarousel('prev')}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md z-10"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="h-6 w-6 text-[#006452]" />
-            </button>
-
-            <button
-              onClick={() => moveCarousel('next')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md z-10"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="h-6 w-6 text-[#006452]" />
-            </button>
-          </div>
-
-          <div className="mt-6 flex justify-center gap-2">
-            {companies.map((_, index) => (
+            {companies.length >= Math.ceil(window.innerWidth / itemWidth) + 2 && (
               <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex % companies.length ? 'bg-[#006452] w-4' : 'bg-gray-300'
-                }`}
-                onClick={() => {
-                  if (!isAnimating) {
-                    setCurrentIndex(index);
-                  }
-                }}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
+                onClick={() => moveCarousel('prev')}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md z-10"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="h-6 w-6 text-[#006452]" />
+              </button>
+            )}
+
+            {companies.length >= Math.ceil(window.innerWidth / itemWidth) + 2 && (
+              <button
+                onClick={() => moveCarousel('next')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md z-10"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="h-6 w-6 text-[#006452]" />
+              </button>
+            )}
           </div>
+
+          {companies.length > 2 && (
+            <div className="mt-6 flex justify-center gap-2">
+              {companies.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex % companies.length ? 'bg-[#006452] w-4' : 'bg-gray-300'
+                  }`}
+                  onClick={() => {
+                    if (!isAnimating) {
+                      setCurrentIndex(index);
+                    }
+                  }}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mobile View */}
         <div className="sm:hidden">
-          <div className="overflow-x-auto pb-6 scrollbar-hide">
-            <div className="flex gap-4 min-w-max px-2">
+          <div className={`pb-6 ${companies.length <= 2 ? 'flex justify-center' : 'overflow-x-auto scrollbar-hide'}`}>
+            <div className={`flex gap-4 px-2 ${companies.length <= 2 ? 'justify-center' : 'min-w-max'}`}>
               {companies.map((company, index) => (
                 <div
                   key={index}

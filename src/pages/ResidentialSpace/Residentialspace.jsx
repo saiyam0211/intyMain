@@ -17,6 +17,8 @@ import LocationPopup from "../../components/LocationPopup/LocationPopup";
 import { searchAlgorithm } from "../../services/SearchAlgorithm";
 // Import the search prompt popup
 import SearchPromptPopup from "../../components/SearchPromptPopup/SearchPromptPopup";
+// Import filter storage service
+import { storeUserFilter } from "../../services/filterStorageService";
 
 // Updated to just use the endpoint without the domain
 const API_ENDPOINT = "companies";
@@ -57,6 +59,7 @@ export default function ResidentialSpace() {
   const [projectType, setProjectType] = useState(searchParams.get("projectType") || "Project Type");
   const [size, setSize] = useState(searchParams.get("size") || "Size (sq ft)");
   const [priceRange, setPriceRange] = useState(searchParams.get("priceRange") || "Price Range");
+  const [assuredOnly, setAssuredOnly] = useState(searchParams.get("assuredOnly") === 'true');
 
   // Save spaceType to localStorage whenever it changes
   useEffect(() => {
@@ -72,33 +75,28 @@ export default function ResidentialSpace() {
 
   // Check if user has previously dismissed the search prompt
   useEffect(() => {
-    const hasSearchInputs = searchParams.get("query") || 
-                           searchParams.get("projectType") || 
-                           searchParams.get("size") || 
-                           searchParams.get("priceRange");
+    // Use a per-user key so the popup shows only once per logged-in user
+    const promptKey = isSignedIn && user ? `hasSeenSearchPrompt_${user.id}` : 'hasSeenSearchPrompt_guest';
+    const hasSeenPrompt = localStorage.getItem(promptKey);
 
-    const hasSeenPrompt = localStorage.getItem('hasSeenSearchPrompt');
-    
-    // Show prompt if:
-    // 1. User hasn't seen the prompt before OR
-    // 2. User is logged in and hasn't provided search inputs
-    if (!hasSeenPrompt || (isSignedIn && !hasSearchInputs)) {
-      // Small delay to show popup after page loads
+    if (!hasSeenPrompt) {
       const timer = setTimeout(() => {
         setShowSearchPrompt(true);
       }, 1000);
-      
       return () => clearTimeout(timer);
     }
-  }, [isSignedIn, searchParams]);
+  }, [isSignedIn, user]);
 
   const handleCloseSearchPrompt = () => {
-    // Mark that user has seen the prompt
-    localStorage.setItem('hasSeenSearchPrompt', 'true');
+    // Mark that user has seen the prompt (per-user key)
+    const promptKey = isSignedIn && user ? `hasSeenSearchPrompt_${user.id}` : 'hasSeenSearchPrompt_guest';
+    localStorage.setItem(promptKey, 'true');
     setShowSearchPrompt(false);
   };
 
   const handleStartSearch = () => {
+    const promptKey = isSignedIn && user ? `hasSeenSearchPrompt_${user.id}` : 'hasSeenSearchPrompt_guest';
+    localStorage.setItem(promptKey, 'true');
     setShowSearchPrompt(false);
     
     // Focus on the search input
@@ -217,6 +215,7 @@ export default function ResidentialSpace() {
     const newSize = params.get("size") || "Size (sq ft)";
     const newPriceRange = params.get("priceRange") || "Price Range";
     const newSpaceType = params.get("spaceType") || localStorage.getItem('spaceType') || "Residential";
+    const newAssuredOnly = params.get("assuredOnly") === 'true';
 
     // Check if space type is changing
     const isSpaceTypeChanging = newSpaceType !== spaceType;
@@ -229,6 +228,7 @@ export default function ResidentialSpace() {
     setProjectType(newProjectType);
     setSize(newSize);
     setPriceRange(newPriceRange);
+    setAssuredOnly(newAssuredOnly);
 
     // Only update spaceType if it's actually changing to avoid unnecessary re-renders
     if (isSpaceTypeChanging) {
@@ -249,7 +249,8 @@ export default function ResidentialSpace() {
         size: newSize !== "Size (sq ft)" ? newSize : undefined,
         priceRange: newPriceRange !== "Price Range" ? newPriceRange : undefined,
         location: userLocation,
-        type: newSpaceType // Include the space type
+        type: newSpaceType, // Include the space type
+        assuredOnly: newAssuredOnly || undefined
       });
     }
   }, [location.search]);
@@ -607,10 +608,12 @@ export default function ResidentialSpace() {
         // Apply the search algorithm
         const searchFilters = {
           search: filters.search,
-          projectType: filters.projectType !== "Project Type" ? filters.projectType : undefined,
+          // projectType intentionally ignored by algorithm (dummy UI field)
           size: filters.size !== "Size (sq ft)" ? filters.size : undefined,
           priceRange: filters.priceRange !== "Price Range" ? filters.priceRange : undefined,
-          spaceType: currentSpaceType
+          spaceType: currentSpaceType,
+          location: filters.location || userLocation,
+          assuredOnly: filters.assuredOnly || (assuredOnly ? true : undefined)
         };
         
         console.log("Applying search algorithm with filters:", searchFilters);
@@ -632,7 +635,8 @@ export default function ResidentialSpace() {
         }
         
         // Sort companies by distance if location is provided
-        if (userLocation && localStorage.getItem('hideDistanceInCompare') !== 'true') {
+        // Disabled: distance is now part of the score inside the search algorithm
+        if (false && userLocation && localStorage.getItem('hideDistanceInCompare') !== 'true') {
           console.log("Further sorting companies by distance since location is provided");
           
           // Calculate distance for each company
@@ -645,9 +649,10 @@ export default function ResidentialSpace() {
           });
           
           // Sort by distance within each group (assured, paid partners, then others)
-          const assuredCompanies = companiesWithDistance.filter(c => c.assured === "true");
-          const topRatedCompanies = companiesWithDistance.filter(c => c.topRated && c.assured !== "true");
-          const otherCompanies = companiesWithDistance.filter(c => !c.topRated && c.assured !== "true");
+          const isAssuredYes = (v) => (v || '').toString().toLowerCase() === 'yes';
+          const assuredCompanies = companiesWithDistance.filter(c => isAssuredYes(c.assured));
+          const topRatedCompanies = companiesWithDistance.filter(c => c.topRated && !isAssuredYes(c.assured));
+          const otherCompanies = companiesWithDistance.filter(c => !c.topRated && !isAssuredYes(c.assured));
           
           // Sort each group by distance
           const sortByDistance = companies => companies.sort((a, b) => {
@@ -701,7 +706,7 @@ export default function ResidentialSpace() {
     }
   };
 
-  const handleSearch = (filters) => {
+  const handleSearch = async (filters) => {
     // Update URL with search parameters
     const params = new URLSearchParams();
     if (filters.search) params.set("query", filters.search);
@@ -715,6 +720,26 @@ export default function ResidentialSpace() {
 
     console.log("Search filters applied:", filters);
 
+    // Store filter data for analytics
+    try {
+      await storeUserFilter({
+        userId: user?.id || 'anonymous',
+        userEmail: user?.emailAddresses?.[0]?.emailAddress || '',
+        searchTerm: filters.search || '',
+        filters: {
+          location: userLocation || '',
+          type: spaceType,
+          roomType: filters.projectType !== "Project Type" ? filters.projectType : '',
+          bhkSize: filters.size !== "Size (sq ft)" ? filters.size : '',
+          budget: filters.priceRange !== "Price Range" ? filters.priceRange : '',
+          assuredOnly: filters.assuredOnly || false
+        },
+        pageType: spaceType.toLowerCase()
+      });
+    } catch (error) {
+      console.error('Error storing filter data:', error);
+    }
+
     // Update local state with the new filters
     setSearchQuery(filters.search || "");
     setProjectType(filters.projectType || "Project Type");
@@ -727,7 +752,8 @@ export default function ResidentialSpace() {
     // Fetch companies with the new filters
     fetchCompanies(1, {
       ...filters,
-      location: userLocation // Include user location in search
+      location: userLocation, // Include user location in search
+      assuredOnly: filters.assuredOnly || (assuredOnly ? true : undefined)
     });
   };
 

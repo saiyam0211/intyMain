@@ -204,7 +204,7 @@ const createCompany = async (req, res) => {
         usp: req.body.usp || '',
         contactEmail: req.body.contactEmail || '',
         googleRating: req.body.googleRating || '',
-        googleReviewCount: req.body.googleReviewCount || '',
+        googleReviews: req.body.googleReviews || req.body.googleReviewCount || '',
         anyAwardWon: req.body.anyAwardWon || '',
         categoryType: req.body.categoryType || '',
         paymentType: req.body.paymentType || "",
@@ -381,7 +381,8 @@ const updateCompany = async (req, res) => {
       if (updates.projects) updates.projects = parseInt(updates.projects);
       if (updates.experience) updates.experience = parseInt(updates.experience);
       if (updates.branches) updates.branches = parseInt(updates.branches);
-      if (updates.googleReviewCount) updates.googleReviewCount = parseInt(updates.googleReviewCount) || 0;
+      if (updates.googleReviews) updates.googleReviews = updates.googleReviews.toString();
+      if (updates.googleReviewCount) updates.googleReviews = updates.googleReviewCount.toString();
 
       // Remove ageOfCompany if present
       if (updates.ageOfCompany) {

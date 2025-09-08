@@ -16,7 +16,8 @@ import {
   FaCreditCard,
   FaCoins,
   FaCheckCircle,
-  FaExclamationCircle
+  FaExclamationCircle,
+  FaFilter
 } from 'react-icons/fa';
 
 const AdminHomePage = () => {
@@ -138,6 +139,13 @@ const AdminHomePage = () => {
             icon: <FaAddressBook className="text-3xl sm:text-4xl mb-3" />,
             path: '/admin/contacts',
             color: 'bg-gradient-to-br from-indigo-500 to-indigo-600'
+        },
+        {
+            title: 'User Filters & Search',
+            description: 'View user search behavior and filter usage',
+            icon: <FaFilter className="text-3xl sm:text-4xl mb-3" />,
+            path: '/admin/user-filters',
+            color: 'bg-gradient-to-br from-pink-500 to-pink-600'
         },
         {
             title: 'Export Database Data',

@@ -146,7 +146,7 @@ const CarouselCard = ({ data, position, image, showOnlyImages, largeImage }) => 
   );
 };
 
-const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
+const Carousel = ({ images, showOnlyImages = false, largeImage = false, excludeCompanyId = null }) => {
 
   // Remove direct API_URL and use apiClient instead which handles CORS
   const [companies, setCompanies] = useState([]);
@@ -200,7 +200,11 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
       console.log("API Response:", response.data); // Debug log
 
       if (response.data && Array.isArray(response.data.companies)) {
-        setCompanies(response.data.companies);
+        // Filter out the excluded company if provided
+        const filteredCompanies = excludeCompanyId 
+          ? response.data.companies.filter(company => company._id !== excludeCompanyId)
+          : response.data.companies;
+        setCompanies(filteredCompanies);
         setCurrentPage(response.data.currentPage);
       } else {
         throw new Error("Invalid data format received from server");
@@ -220,7 +224,7 @@ const Carousel = ({ images, showOnlyImages = false, largeImage = false }) => {
 
   useEffect(() => {
     fetchCompanies(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, excludeCompanyId]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);

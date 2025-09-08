@@ -42,6 +42,7 @@ import AdminContactsView from "./pages/Admin/AdminContactsView.jsx";
 import ImportDataPage from "./pages/Admin/ImportDataPage.jsx";
 import AdminSubscriptionPage from "./pages/Admin/AdminSubscriptionPage";
 import AdminUserCreditsPage from "./pages/Admin/AdminUserCreditsPage";
+import AdminUserFilters from "./pages/Admin/AdminUserFilters";
 import FloatingAdminButton from "./components/Admin/FloatingAdminButton";
 
 // Helper component to redirect to last visited admin page
@@ -217,6 +218,11 @@ const App = () => {
         <Route path="/admin/user-credits" element={
           <ProtectedRoute>
             <AdminUserCreditsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/user-filters" element={
+          <ProtectedRoute>
+            <AdminUserFilters />
           </ProtectedRoute>
         } />
       </Routes>

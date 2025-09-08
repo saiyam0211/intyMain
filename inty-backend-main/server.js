@@ -22,6 +22,7 @@ const exportRoutes = require("./routes/exportRoutes"); // Import Export routes
 const importRoutes = require("./routes/importRoutes"); // Import Import routes
 const subscriptionRoutes = require("./routes/subscriptionRoutes"); // Import Subscription routes
 const paymentRoutes = require("./routes/paymentRoutes"); // Import Payment routes
+const userFilterRoutes = require("./routes/userFilterRoutes"); // Import User Filter routes
 
 const app = express();
 
@@ -117,6 +118,7 @@ app.use('/api/export', exportRoutes); // Use Export routes
 app.use('/api/import', importRoutes); // Use Import routes
 app.use('/api/subscriptions', subscriptionRoutes); // Use Subscription routes
 app.use('/api/payments', paymentRoutes); // Use Payment routes
+app.use('/api/user-filters', userFilterRoutes); // Use User Filter routes
 
 // Simple test route
 app.use('/api/test', (req, res) => {

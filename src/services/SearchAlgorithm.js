@@ -9,7 +9,7 @@
  * @param {Object} company - Company object
  * @returns {Number} Score between 0-3
  */
-export const calculateCompanyScore = (company) => {
+export const calculateCompanyScore = (company, options = {}) => {
   let score = 0;
   
   // Rating and Review : 0 to 1 (Wilson Score)
@@ -52,6 +52,58 @@ export const calculateCompanyScore = (company) => {
     score += hasRecentAward ? 0.5 : 0.25;
   }
   
+  // Distance-based bonus scoring (only when location is a constraint)
+  // options: { userLat, userLng, enableDistance: boolean }
+  if (options && options.enableDistance && typeof options.userLat === 'number' && typeof options.userLng === 'number') {
+    const getCompanyLatLng = () => {
+      // Handle multiple coordinate formats
+      if (company.coordinates) {
+        if (typeof company.coordinates === 'object') {
+          const lat = company.coordinates.latitude ?? company.coordinates.lat;
+          const lng = company.coordinates.longitude ?? company.coordinates.lng;
+          if (typeof lat === 'number' && typeof lng === 'number') return { lat, lng };
+        } else if (typeof company.coordinates === 'string') {
+          const parts = company.coordinates.split(',');
+          if (parts.length === 2) {
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+          }
+        }
+      }
+      if (company.lat && company.lng) {
+        const lat = parseFloat(company.lat);
+        const lng = parseFloat(company.lng);
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+      }
+      if (company.latitude && company.longitude) {
+        const lat = parseFloat(company.latitude);
+        const lng = parseFloat(company.longitude);
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+      }
+      return null;
+    };
+
+    const coords = getCompanyLatLng();
+    if (coords) {
+      const deg2rad = (deg) => deg * (Math.PI / 180);
+      const R = 6371; // km
+      const dLat = deg2rad(coords.lat - options.userLat);
+      const dLon = deg2rad(coords.lng - options.userLng);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(options.userLat)) * Math.cos(deg2rad(coords.lat)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distanceKm = R * c;
+
+      // Add distance bonus per requirement
+      if (distanceKm < 5) score += 2;
+      else if (distanceKm < 10) score += 1.5;
+      else if (distanceKm < 15) score += 1;
+      else score += 0.5;
+    }
+  }
+
   return score;
 };
 
@@ -251,7 +303,7 @@ export const searchAlgorithm = (companies, filters) => {
   }
   
   // Case 1: User provides inputs
-  
+
   // Step 1: Filter on residential/commercial companies
   let filteredCompanies = companies;
   if (filters.spaceType) {
@@ -259,24 +311,15 @@ export const searchAlgorithm = (companies, filters) => {
       company.type && company.type.includes(filters.spaceType)
     );
   }
-  
-  // Step 2: Filter on specialization if needed
-  // If user selects office, kitchen, bathroom etc. but no BHK, filter on specialization first
-  const hasRoomTypeSpecialization = filters.projectType && 
-    ["Office", "Kitchen", "Bathroom", "Living Room"].includes(filters.projectType);
-  
-  const hasBHKSpecialization = filters.projectType && 
-    ["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5+ BHK"].includes(filters.projectType);
-  
-  // Apply specialization filter before price comparison if user selected room type but no BHK
-  if (hasRoomTypeSpecialization && !hasBHKSpecialization) {
-    filteredCompanies = filteredCompanies.filter(company => 
-      company.serviceCategories && 
-      company.serviceCategories.some(category => 
-        category.includes(filters.projectType)
-      )
+
+  // Optional assured-only filter
+  if (filters.assuredOnly) {
+    filteredCompanies = filteredCompanies.filter(company =>
+      (company.assured || '').toString().toLowerCase() === 'yes'
     );
   }
+
+  // IMPORTANT: Project Type is now treated as a dummy field (no filtering)
   
   // Step 3: Use price and area to compare
   const companiesWithPrice = [];
@@ -329,15 +372,10 @@ export const searchAlgorithm = (companies, filters) => {
     priceFilteredCompanies = companiesWithPrice;
   }
   
-  // Apply BHK filter after price filtering if needed
-  if (hasBHKSpecialization) {
-    priceFilteredCompanies = priceFilteredCompanies.filter(company => 
-      company.projectType && company.projectType.includes(filters.projectType)
-    );
-  }
+  // Do not apply any BHK/project-type based filtering (dummy field)
   
-  // Step 4: Sort Inty Assured and Paid partners on top
-  const sortedCompanies = sortCompaniesByAssuredAndScore(priceFilteredCompanies);
+  // Step 4: Sort companies with admin-pinned first, then by score (with optional distance bonus)
+  const sortedCompanies = sortCompaniesByAdminAndScore(priceFilteredCompanies, filters);
   
   return {
     companies: sortedCompanies,
@@ -351,24 +389,41 @@ export const searchAlgorithm = (companies, filters) => {
  * @param {Array} companies - List of companies to sort
  * @returns {Array} - Sorted companies
  */
-export const sortCompaniesByAssuredAndScore = (companies) => {
-  // Calculate scores for all companies
+export const sortCompaniesByAdminAndScore = (companies, filters = {}) => {
+  // Determine if distance bonus should be applied
+  let enableDistance = false;
+  let userLat = null;
+  let userLng = null;
+  try {
+    if (filters && filters.location) {
+      const userLiveLocationStr = localStorage.getItem('userLiveLocation');
+      if (userLiveLocationStr) {
+        const userLoc = JSON.parse(userLiveLocationStr);
+        if (userLoc && typeof userLoc.latitude === 'number' && typeof userLoc.longitude === 'number') {
+          enableDistance = true;
+          userLat = userLoc.latitude;
+          userLng = userLoc.longitude;
+        }
+      }
+    }
+  } catch (e) {}
+
   const companiesWithScores = companies.map(company => ({
     ...company,
-    score: calculateCompanyScore(company)
+    score: calculateCompanyScore(company, { enableDistance, userLat, userLng })
   }));
-  
-  // First sort by Inty Assured status, then by paid partner status, then by score
-  return companiesWithScores.sort((a, b) => {
-    // First sort by Inty Assured (assured="true" at top)
-    if (a.assured === "true" && b.assured !== "true") return -1;
-    if (a.assured !== "true" && b.assured === "true") return 1;
-    
-    // Then sort by paid partner (topRated=true at top)
-    if (a.topRated && !b.topRated) return -1;
-    if (!a.topRated && b.topRated) return 1;
-    
-    // Finally sort by calculated score (higher scores first)
-    return b.score - a.score;
-  });
-}; 
+
+  // Admin-selected top companies first: use topRated flag as admin top-3 marker
+  const pinned = companiesWithScores
+    .filter(c => c.topRated === true)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  const pinnedIds = new Set(pinned.map(c => c._id));
+  const remaining = companiesWithScores.filter(c => !pinnedIds.has(c._id));
+
+  // Sort remaining strictly by score (desc)
+  remaining.sort((a, b) => b.score - a.score);
+
+  return [...pinned, ...remaining];
+};

@@ -23,6 +23,7 @@ import lock from "../../assets/lock.png";
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import LocationPopup from '../../components/LocationPopup/LocationPopup';
+import { storeUserFilter } from "../../services/filterStorageService";
 
 // Fallback to sample data if API fails
 const sampleProfiles = [
@@ -84,7 +85,7 @@ const InteriorDesigner = () => {
   const [showLocationPopup, setShowLocationPopup] = useState(!localStorage.getItem('userLocation'));
 
   // Restrict category selection for non-logged in users
-  const handleCategorySelect = (category) => {
+  const handleCategorySelect = async (category) => {
     if (!isSignedIn && (category === "Standard" || category === "Premium" || category === "Luxury")) {
       // Show toast notification about premium content
       toast.info("Login required to access " + category + " category designers");
@@ -92,6 +93,25 @@ const InteriorDesigner = () => {
       setSelectedCategory(category);
       return;
     }
+    
+    // Store filter data for analytics
+    try {
+      await storeUserFilter({
+        userId: user?.id || 'anonymous',
+        userEmail: user?.emailAddresses?.[0]?.emailAddress || '',
+        searchTerm: category,
+        filters: {
+          location: userLocation || '',
+          type: 'designer',
+          category: category,
+          assuredOnly: false
+        },
+        pageType: 'designer'
+      });
+    } catch (error) {
+      console.error('Error storing filter data:', error);
+    }
+    
     setSelectedCategory(category);
   };
 

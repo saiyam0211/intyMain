@@ -8,6 +8,7 @@ const Search = ({ onSearch }) => {
   const [size, setSize] = useState("Size (sq ft)");
   const [priceRange, setPriceRange] = useState("Price Range");
   const [spaceType, setSpaceType] = useState("Space Type");
+  const [assuredOnly, setAssuredOnly] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showValidationError, setShowValidationError] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Search = ({ onSearch }) => {
     setSize(searchParams.get("size") || "Size (sq ft)");
     setPriceRange(searchParams.get("priceRange") || "Price Range");
     setSpaceType(searchParams.get("spaceType") || "Space Type");
+    setAssuredOnly(searchParams.get("assuredOnly") === "true");
   }, [searchParams]);
 
   // Debounce function to delay search execution
@@ -43,6 +45,7 @@ const Search = ({ onSearch }) => {
     if (size !== "Size (sq ft)") params.append("size", size);
     if (priceRange !== "Price Range") params.append("priceRange", priceRange);
     if (spaceType !== "Space Type") params.append("spaceType", spaceType);
+    if (assuredOnly) params.append("assuredOnly", "true");
 
     return params.toString(); // Return only the query string
   };
@@ -58,6 +61,7 @@ const Search = ({ onSearch }) => {
           size: size !== "Size (sq ft)" ? size : undefined,
           priceRange: priceRange !== "Price Range" ? priceRange : undefined,
           spaceType: spaceType !== "Space Type" ? spaceType : undefined,
+          assuredOnly: assuredOnly || undefined,
           search: query // Add search parameter explicitly
         });
         setIsSearching(false);
@@ -111,6 +115,7 @@ const Search = ({ onSearch }) => {
         size: size !== "Size (sq ft)" ? size : undefined,
         priceRange: priceRange !== "Price Range" ? priceRange : undefined,
         spaceType: spaceType !== "Space Type" ? spaceType : undefined,
+        assuredOnly: assuredOnly || undefined,
         search: searchQuery // Add search parameter explicitly
       });
     }
@@ -147,6 +152,7 @@ const Search = ({ onSearch }) => {
         if (size !== "Size (sq ft)") queryString.append("size", size);
         if (priceRange !== "Price Range") queryString.append("priceRange", priceRange);
         if (spaceType !== "Space Type") queryString.append("spaceType", spaceType);
+        if (assuredOnly) queryString.append("assuredOnly", "true");
         
         let targetPage = '/residential-space';
         navigate(`${targetPage}?${queryString.toString()}`);
@@ -157,6 +163,7 @@ const Search = ({ onSearch }) => {
           size: size !== "Size (sq ft)" ? size : undefined,
           priceRange: priceRange !== "Price Range" ? priceRange : undefined,
           spaceType: spaceType !== "Space Type" ? spaceType : undefined,
+          assuredOnly: assuredOnly || undefined,
           search: searchQuery // Add search parameter explicitly
         });
       }, 100);
@@ -193,6 +200,7 @@ const Search = ({ onSearch }) => {
         if (value !== "Size (sq ft)") queryString.append("size", value);
         if (priceRange !== "Price Range") queryString.append("priceRange", priceRange);
         if (spaceType !== "Space Type") queryString.append("spaceType", spaceType);
+        if (assuredOnly) queryString.append("assuredOnly", "true");
         
         let targetPage = '/residential-space';
         navigate(`${targetPage}?${queryString.toString()}`);
@@ -203,6 +211,7 @@ const Search = ({ onSearch }) => {
           size: value !== "Size (sq ft)" ? value : undefined,
           priceRange: priceRange !== "Price Range" ? priceRange : undefined,
           spaceType: spaceType !== "Space Type" ? spaceType : undefined,
+          assuredOnly: assuredOnly || undefined,
           search: searchQuery // Add search parameter explicitly
         });
       }, 100);
@@ -239,6 +248,7 @@ const Search = ({ onSearch }) => {
         if (size !== "Size (sq ft)") queryString.append("size", size);
         if (value !== "Price Range") queryString.append("priceRange", value);
         if (spaceType !== "Space Type") queryString.append("spaceType", spaceType);
+        if (assuredOnly) queryString.append("assuredOnly", "true");
         
         let targetPage = '/residential-space';
         navigate(`${targetPage}?${queryString.toString()}`);
@@ -249,6 +259,7 @@ const Search = ({ onSearch }) => {
           size: size !== "Size (sq ft)" ? size : undefined,
           priceRange: value !== "Price Range" ? value : undefined,
           spaceType: spaceType !== "Space Type" ? spaceType : undefined,
+          assuredOnly: assuredOnly || undefined,
           search: searchQuery // Add search parameter explicitly
         });
       }, 100);
@@ -286,6 +297,7 @@ const Search = ({ onSearch }) => {
         if (size !== "Size (sq ft)") queryString.append("size", size);
         if (priceRange !== "Price Range") queryString.append("priceRange", priceRange);
         if (value !== "Space Type") queryString.append("spaceType", value);
+        if (assuredOnly) queryString.append("assuredOnly", "true");
         
         let targetPage = '/residential-space';
         navigate(`${targetPage}?${queryString.toString()}`);
@@ -296,6 +308,7 @@ const Search = ({ onSearch }) => {
           size: size !== "Size (sq ft)" ? size : undefined,
           priceRange: priceRange !== "Price Range" ? priceRange : undefined,
           spaceType: value !== "Space Type" ? value : undefined,
+          assuredOnly: assuredOnly || undefined,
           search: searchQuery // Add search parameter explicitly
         });
       }, 100);
@@ -367,7 +380,7 @@ const Search = ({ onSearch }) => {
             <span className="text-red-500">*</span> Please fill in at least one field before searching
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4 mt-2">
             <div>
               <label className={`block text-sm sm:text-base font-semibold ${showValidationError ? 'text-red-500' : 'text-gray-700'} text-left mb-1`}>
                 Space Type <span className="text-red-500">*</span>
@@ -473,6 +486,42 @@ const Search = ({ onSearch }) => {
                 <option className="text-xs sm:text-sm">30Lakh to 40Lakh</option>
                 <option className="text-xs sm:text-sm">40Lakh+</option>
               </select>
+            </div>
+
+            {/* Inty Assured checkbox */}
+            <div className="flex items-end">
+              <label className="inline-flex items-center gap-2 pb-2">
+                <input
+                  type="checkbox"
+                  checked={assuredOnly}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAssuredOnly(checked);
+                    const queryString = new URLSearchParams();
+                    if (searchQuery) queryString.append('query', searchQuery);
+                    if (projectType !== 'Project Type') queryString.append('projectType', projectType);
+                    if (size !== 'Size (sq ft)') queryString.append('size', size);
+                    if (priceRange !== 'Price Range') queryString.append('priceRange', priceRange);
+                    if (spaceType !== 'Space Type') queryString.append('spaceType', spaceType);
+                    if (checked) queryString.append('assuredOnly', 'true');
+                    let targetPage = '/residential-space';
+                    navigate(`${targetPage}?${queryString.toString()}`);
+                    if (onSearch) {
+                      onSearch({
+                        query: searchQuery,
+                        projectType: projectType !== 'Project Type' ? projectType : undefined,
+                        size: size !== 'Size (sq ft)' ? size : undefined,
+                        priceRange: priceRange !== 'Price Range' ? priceRange : undefined,
+                        spaceType: spaceType !== 'Space Type' ? spaceType : undefined,
+                        assuredOnly: checked || undefined,
+                        search: searchQuery
+                      });
+                    }
+                  }}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm sm:text-base font-semibold text-gray-700 mb-1">Inty Assured only</span>
+              </label>
             </div>
           </div>
 

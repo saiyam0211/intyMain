@@ -11,9 +11,12 @@ import Search from "../../components/Search/Search";
 import TestimonialCarousel from "../../components/TestimonialCarousel/TestimonialCarousel";
 import InteriorPlatform from "../../components/InteriorPlatform/InteriorPlatform";
 import LocationPopup from "../../components/LocationPopup/LocationPopup";
+import { useUser } from "@clerk/clerk-react";
+import { storeUserFilter } from "../../services/filterStorageService";
 
 const Home = () => {
   const [userLocation, setUserLocation] = useState(localStorage.getItem('userLocation') || '');
+  const { user } = useUser();
 
   const handleLocationSelect = (location, coordinates = null, address = null) => {
     setUserLocation(location);
@@ -33,12 +36,34 @@ const Home = () => {
     }
   };
 
+  const handleHomeSearch = async (filters) => {
+    try {
+      // Store the filter data for analytics
+      await storeUserFilter({
+        userId: user?.id || 'anonymous',
+        userEmail: user?.emailAddresses?.[0]?.emailAddress || '',
+        searchTerm: filters.search || '',
+        filters: {
+          location: userLocation || '',
+          type: filters.spaceType || 'residential', // Default to residential if not specified
+          roomType: filters.projectType !== "Project Type" ? filters.projectType : '',
+          bhkSize: filters.size !== "Size (sq ft)" ? filters.size : '',
+          budget: filters.priceRange !== "Price Range" ? filters.priceRange : '',
+          assuredOnly: filters.assuredOnly || false
+        },
+        pageType: filters.spaceType === 'Commercial' ? 'commercial' : 'residential'
+      });
+    } catch (error) {
+      console.error('Error storing filter data from home page:', error);
+    }
+  };
+
   return (
     <div>
       <Navbar />
       <LocationPopup onLocationSelect={handleLocationSelect} />
       <InteriorPlatform />
-      <Search />
+      <Search onSearch={handleHomeSearch} />
       <Hero />
       <Features />
       <Designers />

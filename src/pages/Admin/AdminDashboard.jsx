@@ -208,7 +208,25 @@ const AdminDashboard = () => {
       basicPriceRange: '',
       premiumPriceRange: '',
       luxuryPriceRange: '',
-      deliveryTimeline: ''
+      deliveryTimeline: '',
+      googleRating: '',
+      googleReviews: '',
+      contactEmail: '',
+      usp: '',
+      anyAwardWon: '',
+      categoryType: '',
+      assured: '',
+      workInTeams: '',
+      discountsOfferTimeline: '',
+      numberOfProjectsCompleted: '',
+      digitalBrochure: null,
+      registeredCompanyName: '',
+      nameDisplay: '',
+      officialWebsite: '',
+      fullName: '',
+      designation: '',
+      phoneNumber: '',
+      minMaxBudget: ''
     };
   });
   const navigate = useNavigate();
@@ -610,7 +628,7 @@ const AdminDashboard = () => {
         testimonialsAttachment: null,
         // Keep the banner images that have URLs (strings)
         bannerImages: formData.bannerImages.filter(item => typeof item === 'string'),
-        googleReviewCount: formData.googleReviewCount, // Make sure it's included
+        googleReviews: formData.googleReviews, // Make sure it's included
       };
 
       // Save testimonials data (without image files)
@@ -644,7 +662,7 @@ const AdminDashboard = () => {
       console.error('Error saving draft:', error);
       return false;
     }
-  }, [formData, testimonials, offerTags, awardTags, uspTags, formData.googleReviewCount]);
+  }, [formData, testimonials, offerTags, awardTags, uspTags, formData.googleReviews]);
 
   // Manual save with feedback
   const handleManualSave = () => {
@@ -766,8 +784,7 @@ const AdminDashboard = () => {
         usp: "",
         contactEmail: "",
         googleRating: "",
-        googleReviews: "",
-        googleReviewCount: "", // Add this to the reset
+        googleReviews: "", // Add this to the reset
         anyAwardWon: "",
         categoryType: "",
         assured: "",
@@ -878,7 +895,7 @@ const AdminDashboard = () => {
         'registeredCompanyName', 'nameDisplay', 'officialWebsite',
         'fullName', 'designation', 'phoneNumber', 'minMaxBudget',
         'discountsOfferTimeline', 'numberOfProjectsCompleted', 'digitalBrochure',
-        'usp', 'contactEmail', 'googleRating', 'googleReviews', 'googleReviewCount',
+        'usp', 'contactEmail', 'googleRating', 'googleReviews',
         'anyAwardWon', 'categoryType', 'assured', 'projectType', 'propertySizeRange',
         'serviceCategories', 'searchKeywords', 'specificNeighborhoods', 'testimonials'
       ];
@@ -1852,9 +1869,9 @@ const AdminDashboard = () => {
               </label>
               <input
                 type="number"
-                name="googleReviewCount"
-                value={formData.googleReviewCount}
-                onChange={(e) => setFormData({ ...formData, googleReviewCount: e.target.value })}
+                name="googleReviews"
+                value={formData.googleReviews}
+                onChange={(e) => setFormData({ ...formData, googleReviews: e.target.value })}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 placeholder="Enter number of Google reviews"
                 min="0"

@@ -360,13 +360,9 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
     }
   };
 
-  // Calculate average rating from reviews
-  const averageRating = localCompany.reviews?.length > 0
-    ? (localCompany.reviews.reduce((acc, review) => acc + review.rating, 0) / localCompany.reviews.length).toFixed(1)
-    : 5;
-
-  // Get total number of reviews
-  const totalReviews = localCompany?.googleReviews;
+  // Get rating and reviews from backend
+  const averageRating = parseFloat(localCompany?.googleRating) || 0;
+  const totalReviews = localCompany?.googleReviews || '0';
 
   // Update the showDistance function
   const showDistance = () => {
@@ -573,7 +569,7 @@ export default function CompanyCard({ company, edit = false, onCompareChange }) 
               {[...Array(5)].map((_, i) => (
                 <svg
                   key={i}
-                  className={`w-4 h-4 ${i < Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                  className={`w-4 h-4 ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                   xmlns="http://www.w3.org/2000/svg"

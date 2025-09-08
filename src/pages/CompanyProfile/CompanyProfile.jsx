@@ -99,7 +99,7 @@ const CompanyProfile = () => {
       {hasCompanyTestimonials && (
         <CompanyTestimonials testimonials={company.testimonials} />
       )}
-      <CardCrousal images={images} />
+      <CardCrousal images={images} excludeCompanyId={id} />
       <Footer />
 
       {/* Floating Enquire Button */}
